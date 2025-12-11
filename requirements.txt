@@ -1,0 +1,18 @@
+# PaddleOCR Toolkit - Python Dependencies
+
+# Core OCR
+paddlepaddle-gpu>=3.0.0  # 如果無 GPU，改用 paddlepaddle
+paddleocr>=3.0.0
+
+# PDF Processing
+pymupdf>=1.24.0
+
+# Image Processing
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Optional: Progress Bar
+tqdm>=4.65.0
+
+# Optional: Excel Output
+openpyxl>=3.1.0
