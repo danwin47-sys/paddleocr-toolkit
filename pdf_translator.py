@@ -96,6 +96,23 @@ class TranslationEngine(ABC):
 class OllamaTranslator(TranslationEngine):
     """使用 Ollama 本地模型進行翻譯"""
     
+    # 專業術語保留列表（這些詞不翻譯）
+    PRESERVE_TERMS = {
+        # 半導體/MEMS
+        "MEMS", "CMOS", "MUMPs", "PolyMUMPs", "SOIMUMPs", "MetalMUMPs",
+        "VLSI", "ASIC", "FPGA", "SoC", "IC", "PCB", "RF", "RFID",
+        "CVD", "PVD", "RIE", "DRIE", "CMP", "EDP", "KOH", "TMAH",
+        "SOI", "BOX", "PSG", "BPSG", "TEOS", "LPCVD", "PECVD",
+        # 公司/組織
+        "Cronos", "MEMScAP", "TSMC", "Intel", "Samsung", "GlobalFoundries",
+        # 通用技術
+        "API", "SDK", "CPU", "GPU", "RAM", "ROM", "USB", "HDMI",
+        "WiFi", "Bluetooth", "IoT", "AI", "ML", "DL", "NLP",
+        "HTTP", "HTTPS", "TCP", "IP", "DNS", "URL", "JSON", "XML",
+        # 單位
+        "nm", "μm", "mm", "cm", "MHz", "GHz", "kHz",
+    }
+    
     def __init__(
         self, 
         model: str = "qwen2.5:7b",
@@ -112,6 +129,15 @@ class OllamaTranslator(TranslationEngine):
         
         if not text or not text.strip():
             return text
+        
+        # 保護專業術語：替換為佔位符
+        term_map = {}
+        protected_text = text
+        for i, term in enumerate(self.PRESERVE_TERMS):
+            if term in protected_text:
+                placeholder = f"__TERM_{i}__"
+                term_map[placeholder] = term
+                protected_text = protected_text.replace(term, placeholder)
             
         # 語言代碼轉換為自然語言描述
         lang_names = {
@@ -145,7 +171,7 @@ class OllamaTranslator(TranslationEngine):
 3. 如果某個字簡繁相同（如「今晚」「已經」），直接保留原字
 4. 只輸出轉換結果，不要任何解釋
 
-簡體中文：{text}
+簡體中文：{protected_text}
 
 繁體中文："""
             else:
@@ -157,25 +183,22 @@ class OllamaTranslator(TranslationEngine):
 3. 如果某個字繁簡相同，直接保留原字
 4. 只輸出轉換結果，不要任何解釋
 
-繁體中文：{text}
+繁體中文：{protected_text}
 
 簡體中文："""
         elif source_lang == "auto":
             prompt = f"""請將以下文字翻譯成{target_name}。
-重要：只輸出{target_name}翻譯結果，不要輸出其他語言，不要添加任何解釋或說明。
+只輸出{target_name}譯文。
 
-原文：
-{text}
+原文：{protected_text}
 
-{target_name}翻譯："""
+譯文："""
         else:
-            prompt = f"""請將以下{source_name}文字翻譯成{target_name}。
-重要：只輸出{target_name}翻譯結果，不要輸出其他語言，不要添加任何解釋或說明。
+            prompt = f"""將以下{source_name}翻譯成{target_name}，只輸出譯文。
 
-{source_name}原文：
-{text}
+原文：{protected_text}
 
-{target_name}翻譯："""
+譯文："""
         
         try:
             response = requests.post(
@@ -196,10 +219,40 @@ class OllamaTranslator(TranslationEngine):
             result = response.json()
             translated = result.get("response", "").strip()
             
-            # 清理可能的多餘標記
-            for prefix in ["翻譯：", "翻譯:", "繁體中文：", "繁體中文:", "簡體中文：", "簡體中文:"]:
+            # 清理可能的多餘標記和提示詞洩漏
+            prefixes_to_remove = [
+                "翻譯：", "翻譯:", 
+                "繁體中文：", "繁體中文:", 
+                "簡體中文：", "簡體中文:",
+                "英文翻譯：", "英文翻譯:",
+                "Translation:", "Translation：",
+            ]
+            for prefix in prefixes_to_remove:
                 if translated.startswith(prefix):
                     translated = translated[len(prefix):].strip()
+            
+            # 移除可能洩漏的提示詞片段
+            prompt_leaks = [
+                "重要：", "重要:", 
+                "【嚴格規則】", "【規則】",
+                "只輸出", "不要輸出", "不要添加",
+                "絕對不要", "直接保留",
+            ]
+            for leak in prompt_leaks:
+                if leak in translated:
+                    # 找到洩漏點並截斷
+                    leak_pos = translated.find(leak)
+                    if leak_pos > 0:
+                        translated = translated[:leak_pos].strip()
+                    else:
+                        # 如果在開頭，嘗試找下一個換行後的內容
+                        parts = translated.split('\n')
+                        for i, part in enumerate(parts):
+                            if any(l in part for l in prompt_leaks):
+                                continue
+                            else:
+                                translated = '\n'.join(parts[i:])
+                                break
             
             # 如果是簡繁轉換，檢測是否誤翻成英文
             if is_chinese_conversion and translated:
@@ -210,6 +263,10 @@ class OllamaTranslator(TranslationEngine):
                 if original_chinese_ratio > 0.5 and chinese_ratio < 0.3:
                     logging.warning(f"簡繁轉換誤翻成其他語言，返回原文: {translated[:30]}...")
                     return text
+            
+            # 恢復專業術語
+            for placeholder, term in term_map.items():
+                translated = translated.replace(placeholder, term)
             
             return translated if translated else text
             
