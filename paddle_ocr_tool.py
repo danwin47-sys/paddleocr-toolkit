@@ -131,6 +131,13 @@ try:
 except ImportError:
     HAS_OPENPYXL = False
 
+# 可選依賴：英文分詞（修復 OCR 空格問題）
+try:
+    import wordninja
+    HAS_WORDNINJA = True
+except ImportError:
+    HAS_WORDNINJA = False
+
 # 可選依賴：翻譯模組
 try:
     from pdf_translator import (
@@ -161,13 +168,20 @@ SUPPORTED_IMAGE_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.w
 SUPPORTED_PDF_FORMAT = '.pdf'
 
 
-def fix_english_spacing(text: str) -> str:
+def fix_english_spacing(text: str, use_wordninja: bool = True) -> str:
     """
     修復英文 OCR 結果中的空格問題
     
-    1. CamelCase 分詞：FoundryService → Foundry Service
-    2. 修復連字符：wellestablished → well-established
-    3. 數字前後空格：Dec.1992and → Dec. 1992 and
+    策略：
+    1. 保護專業術語不被拆分
+    2. CamelCase 分詞：FoundryService → Foundry Service
+    3. wordninja 智能分詞（可選）：aprogramoffered → a program offered
+    4. 修復連字符詞：wellestablished → well-established
+    5. 數字前後空格：Dec.1992and → Dec. 1992 and
+    
+    Args:
+        text: 輸入文字
+        use_wordninja: 是否使用 wordninja 智能分詞（預設開啟）
     """
     import re
     
@@ -176,14 +190,67 @@ def fix_english_spacing(text: str) -> str:
     
     result = text
     
+    # ========== 0. 首先合併被 OCR 錯誤分詞的術語 ==========
+    # OCR 可能會把 PolyMUMPs 識別為 Poly MUMPs
+    MERGE_TERMS = {
+        'Poly MUMPs': 'PolyMUMPs',
+        'Poly MUMPS': 'PolyMUMPs',
+        'SOIMUMP s': 'SOIMUMPs',
+        'SOI MUMPs': 'SOIMUMPs',
+        'Metal MUMPs': 'MetalMUMPs',
+        # MEMScAP 各種錯誤識別
+        'MEMS cAP': 'MEMScAP',
+        'MEMSc AP': 'MEMScAP',
+        'MEMSC AP': 'MEMScAP',
+        'MEMSc ap': 'MEMScAP',
+        # MEMS Processes（保留空格）
+        'MEMSProcesses': 'MEMS Processes',
+        'MEMSprocesses': 'MEMS processes',
+        # 符號空格修復
+        '2025©': '2025 ©',
+        '2024©': '2024 ©',
+        '2023©': '2023 ©',
+        '©Chiu': '© Chiu',
+        # 逗號後加空格
+        ',Yi': ', Yi',
+        ',Fall': ', Fall',
+        'Fall,2': 'Fall, 2',  # Fall,2025 → Fall, 2025
+        # 數字後黏連修復
+        '81runs': '81 runs',
+        '82runs': '82 runs',
+        '9thrun': '9th run',
+        # 常見黏連詞
+        'micromachiningby': 'micromachining by',
+        'micromachiningfor': 'micromachining for',
+        # 版本號 OCR 錯誤修正（1 被丟失）
+        '.v0.pdf': '.v10.pdf',
+        '.v0.doc': '.v10.doc',
+        '_v0.pdf': '_v10.pdf',
+        '_v0.doc': '_v10.doc',
+        'dr.v0': 'dr.v10',
+    }
+    for wrong, correct in MERGE_TERMS.items():
+        result = result.replace(wrong, correct)
+    
     # 保護不應該被拆分的專業術語
     PROTECTED_TERMS = {
+        # MEMS 相關術語（不應被拆分）
         'MUMPs', 'PolyMUMPs', 'SOIMUMPs', 'MetalMUMPs',
-        'MEMScAP', 'MEMSCAP', 'MEMSProcesses',
+        'MEMScAP', 'MEMSCAP', 'MEMSProcesses', 'MEMSdevices',
+        'micromachining', 'Micromachining', 'MICROMACHINING',
+        'FoundryService', 'CMOS', 'MEMS', 'OCR', 'PDF',
+        # 科技術語
         'PaddleOCR', 'PowerPoint', 'JavaScript', 'TypeScript',
         'GitHub', 'LinkedIn', 'YouTube', 'Facebook',
         'iPhone', 'iPad', 'macOS', 'iOS', 'WiFi',
+        # 常見縮寫
         'TM', 'PhD', 'CEO', 'CTO', 'CFO',
+        # 序數後綴（不應在數字和 th/st/nd/rd 之間加空格）
+        '0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th',
+        '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th',
+        '20th', '21st', '22nd', '23rd', '24th', '25th', '30th', '40th', '50th',
+        # 版本號
+        'v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10',
     }
     
     # 先用佔位符保護這些詞
@@ -205,9 +272,10 @@ def fix_english_spacing(text: str) -> str:
     result = re.sub(r'([A-Z]{2,})([A-Z][a-z])', r'\1 \2', result)
     
     # 3. 修復數字和字母之間缺少空格
-    result = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', result)  # 數字後接字母
-    # 字母後接數字 - 但不拆分如 v10, Dec1992 中的連接
-    result = re.sub(r'([a-z])(\d)', r'\1 \2', result)  # 小寫後接數字
+    # 但排除版本號（v10）和序數（9th）
+    result = re.sub(r'(\d)([a-zA-Z])', lambda m: m.group(0) if m.group(2).lower() in ['t','s','n','r','v'] else m.group(1) + ' ' + m.group(2), result)
+    # 小寫後接數字（但排除 v + 數字）
+    result = re.sub(r'([a-uw-z])(\d)', r'\1 \2', result)  # 排除 v
     
     # 4. 修復標點符號後缺少空格
     result = re.sub(r'\.(\d)', r'. \1', result)  # 句號後接數字
@@ -284,11 +352,29 @@ def fix_english_spacing(text: str) -> str:
     for wrong, correct in common_hyphenated.items():
         result = re.sub(wrong, correct, result, flags=re.IGNORECASE)
     
+    # 7. wordninja 智能分詞（處理長連字）
+    if use_wordninja and HAS_WORDNINJA:
+        # 找出長度超過閾值的連續小寫單詞並嘗試分詞
+        def split_long_words(match):
+            word = match.group(0)
+            if len(word) > 10:  # 只處理長單詞
+                # 使用 wordninja 分詞
+                parts = wordninja.split(word.lower())
+                if len(parts) > 1:
+                    # 保持首字母大小寫
+                    if word[0].isupper():
+                        parts[0] = parts[0].capitalize()
+                    return ' '.join(parts)
+            return word
+        
+        # 匹配沒有空格的長單詞
+        result = re.sub(r'\b[A-Za-z]{11,}\b', split_long_words, result)
+    
     # 恢復被保護的專業術語
     for placeholder, term in protected_map.items():
         result = result.replace(placeholder, term)
     
-    # 7. 清理多餘空格
+    # 8. 清理多餘空格
     result = re.sub(r' +', ' ', result)
     
     return result
@@ -417,16 +503,18 @@ class PDFGenerator:
     使 PDF 可搜尋、可選取文字，同時保持原始視覺外觀。
     """
     
-    def __init__(self, output_path: str):
+    def __init__(self, output_path: str, debug_mode: bool = False):
         """
         初始化 PDF 生成器
         
         Args:
             output_path: 輸出 PDF 的檔案路徑
+            debug_mode: 如果為 True，文字會顯示為粉紅色（方便調試）
         """
         self.output_path = output_path
         self.doc = fitz.open()  # 建立新的空白 PDF
         self.page_count = 0
+        self.debug_mode = debug_mode
     
     def add_page(self, image_path: str, ocr_results: List[OCRResult]) -> bool:
         """
@@ -584,6 +672,13 @@ class PDFGenerator:
                 baseline_y = y + best_font_size * 0.8
             if baseline_y > y + height:
                 baseline_y = y + height
+            # 根據 debug_mode 設定文字樣式
+            if self.debug_mode:
+                render_mode = 0  # 可見模式
+                text_color = (1, 0.4, 0.6)  # 粉紅色
+            else:
+                render_mode = 3  # 隱形模式（可搜尋但不可見）
+                text_color = (0, 0, 0)  # 黑色
             
             # 插入文字
             try:
@@ -592,8 +687,8 @@ class PDFGenerator:
                     text,
                     fontsize=best_font_size,
                     fontname=best_font,
-                    render_mode=3,  # 隱形模式（可搜尋但不可見）
-                    color=(0, 0, 0)  # 黑色
+                    render_mode=render_mode,
+                    color=text_color
                 )
             except Exception as e:
                 # 如果失敗，嘗試其他字體
@@ -605,8 +700,8 @@ class PDFGenerator:
                                 text,
                                 fontsize=best_font_size,
                                 fontname=fontname,
-                                render_mode=3,
-                                color=(0, 0, 0)
+                                render_mode=render_mode,
+                                color=text_color
                             )
                             return
                         except:
@@ -657,7 +752,8 @@ class PaddleOCRTool:
         use_orientation_classify: bool = False,
         use_doc_unwarping: bool = False,
         use_textline_orientation: bool = False,
-        device: str = "gpu"
+        device: str = "gpu",
+        debug_mode: bool = False
     ):
         """
         初始化 PaddleOCR 工具
@@ -668,7 +764,9 @@ class PaddleOCRTool:
             use_doc_unwarping: 是否啟用文件彎曲校正
             use_textline_orientation: 是否啟用文字行方向偵測
             device: 運算設備 ('gpu' 或 'cpu')
+            debug_mode: DEBUG 模式，將隱形文字改為粉紅色可見文字
         """
+        self.debug_mode = debug_mode
         self.mode = mode
         self.use_orientation_classify = use_orientation_classify
         self.use_doc_unwarping = use_doc_unwarping
@@ -676,6 +774,8 @@ class PaddleOCRTool:
         
         # 初始化對應的 OCR 引擎
         print(f"正在初始化 PaddleOCR 3.x (模式: {mode})...")
+        if debug_mode:
+            print("[DEBUG] 已啟用 DEBUG 模式：可搜尋 PDF 的隱形文字將顯示為粉紅色")
         
         try:
             if mode == "structure":
@@ -864,18 +964,20 @@ class PaddleOCRTool:
         input_path: str,
         markdown_output: Optional[str] = None,
         json_output: Optional[str] = None,
-        excel_output: Optional[str] = None
+        excel_output: Optional[str] = None,
+        html_output: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         使用 PP-StructureV3 或 PaddleOCR-VL 處理文件
         
-        適用於 structure 和 vl 模式，直接輸出 Markdown/JSON/Excel 格式
+        適用於 structure 和 vl 模式，直接輸出 Markdown/JSON/Excel/HTML 格式
         
         Args:
             input_path: 輸入檔案路徑（PDF 或圖片）
             markdown_output: Markdown 輸出目錄（可選）
             json_output: JSON 輸出目錄（可選）
             excel_output: Excel 輸出路徑（可選，僅表格）
+            html_output: HTML 輸出路徑（可選）
             
         Returns:
             Dict[str, Any]: 處理結果摘要
@@ -889,7 +991,8 @@ class PaddleOCRTool:
             "pages_processed": 0,
             "markdown_files": [],
             "json_files": [],
-            "excel_files": []
+            "excel_files": [],
+            "html_files": []
         }
         
         try:
@@ -971,6 +1074,32 @@ class PaddleOCRTool:
                             logging.warning(f"Excel 輸出失敗 (頁 {page_count}): {excel_err}")
                         finally:
                             shutil.rmtree(temp_dir, ignore_errors=True)
+                
+                # 輸出 HTML
+                if html_output:
+                    temp_dir = tempfile.mkdtemp()
+                    try:
+                        # 嘗試呼叫 save_to_html（如果結果物件支援）
+                        if hasattr(res, 'save_to_html'):
+                            res.save_to_html(save_path=temp_dir)
+                            # 複製生成的 HTML 到目標位置
+                            html_path = Path(html_output)
+                            if not html_path.is_absolute():
+                                html_path = script_dir / html_path
+                            for html_file in Path(temp_dir).glob("*.html"):
+                                if html_path.suffix == '.html':
+                                    target_html = html_path.parent / f"{html_path.stem}_page{page_count}.html"
+                                else:
+                                    html_path.mkdir(parents=True, exist_ok=True)
+                                    target_html = html_path / f"{Path(input_path).stem}_page{page_count}.html"
+                                shutil.copy(html_file, target_html)
+                                result_summary["html_files"].append(str(target_html))
+                        else:
+                            logging.warning(f"結果物件不支援 save_to_html 方法")
+                    except Exception as html_err:
+                        logging.warning(f"HTML 輸出失敗 (頁 {page_count}): {html_err}")
+                    finally:
+                        shutil.rmtree(temp_dir, ignore_errors=True)
             
             # 合併所有 markdown 內容到單一檔案
             if markdown_output and all_markdown_content:
@@ -982,6 +1111,10 @@ class PaddleOCRTool:
             # Excel 輸出完成訊息
             if result_summary.get("excel_files"):
                 print(f"[OK] Excel 已儲存：{len(result_summary['excel_files'])} 個檔案")
+            
+            # HTML 輸出完成訊息
+            if result_summary.get("html_files"):
+                print(f"[OK] HTML 已儲存：{len(result_summary['html_files'])} 個檔案")
             
             result_summary["pages_processed"] = page_count
             print(f"[OK] 處理完成：{page_count} 頁")
@@ -1031,7 +1164,7 @@ class PaddleOCRTool:
                     base_name = Path(pdf_path).stem
                     output_path = str(Path(pdf_path).parent / f"{base_name}_searchable.pdf")
                 logging.info(f"準備生成可搜尋 PDF: {output_path}")
-                pdf_generator = PDFGenerator(output_path)
+                pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
             
             # 處理每一頁（使用進度條）
             page_iterator = range(total_pages)
@@ -1162,7 +1295,7 @@ class PaddleOCRTool:
         if searchable:
             if not output_path:
                 output_path = str(dir_path / f"{dir_path.name}_searchable.pdf")
-            pdf_generator = PDFGenerator(output_path)
+            pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
             
             for file_path in sorted(files):
                 file_str = str(file_path)
@@ -1300,20 +1433,26 @@ class PaddleOCRTool:
         input_path: str,
         output_path: Optional[str] = None,
         markdown_output: Optional[str] = None,
+        json_output: Optional[str] = None,
+        html_output: Optional[str] = None,
         dpi: int = 150,
-        show_progress: bool = True
+        show_progress: bool = True,
+        translate_config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         混合模式：使用 PP-StructureV3 版面分析 + PP-OCRv5 精確座標
         
-        生成閱讀順序正確的可搜尋 PDF 和 Markdown
+        生成閱讀順序正確的可搜尋 PDF 和 Markdown/JSON/HTML
         
         Args:
             input_path: 輸入檔案路徑（PDF 或圖片）
             output_path: 可搜尋 PDF 輸出路徑（可選）
             markdown_output: Markdown 輸出路徑（可選）
+            json_output: JSON 輸出路徑（可選）
+            html_output: HTML 輸出路徑（可選）
             dpi: PDF 轉圖片解析度
             show_progress: 是否顯示進度條
+            translate_config: 翻譯配置（可選），傳入後會在生成可搜尋 PDF 後自動執行翻譯
             
         Returns:
             Dict[str, Any]: 處理結果摘要
@@ -1346,16 +1485,18 @@ class PaddleOCRTool:
             
             # 判斷輸入類型
             if input_path_obj.suffix.lower() == '.pdf':
-                # 自動偵測 PDF 品質並調整 DPI（如果用戶未指定）
-                if dpi == 150:  # 使用預設值時才自動調整
-                    quality = detect_pdf_quality(input_path)
-                    if quality['recommended_dpi'] != 150:
-                        print(f"[品質] {quality['reason']}")
-                        print(f"   使用 DPI: {quality['recommended_dpi']}")
+                # 自動偵測 PDF 品質並調整 DPI
+                quality = detect_pdf_quality(input_path)
+                print(f"[偵測] {quality['reason']}")
+                if quality['is_scanned'] or quality['is_blurry']:
+                    if quality['recommended_dpi'] > dpi:
                         dpi = quality['recommended_dpi']
+                print(f"   使用 DPI: {dpi}")
                 
                 return self._process_hybrid_pdf(
-                    input_path, output_path, markdown_output, dpi, show_progress, result_summary
+                    input_path, output_path, markdown_output, json_output, html_output,
+                    dpi, show_progress, result_summary,
+                    translate_config=translate_config
                 )
             else:
                 return self._process_hybrid_image(
@@ -1375,11 +1516,25 @@ class PaddleOCRTool:
         pdf_path: str,
         output_path: str,
         markdown_output: str,
+        json_output: Optional[str],
+        html_output: Optional[str],
         dpi: int,
         show_progress: bool,
-        result_summary: Dict[str, Any]
+        result_summary: Dict[str, Any],
+        translate_config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """處理 PDF 的混合模式"""
+        """處理 PDF 的混合模式
+        
+        同時生成：
+        1. *_hybrid.pdf（原文可搜尋）
+        2. *_erased.pdf（擦除版 + 文字層）
+        3. *_hybrid.md（Markdown）
+        4. *_hybrid.json（JSON，可選）
+        5. *_hybrid.html（HTML，可選）
+        
+        Args:
+            translate_config: 翻譯配置（可選），包含 source_lang, target_lang, ollama_model 等
+        """
         
         pdf_doc = fitz.open(pdf_path)
         total_pages = len(pdf_doc)
@@ -1387,10 +1542,21 @@ class PaddleOCRTool:
         print(f"PDF 共 {total_pages} 頁")
         logging.info(f"PDF 共 {total_pages} 頁")
         
-        # 準備 PDF 生成器
-        pdf_generator = PDFGenerator(output_path)
+        # ========== 設定輸出路徑 ==========
+        erased_output_path = output_path.replace('_hybrid.pdf', '_erased.pdf')
+        
+        # ========== 準備 PDF 生成器 ==========
+        # 1. 原文可搜尋 PDF
+        pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
+        # 2. 擦除版 PDF
+        erased_generator = PDFGenerator(erased_output_path, debug_mode=self.debug_mode)
+        
+        # 擦除器
+        inpainter = TextInpainter() if HAS_TRANSLATOR else None
+        
         all_markdown = []
         all_text = []
+        all_ocr_results = []  # 收集每頁 OCR 結果，用於翻譯
         
         # 處理每一頁
         page_iterator = range(total_pages)
@@ -1469,26 +1635,53 @@ class PaddleOCRTool:
                 else:
                     logging.warning(f"  未提取到任何 OCR 結果!")
                 
-                # 步驟 3：生成可搜尋 PDF 頁面
+                # ========== 步驟 3：同時生成兩個 PDF ==========
                 if sorted_results:
-                    # 儲存臨時圖片
+                    # 需要複製 img_array（因為後面會用到）
+                    img_array_copy = img_array.copy()
+                    
+                    # 3.1 生成原文可搜尋 PDF（*_hybrid.pdf）
                     tmp_path = tempfile.mktemp(suffix='.png')
                     try:
-                        Image.fromarray(img_array).save(tmp_path)
+                        Image.fromarray(img_array_copy).save(tmp_path)
                         pdf_generator.add_page(tmp_path, sorted_results)
                     finally:
                         if os.path.exists(tmp_path):
                             os.remove(tmp_path)
+                    
+                    # 3.2 生成擦除版 PDF（*_erased.pdf）
+                    if inpainter:
+                        # 收集 bboxes
+                        bboxes = [result.bbox for result in sorted_results if result.text and result.text.strip()]
+                        
+                        if bboxes:
+                            # 在圖片上擦除文字區域
+                            erased_image = inpainter.erase_multiple_regions(
+                                img_array_copy, bboxes, fill_color=(255, 255, 255)
+                            )
+                        else:
+                            erased_image = img_array_copy
+                        
+                        # 儲存擦除版圖片並添加到 erased_generator
+                        tmp_erased_path = tempfile.mktemp(suffix='.png')
+                        try:
+                            Image.fromarray(erased_image).save(tmp_erased_path)
+                            # 擦除版 PDF 也添加文字層（用於後續翻譯）
+                            erased_generator.add_page(tmp_erased_path, sorted_results)
+                        finally:
+                            if os.path.exists(tmp_erased_path):
+                                os.remove(tmp_erased_path)
                 
-                # 收集 Markdown 和文字
+                # 收集 Markdown、文字和 OCR 結果
                 all_markdown.append(page_markdown)
                 page_text = self.get_text(sorted_results)
                 all_text.append(page_text)
+                all_ocr_results.append(sorted_results)  # 收集 OCR 結果用於翻譯
                 
                 result_summary["pages_processed"] += 1
                 
                 # 清理記憶體
-                del pixmap, img_array
+                del pixmap
                 gc.collect()
                 
             except Exception as page_error:
@@ -1503,6 +1696,11 @@ class PaddleOCRTool:
             result_summary["searchable_pdf"] = output_path
             print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
         
+        # 儲存擦除版 PDF
+        if erased_generator.save():
+            result_summary["erased_pdf"] = erased_output_path
+            print(f"[OK] 擦除版 PDF 已儲存：{erased_output_path}")
+        
         # 儲存 Markdown
         if markdown_output and all_markdown:
             # 應用英文空格修復
@@ -1512,7 +1710,110 @@ class PaddleOCRTool:
             result_summary["markdown_file"] = markdown_output
             print(f"[OK] Markdown 已儲存：{markdown_output}")
         
+        # ========== JSON 輸出（如果啟用）==========
+        if json_output:
+            try:
+                import json
+                # 將 OCR 結果轉換為可序列化的格式
+                json_data = {
+                    "input": pdf_path,
+                    "pages": []
+                }
+                for page_num, page_results in enumerate(all_ocr_results, 1):
+                    page_data = {
+                        "page": page_num,
+                        "text_blocks": []
+                    }
+                    for result in page_results:
+                        page_data["text_blocks"].append({
+                            "text": result.text,
+                            "confidence": result.confidence,
+                            "bbox": [[float(p[0]), float(p[1])] for p in result.bbox]
+                        })
+                    json_data["pages"].append(page_data)
+                
+                with open(json_output, 'w', encoding='utf-8') as f:
+                    json.dump(json_data, f, ensure_ascii=False, indent=2)
+                result_summary["json_file"] = json_output
+                print(f"[OK] JSON 已儲存：{json_output}")
+            except Exception as json_err:
+                logging.warning(f"JSON 輸出失敗: {json_err}")
+        
+        # ========== HTML 輸出（如果啟用）==========
+        if html_output:
+            try:
+                # 將 Markdown 轉換為 HTML
+                html_content = f"""<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{Path(pdf_path).stem} - OCR 結果</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+               max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; }}
+        h1, h2, h3 {{ color: #333; }}
+        hr {{ border: none; border-top: 1px solid #ddd; margin: 20px 0; }}
+        pre {{ background: #f5f5f5; padding: 10px; overflow-x: auto; }}
+        code {{ background: #f5f5f5; padding: 2px 5px; border-radius: 3px; }}
+        img {{ max-width: 100%; }}
+        table {{ border-collapse: collapse; width: 100%; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background: #f5f5f5; }}
+    </style>
+</head>
+<body>
+"""
+                # 簡單的 Markdown 到 HTML 轉換
+                for md in all_markdown:
+                    fixed_md = fix_english_spacing(md)
+                    # 基本轉換
+                    lines = fixed_md.split('\n')
+                    for line in lines:
+                        if line.startswith('### '):
+                            html_content += f"<h3>{line[4:]}</h3>\n"
+                        elif line.startswith('## '):
+                            html_content += f"<h2>{line[3:]}</h2>\n"
+                        elif line.startswith('# '):
+                            html_content += f"<h1>{line[2:]}</h1>\n"
+                        elif line.startswith('- '):
+                            html_content += f"<li>{line[2:]}</li>\n"
+                        elif line.startswith('* '):
+                            html_content += f"<li>{line[2:]}</li>\n"
+                        elif line.strip() == '---':
+                            html_content += "<hr>\n"
+                        elif line.strip():
+                            html_content += f"<p>{line}</p>\n"
+                    html_content += "<hr>\n"
+                
+                html_content += """
+</body>
+</html>"""
+                
+                with open(html_output, 'w', encoding='utf-8') as f:
+                    f.write(html_content)
+                result_summary["html_file"] = html_output
+                print(f"[OK] HTML 已儲存：{html_output}")
+            except Exception as html_err:
+                logging.warning(f"HTML 輸出失敗: {html_err}")
+        
         result_summary["text_content"] = all_text
+        
+        # ========== 翻譯處理（如果啟用）==========
+        # Debug 模式時關閉翻譯功能
+        if translate_config and HAS_TRANSLATOR:
+            if self.debug_mode:
+                print(f"[DEBUG] Debug 模式已啟用，跳過翻譯處理")
+                logging.info("Debug 模式已啟用，跳過翻譯處理")
+            else:
+                self._process_translation_on_pdf(
+                    erased_pdf_path=erased_output_path,
+                    ocr_results_per_page=all_ocr_results,
+                    translate_config=translate_config,
+                    result_summary=result_summary,
+                    dpi=dpi
+                )
+        
         print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
         
         return result_summary
@@ -1539,7 +1840,7 @@ class PaddleOCRTool:
         
         # 生成可搜尋 PDF
         if sorted_results:
-            pdf_generator = PDFGenerator(output_path)
+            pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
             pdf_generator.add_page(image_path, sorted_results)
             if pdf_generator.save():
                 result_summary["searchable_pdf"] = output_path
@@ -1688,7 +1989,7 @@ class PaddleOCRTool:
                                             bbox = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
                                             conf = float(scores[i]) if i < len(scores) else 0.9
                                             ocr_results.append(OCRResult(
-                                                text=str(text),
+                                                text=fix_english_spacing(str(text)),
                                                 confidence=conf,
                                                 bbox=bbox
                                             ))
@@ -1702,7 +2003,7 @@ class PaddleOCRTool:
                                             bbox = [[float(p[0]), float(p[1])] for p in poly_list]
                                             conf = float(scores[i]) if i < len(scores) else 0.9
                                             ocr_results.append(OCRResult(
-                                                text=str(text),
+                                                text=fix_english_spacing(str(text)),
                                                 confidence=conf,
                                                 bbox=bbox
                                             ))
@@ -1730,7 +2031,7 @@ class PaddleOCRTool:
                                         x1, y1, x2, y2 = float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])
                                         bbox_points = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
                                         ocr_results.append(OCRResult(
-                                            text=content_str,
+                                            text=fix_english_spacing(content_str),
                                             confidence=0.85,
                                             bbox=bbox_points
                                         ))
@@ -1832,6 +2133,200 @@ class PaddleOCRTool:
         
         return sorted_results
 
+    def _process_translation_on_pdf(
+        self,
+        erased_pdf_path: str,  # 使用擦除版 PDF 作為翻譯基礎
+        ocr_results_per_page: List[List[OCRResult]],
+        translate_config: Dict[str, Any],
+        result_summary: Dict[str, Any],
+        dpi: int = 150
+    ) -> None:
+        """
+        在擦除版 PDF 基礎上進行翻譯處理
+        
+        流程：
+        1. 開啟 *_erased.pdf（已擦除）
+        2. 翻譯文字
+        3. 在擦除後的圖片上繪製翻譯文字
+        4. 生成 *_translated_{lang}.pdf 和 *_bilingual_{lang}.pdf
+        
+        Args:
+            erased_pdf_path: 已擦除的 PDF 路徑（*_erased.pdf）
+            ocr_results_per_page: 每頁的 OCR 結果列表
+            translate_config: 翻譯配置
+            result_summary: 結果摘要（會被更新）
+            dpi: PDF 轉圖片時使用的 DPI
+        """
+        print(f"\n[翻譯] 開始翻譯處理...")
+        logging.info(f"開始翻譯處理: {erased_pdf_path}")
+        
+        source_lang = translate_config.get('source_lang', 'auto')
+        target_lang = translate_config.get('target_lang', 'en')
+        ollama_model = translate_config.get('ollama_model', 'qwen2.5:7b')
+        ollama_url = translate_config.get('ollama_url', 'http://localhost:11434')
+        no_mono = translate_config.get('no_mono', False)
+        no_dual = translate_config.get('no_dual', False)
+        dual_mode = translate_config.get('dual_mode', 'alternating')
+        font_path = translate_config.get('font_path', None)
+        # 翻譯 debug 模式（暫時不用，預設關閉，之後會用）
+        translate_debug = translate_config.get('translate_debug', False)
+        
+        print(f"   來源語言: {source_lang}")
+        print(f"   目標語言: {target_lang}")
+        print(f"   Ollama 模型: {ollama_model}")
+        
+        try:
+            # 初始化翻譯器和繪製器
+            translator = OllamaTranslator(model=ollama_model, base_url=ollama_url)
+            renderer = TextRenderer(font_path=font_path)  # 用於繪製翻譯文字
+            
+            # 開啟擦除版 PDF
+            pdf_doc = fitz.open(erased_pdf_path)
+            total_pages = len(pdf_doc)
+            
+            # 開啟原始 hybrid.pdf 用於生成雙語對照
+            hybrid_pdf_path = erased_pdf_path.replace('_erased.pdf', '_hybrid.pdf')
+            hybrid_doc = None
+            if not no_dual and os.path.exists(hybrid_pdf_path):
+                hybrid_doc = fitz.open(hybrid_pdf_path)
+            
+            # 建立輸出路徑
+            base_path = erased_pdf_path.replace('_erased.pdf', '')
+            translated_path = f"{base_path}_translated_{target_lang}.pdf" if not no_mono else None
+            bilingual_path = f"{base_path}_bilingual_{target_lang}.pdf" if not no_dual else None
+            
+            # 建立 PDF 生成器
+            mono_generator = MonolingualPDFGenerator() if translated_path else None
+            bilingual_generator = BilingualPDFGenerator(
+                mode=dual_mode,
+                translate_first=translate_config.get('dual_translate_first', False)
+            ) if bilingual_path else None
+            
+            # 進度條
+            page_iter = range(total_pages)
+            if HAS_TQDM:
+                page_iter = tqdm(page_iter, desc="翻譯頁面", unit="頁", ncols=80)
+            
+            for page_num in page_iter:
+                try:
+                    # 取得該頁的 OCR 結果
+                    if page_num >= len(ocr_results_per_page):
+                        logging.warning(f"第 {page_num + 1} 頁沒有 OCR 結果")
+                        continue
+                    
+                    page_ocr_results = ocr_results_per_page[page_num]
+                    
+                    # ========== 取得擦除版圖片（已經擦除過了）==========
+                    erased_page = pdf_doc[page_num]
+                    zoom = dpi / 72.0
+                    matrix = fitz.Matrix(zoom, zoom)
+                    erased_pixmap = erased_page.get_pixmap(matrix=matrix)
+                    
+                    erased_image = np.frombuffer(erased_pixmap.samples, dtype=np.uint8)
+                    erased_image = erased_image.reshape(erased_pixmap.height, erased_pixmap.width, erased_pixmap.n).copy()
+                    if erased_pixmap.n == 4:
+                        erased_image = erased_image[:, :, :3].copy()
+                    
+                    # 取得原始圖片（用於雙語對照）
+                    original_image = erased_image.copy()
+                    if hybrid_doc:
+                        hybrid_page = hybrid_doc[page_num]
+                        hybrid_pixmap = hybrid_page.get_pixmap(matrix=matrix)
+                        original_image = np.frombuffer(hybrid_pixmap.samples, dtype=np.uint8)
+                        original_image = original_image.reshape(hybrid_pixmap.height, hybrid_pixmap.width, hybrid_pixmap.n).copy()
+                        if hybrid_pixmap.n == 4:
+                            original_image = original_image[:, :, :3].copy()
+                    
+                    if not page_ocr_results:
+                        # 沒有文字需要翻譯，保留擦除版圖片
+                        if mono_generator:
+                            mono_generator.add_page(erased_image)
+                        if bilingual_generator:
+                            bilingual_generator.add_bilingual_page(original_image, erased_image)
+                        continue
+                    
+                    # 收集需要翻譯的文字和 bbox
+                    texts_to_translate = []
+                    valid_results = []
+                    bboxes = []
+                    for result in page_ocr_results:
+                        if result.text and result.text.strip():
+                            texts_to_translate.append(result.text)
+                            valid_results.append(result)
+                            bboxes.append(result.bbox)
+                    
+                    if not texts_to_translate:
+                        if mono_generator:
+                            mono_generator.add_page(erased_image)
+                        if bilingual_generator:
+                            bilingual_generator.add_bilingual_page(original_image, erased_image)
+                        continue
+                    
+                    logging.info(f"第 {page_num + 1} 頁: 翻譯 {len(texts_to_translate)} 個文字區塊")
+                    
+                    # ========== 批次翻譯 ==========
+                    translated_texts = translator.translate_batch(
+                        texts_to_translate, source_lang, target_lang, show_progress=False
+                    )
+                    
+                    # ========== 在擦除後的圖片上繪製翻譯文字 ==========
+                    translated_blocks = []
+                    for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
+                        translated_blocks.append(TranslatedBlock(
+                            original_text=orig,
+                            translated_text=trans,
+                            bbox=bbox
+                        ))
+                    
+                    translated_image = erased_image.copy()
+                    translated_image = renderer.render_multiple_texts(
+                        translated_image, translated_blocks
+                    )
+                    
+                    # 添加到純翻譯 PDF
+                    if mono_generator:
+                        mono_generator.add_page(translated_image)
+                    
+                    # 添加到雙語對照 PDF
+                    if bilingual_generator:
+                        bilingual_generator.add_bilingual_page(original_image, translated_image)
+                    
+                    # 清理記憶體
+                    del erased_pixmap
+                    gc.collect()
+                    
+                except Exception as page_err:
+                    logging.error(f"翻譯第 {page_num + 1} 頁時發生錯誤: {page_err}")
+                    logging.error(traceback.format_exc())
+                    continue
+            
+            pdf_doc.close()
+            if hybrid_doc:
+                hybrid_doc.close()
+            
+            # 儲存翻譯版 PDF
+            if mono_generator and translated_path:
+                if mono_generator.save(translated_path):
+                    result_summary["translated_pdf"] = translated_path
+                    print(f"[OK] 翻譯 PDF 已儲存：{translated_path}")
+                mono_generator.close()
+            
+            # 儲存雙語版 PDF
+            if bilingual_generator and bilingual_path:
+                if bilingual_generator.save(bilingual_path):
+                    result_summary["bilingual_pdf"] = bilingual_path
+                    print(f"[OK] 雙語對照 PDF 已儲存：{bilingual_path}")
+                bilingual_generator.close()
+            
+            print(f"[OK] 翻譯處理完成")
+            
+        except Exception as e:
+            error_msg = f"翻譯處理失敗: {str(e)}"
+            logging.error(error_msg)
+            logging.error(traceback.format_exc())
+            print(f"錯誤：{error_msg}")
+            result_summary["translation_error"] = str(e)
+
     def process_translate(
         self,
         input_path: str,
@@ -1846,15 +2341,19 @@ class PaddleOCRTool:
         dual_translate_first: bool = False,
         font_path: Optional[str] = None,
         dpi: int = 150,
-        show_progress: bool = True
+        show_progress: bool = True,
+        json_output: Optional[str] = None,
+        html_output: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        翻譯 PDF 並生成多種輸出
+        翻譯 PDF 並生成多種輸出（簡化版，調用 process_hybrid）
         
         輸出檔案：
-        - *_hybrid.pdf：可搜尋 PDF
+        - *_hybrid.pdf：可搜尋 PDF（原文）
         - *_hybrid.md：Markdown 輸出
-        - *_translated_{lang}.pdf：純翻譯 PDF（除非 --no-mono）
+        - *_hybrid.json：JSON 輸出（可選）
+        - *_hybrid.html：HTML 輸出（可選）
+        - *_translated_{lang}.pdf：翻譯 PDF（可搜尋）
         - *_bilingual_{lang}.pdf：雙語對照 PDF（除非 --no-dual）
         
         Args:
@@ -1868,9 +2367,11 @@ class PaddleOCRTool:
             no_dual: 不輸出雙語對照 PDF
             dual_mode: 雙語模式（alternating 或 side-by-side）
             dual_translate_first: 雙語模式中譯文在前
-            font_path: 自訂字體路徑
+            font_path: 自訂字體路徑（目前未使用）
             dpi: PDF 轉圖片解析度
             show_progress: 是否顯示進度條
+            json_output: JSON 輸出路徑（可選）
+            html_output: HTML 輸出路徑（可選）
             
         Returns:
             Dict[str, Any]: 處理結果摘要
@@ -1881,223 +2382,43 @@ class PaddleOCRTool:
         if self.mode != "hybrid":
             raise ValueError(f"process_translate 需要 hybrid 模式，當前模式: {self.mode}")
         
-        result_summary = {
-            "input": input_path,
-            "mode": "translate",
-            "source_lang": source_lang,
-            "target_lang": target_lang,
-            "pages_processed": 0,
-            "searchable_pdf": None,
-            "markdown_file": None,
-            "translated_pdf": None,
-            "bilingual_pdf": None,
-            "error": None
+        print(f"\n[翻譯] 正在處理: {input_path}")
+        print(f"   來源語言: {source_lang}")
+        print(f"   目標語言: {target_lang}")
+        print(f"   Ollama 模型: {ollama_model}")
+        logging.info(f"開始翻譯模式處理: {input_path}")
+        
+        # 建立翻譯配置
+        translate_config = {
+            'source_lang': source_lang,
+            'target_lang': target_lang,
+            'ollama_model': ollama_model,
+            'ollama_url': ollama_url,
+            'no_mono': no_mono,
+            'no_dual': no_dual,
+            'dual_mode': dual_mode,
+            'dual_translate_first': dual_translate_first,
+            'font_path': font_path,
         }
         
-        input_path_obj = Path(input_path)
+        # 直接調用 process_hybrid，傳入翻譯配置
+        # process_hybrid 會在生成可搜尋 PDF 後自動調用 _process_translation_on_pdf
+        result = self.process_hybrid(
+            input_path=input_path,
+            output_path=output_path,
+            json_output=json_output,
+            html_output=html_output,
+            dpi=dpi,
+            show_progress=show_progress,
+            translate_config=translate_config
+        )
         
-        try:
-            # 設定輸出路徑
-            base_path = input_path_obj.parent / input_path_obj.stem
-            
-            if not output_path:
-                output_path = str(base_path) + "_hybrid.pdf"
-            
-            markdown_output = str(base_path) + "_hybrid.md"
-            translated_output = str(base_path) + f"_translated_{target_lang}.pdf" if not no_mono else None
-            bilingual_output = str(base_path) + f"_bilingual_{target_lang}.pdf" if not no_dual else None
-            
-            print(f"\n[翻譯] 正在處理: {input_path}")
-            print(f"   來源語言: {source_lang}")
-            print(f"   目標語言: {target_lang}")
-            print(f"   Ollama 模型: {ollama_model}")
-            logging.info(f"開始翻譯模式處理: {input_path}")
-            
-            # 初始化翻譯器
-            translator = OllamaTranslator(model=ollama_model, base_url=ollama_url)
-            inpainter = TextInpainter()
-            renderer = TextRenderer(font_path=font_path)
-            
-            # 初始化 PDF 生成器
-            pdf_generator = PDFGenerator(output_path)
-            mono_generator = MonolingualPDFGenerator() if translated_output else None
-            bilingual_generator = BilingualPDFGenerator(
-                mode=dual_mode,
-                translate_first=dual_translate_first
-            ) if bilingual_output else None
-            
-            # 處理 PDF
-            pdf_doc = fitz.open(input_path)
-            total_pages = len(pdf_doc)
-            all_markdown = []
-            
-            print(f"PDF 共 {total_pages} 頁")
-            logging.info(f"PDF 共 {total_pages} 頁")
-            
-            # 進度條
-            page_iter = range(total_pages)
-            if show_progress and HAS_TQDM:
-                page_iter = tqdm(page_iter, desc="翻譯頁面", unit="頁", ncols=80)
-            
-            for page_num in page_iter:
-                try:
-                    page = pdf_doc[page_num]
-                    
-                    # 轉換為圖片
-                    zoom = dpi / 72.0
-                    matrix = fitz.Matrix(zoom, zoom)
-                    pixmap = page.get_pixmap(matrix=matrix)
-                    
-                    img_array = np.frombuffer(pixmap.samples, dtype=np.uint8)
-                    img_array = img_array.reshape(pixmap.height, pixmap.width, pixmap.n).copy()
-                    if pixmap.n == 4:
-                        img_array = img_array[:, :, :3].copy()
-                    
-                    original_image = img_array.copy()
-                    
-                    # 使用 PP-Structure 進行版面分析和 OCR
-                    logging.info(f"  第 {page_num + 1} 頁：版面分析中...")
-                    structure_output = self.structure_engine.predict(input=img_array.copy())
-                    
-                    # 提取 Markdown
-                    page_markdown = f"## 第 {page_num + 1} 頁\n\n"
-                    for res in structure_output:
-                        temp_md_dir = tempfile.mkdtemp()
-                        try:
-                            if hasattr(res, 'save_to_markdown'):
-                                res.save_to_markdown(save_path=temp_md_dir)
-                                for md_file in Path(temp_md_dir).glob("*.md"):
-                                    with open(md_file, 'r', encoding='utf-8') as f:
-                                        page_markdown += f.read()
-                                    break
-                        except Exception as md_err:
-                            logging.warning(f"save_to_markdown 失敗: {md_err}")
-                            if hasattr(res, 'markdown') and isinstance(res.markdown, str):
-                                page_markdown += res.markdown
-                        finally:
-                            shutil.rmtree(temp_md_dir, ignore_errors=True)
-                    
-                    all_markdown.append(page_markdown)
-                    
-                    # 提取 OCR 結果
-                    ocr_results = self._extract_ocr_from_structure(structure_output, markdown_text=page_markdown)
-                    
-                    # 添加到可搜尋 PDF
-                    if ocr_results:
-                        tmp_path = tempfile.mktemp(suffix='.png')
-                        try:
-                            Image.fromarray(img_array).save(tmp_path)
-                            pdf_generator.add_page(tmp_path, ocr_results)
-                        finally:
-                            if os.path.exists(tmp_path):
-                                os.remove(tmp_path)
-                    
-                    # 翻譯流程
-                    if mono_generator or bilingual_generator:
-                        logging.info(f"  第 {page_num + 1} 頁：翻譯中...")
-                        
-                        # 收集需要翻譯的文字
-                        texts_to_translate = []
-                        bboxes = []
-                        
-                        for result in ocr_results:
-                            if result.text and result.text.strip():
-                                texts_to_translate.append(result.text)
-                                bboxes.append(result.bbox)
-                        
-                        # 翻譯文字
-                        if texts_to_translate:
-                            print(f"  翻譯 {len(texts_to_translate)} 個文字區塊...")
-                            translated_texts = translator.translate_batch(
-                                texts_to_translate, source_lang, target_lang, show_progress=False
-                            )
-                            
-                            # 建立翻譯區塊
-                            translated_blocks = []
-                            for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
-                                translated_blocks.append(TranslatedBlock(
-                                    original_text=orig,
-                                    translated_text=trans,
-                                    bbox=bbox
-                                ))
-                            
-                            # 處理圖片：擦除原文並繪製譯文
-                            translated_image = img_array.copy()
-                            
-                            if inpainter and translated_blocks:
-                                all_bboxes = [block.bbox for block in translated_blocks]
-                                translated_image = inpainter.erase_multiple_regions(
-                                    translated_image, all_bboxes, fill_color=(255, 255, 255)
-                                )
-                            
-                            # 繪製譯文
-                            translated_image = renderer.render_multiple_texts(
-                                translated_image, translated_blocks
-                            )
-                            
-                            # 添加到純翻譯 PDF
-                            if mono_generator:
-                                mono_generator.add_page(translated_image)
-                            
-                            # 添加到雙語對照 PDF
-                            if bilingual_generator:
-                                bilingual_generator.add_bilingual_page(
-                                    original_image, translated_image
-                                )
-                        else:
-                            # 沒有文字需要翻譯，保留原圖
-                            if mono_generator:
-                                mono_generator.add_page(original_image)
-                            if bilingual_generator:
-                                bilingual_generator.add_bilingual_page(
-                                    original_image, original_image
-                                )
-                    
-                    result_summary["pages_processed"] += 1
-                    
-                    # 清理記憶體
-                    del pixmap, img_array
-                    gc.collect()
-                    
-                except Exception as page_error:
-                    logging.error(f"處理第 {page_num + 1} 頁時發生錯誤: {page_error}")
-                    logging.error(traceback.format_exc())
-                    continue
-            
-            pdf_doc.close()
-            
-            # 儲存可搜尋 PDF
-            if pdf_generator.save():
-                result_summary["searchable_pdf"] = output_path
-            
-            # 儲存 Markdown
-            if all_markdown:
-                with open(markdown_output, 'w', encoding='utf-8') as f:
-                    f.write("\n\n---\n\n".join(all_markdown))
-                result_summary["markdown_file"] = markdown_output
-                print(f"[OK] Markdown 已儲存：{markdown_output}")
-            
-            # 儲存翻譯 PDF
-            if mono_generator and mono_generator.save(translated_output):
-                result_summary["translated_pdf"] = translated_output
-                mono_generator.close()
-            
-            # 儲存雙語對照 PDF
-            if bilingual_generator and bilingual_generator.save(bilingual_output):
-                result_summary["bilingual_pdf"] = bilingual_output
-                bilingual_generator.close()
-            
-            print(f"[OK] 翻譯處理完成：{result_summary['pages_processed']} 頁")
-            
-            return result_summary
-            
-        except Exception as e:
-            error_msg = f"翻譯處理失敗: {str(e)}"
-            logging.error(error_msg)
-            logging.error(traceback.format_exc())
-            print(f"錯誤：{error_msg}")
-            result_summary["error"] = str(e)
-            return result_summary
+        # 更新結果摘要
+        result["mode"] = "translate"
+        result["source_lang"] = source_lang
+        result["target_lang"] = target_lang
+        
+        return result
 
 
 def main():
@@ -2242,6 +2563,23 @@ def main():
         help="輸出 Excel 格式（structure 模式，僅表格：[原始檔名]_tables.xlsx）"
     )
     
+    # HTML 輸出（structure 模式）
+    parser.add_argument(
+        "--html-output",
+        type=str,
+        nargs='?',
+        const='AUTO',
+        default=None,
+        help="輸出 HTML 格式（structure/hybrid 模式：[原始檔名]_page*.html）"
+    )
+    
+    # 輸出全部格式
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="一次輸出所有格式（Markdown + JSON + HTML，structure/hybrid 模式）"
+    )
+    
     # LaTeX 輸出（公式識別）
     parser.add_argument(
         "--latex-output",
@@ -2285,6 +2623,12 @@ def main():
         "--verbose", "-v",
         action="store_true",
         help="顯示詳細日誌"
+    )
+    
+    parser.add_argument(
+        "--debug-text",
+        action="store_true",
+        help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便調試文字位置）"
     )
     
     # ========== 翻譯選項 ==========
@@ -2388,6 +2732,14 @@ def main():
     if args.no_json_output:
         args.json_output = None
     
+    # 處理 --all 參數：一次啟用所有輸出格式
+    if hasattr(args, 'all') and args.all:
+        if args.mode in ['structure', 'vl', 'hybrid']:
+            args.markdown_output = args.markdown_output or 'AUTO'
+            args.json_output = args.json_output or 'AUTO'
+            args.html_output = args.html_output or 'AUTO'
+            print(f"[--all] 啟用所有輸出格式：Markdown, JSON, HTML")
+    
     # 根據模式設定預設輸出路徑
     if args.mode == "basic":
         # basic 模式：處理 text_output 和 searchable
@@ -2409,23 +2761,28 @@ def main():
         args.json_output = None
         args.excel_output = None
     elif args.mode == "hybrid":
-        # hybrid 模式：處理 searchable 和 markdown_output
+        # hybrid 模式：處理 searchable、markdown_output、json_output、html_output
         if args.markdown_output == 'AUTO':
             args.markdown_output = str(script_dir / f"{base_name}_hybrid.md")
+        if args.json_output == 'AUTO':
+            args.json_output = str(script_dir / f"{base_name}_hybrid.json")
+        if args.html_output == 'AUTO':
+            args.html_output = str(script_dir / f"{base_name}_hybrid.html")
         # hybrid 模式會自動生成可搜尋 PDF
         args.searchable = True
         args.text_output = None
-        args.json_output = None
         args.excel_output = None
         args.latex_output = None
     else:
-        # structure/vl 模式：處理 markdown_output、json_output 和 excel_output
+        # structure/vl 模式：處理 markdown_output、json_output、excel_output 和 html_output
         if args.markdown_output == 'AUTO':
             args.markdown_output = str(script_dir / f"{base_name}_ocr.md")
         if args.json_output == 'AUTO':
             args.json_output = str(script_dir / f"{base_name}_ocr.json")
         if args.excel_output == 'AUTO':
             args.excel_output = str(script_dir / f"{base_name}_tables.xlsx")
+        if args.html_output == 'AUTO':
+            args.html_output = str(script_dir / f"{base_name}_ocr.html")
         # 忽略 basic 專用的輸出
         args.searchable = False
         args.text_output = None
@@ -2442,10 +2799,13 @@ def main():
     elif args.mode == "hybrid":
         print(f"[可搜尋 PDF] 啟用（混合模式）")
         print(f"[Markdown 輸出] {args.markdown_output if args.markdown_output else '停用'}")
+        print(f"[JSON 輸出] {args.json_output if args.json_output else '停用'}")
+        print(f"[HTML 輸出] {args.html_output if args.html_output else '停用'}")
     else:
         print(f"[Markdown 輸出] {args.markdown_output if args.markdown_output else '停用'}")
         print(f"[JSON 輸出] {args.json_output if args.json_output else '停用'}")
         print(f"[Excel 輸出] {args.excel_output if args.excel_output else '停用'}")
+        print(f"[HTML 輸出] {args.html_output if args.html_output else '停用'}")
     if not args.no_progress and HAS_TQDM:
         print(f"[進度條] 啟用")
     print()
@@ -2477,7 +2837,8 @@ def main():
         use_orientation_classify=args.orientation_classify,
         use_doc_unwarping=args.unwarping,
         use_textline_orientation=args.textline_orientation,
-        device=args.device
+        device=args.device,
+        debug_mode=args.debug_text
     )
     
     # 根據模式處理
@@ -2501,7 +2862,8 @@ def main():
             input_path=str(input_path),
             markdown_output=args.markdown_output,
             json_output=args.json_output,
-            excel_output=args.excel_output
+            excel_output=args.excel_output,
+            html_output=args.html_output
         )
         
         if result.get("error"):
@@ -2514,6 +2876,8 @@ def main():
                 print(f"  JSON 檔案: {', '.join(result['json_files'])}")
             if result.get("excel_files"):
                 print(f"  Excel 檔案: {', '.join(result['excel_files'])}")
+            if result.get("html_files"):
+                print(f"  HTML 檔案: {', '.join(result['html_files'])}")
     
     elif args.mode == "hybrid":
         # 混合模式：版面分析 + 精確 OCR
@@ -2547,7 +2911,9 @@ def main():
                 dual_translate_first=args.dual_translate_first,
                 font_path=args.font_path,
                 dpi=args.dpi,
-                show_progress=show_progress
+                show_progress=show_progress,
+                json_output=args.json_output,
+                html_output=args.html_output
             )
             
             if result.get("error"):
@@ -2558,6 +2924,10 @@ def main():
                     print(f"  [可搜尋 PDF] {result['searchable_pdf']}")
                 if result.get("markdown_file"):
                     print(f"  [Markdown] {result['markdown_file']}")
+                if result.get("json_file"):
+                    print(f"  [JSON] {result['json_file']}")
+                if result.get("html_file"):
+                    print(f"  [HTML] {result['html_file']}")
                 if result.get("translated_pdf"):
                     print(f"  [翻譯PDF] {result['translated_pdf']}")
                 if result.get("bilingual_pdf"):
@@ -2568,6 +2938,8 @@ def main():
                 input_path=str(input_path),
                 output_path=args.output,
                 markdown_output=args.markdown_output,
+                json_output=args.json_output,
+                html_output=args.html_output,
                 dpi=args.dpi,
                 show_progress=show_progress
             )
@@ -2622,7 +2994,7 @@ def main():
             
             if args.searchable:
                 output_path = args.output or str(input_path.with_suffix('.pdf'))
-                pdf_generator = PDFGenerator(output_path)
+                pdf_generator = PDFGenerator(output_path, debug_mode=args.debug_text)
                 pdf_generator.add_page(str(input_path), results)
                 pdf_generator.save()
             
