@@ -94,33 +94,73 @@ class TranslationEngine(ABC):
 
 
 class OllamaTranslator(TranslationEngine):
-    """使用 Ollama 本地模型進行翻譯"""
+    """使用 Ollama 本地模型進行翻譯
     
-    # 專業術語保留列表（這些詞不翻譯）
-    PRESERVE_TERMS = {
-        # 半導體/MEMS
+    支援外部術語表 (glossary.csv) 來保護專業術語不被誤翻。
+    術語表格式：英文術語,中文翻譯,類別,保留原文(Y/N)
+    """
+    
+    # 內建術語保留列表（作為後備）
+    DEFAULT_PRESERVE_TERMS = {
         "MEMS", "CMOS", "MUMPs", "PolyMUMPs", "SOIMUMPs", "MetalMUMPs",
         "VLSI", "ASIC", "FPGA", "SoC", "IC", "PCB", "RF", "RFID",
-        "CVD", "PVD", "RIE", "DRIE", "CMP", "EDP", "KOH", "TMAH",
-        "SOI", "BOX", "PSG", "BPSG", "TEOS", "LPCVD", "PECVD",
-        # 公司/組織
-        "Cronos", "MEMScAP", "TSMC", "Intel", "Samsung", "GlobalFoundries",
-        # 通用技術
-        "API", "SDK", "CPU", "GPU", "RAM", "ROM", "USB", "HDMI",
-        "WiFi", "Bluetooth", "IoT", "AI", "ML", "DL", "NLP",
-        "HTTP", "HTTPS", "TCP", "IP", "DNS", "URL", "JSON", "XML",
-        # 單位
-        "nm", "μm", "mm", "cm", "MHz", "GHz", "kHz",
+        "CVD", "PVD", "RIE", "DRIE", "CMP", "LPCVD", "PECVD",
+        "SOI", "API", "SDK", "CPU", "GPU", "RAM", "ROM",
+        "TSMC", "Intel", "Samsung", "Cronos", "MEMScAP",
     }
     
     def __init__(
         self, 
         model: str = "qwen2.5:7b",
-        base_url: str = "http://localhost:11434"
+        base_url: str = "http://localhost:11434",
+        glossary_path: Optional[str] = None
     ):
         self.model = model
         self.base_url = base_url.rstrip('/')
         self.api_url = f"{self.base_url}/api/generate"
+        
+        # 載入術語表
+        self.preserve_terms = set()  # 保留原文的術語
+        self.translation_dict = {}    # 指定翻譯的術語
+        
+        if glossary_path:
+            self._load_glossary(glossary_path)
+        else:
+            # 嘗試載入預設路徑的術語表
+            default_glossary = Path(__file__).parent / "glossary.csv"
+            if default_glossary.exists():
+                self._load_glossary(str(default_glossary))
+            else:
+                self.preserve_terms = self.DEFAULT_PRESERVE_TERMS.copy()
+    
+    def _load_glossary(self, glossary_path: str):
+        """載入外部術語表"""
+        try:
+            with open(glossary_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    
+                    parts = line.split(',')
+                    if len(parts) >= 4:
+                        term = parts[0].strip()
+                        translation = parts[1].strip()
+                        # category = parts[2].strip()  # 可用於篩選
+                        preserve = parts[3].strip().upper() == 'Y'
+                        
+                        if preserve:
+                            self.preserve_terms.add(term)
+                        elif translation:
+                            self.translation_dict[term] = translation
+                    elif len(parts) >= 1:
+                        # 簡單格式：只有術語
+                        self.preserve_terms.add(parts[0].strip())
+            
+            logging.info(f"載入術語表：{len(self.preserve_terms)} 個保留術語，{len(self.translation_dict)} 個翻譯術語")
+        except Exception as e:
+            logging.warning(f"載入術語表失敗：{e}，使用內建術語表")
+            self.preserve_terms = self.DEFAULT_PRESERVE_TERMS.copy()
         
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         """使用 Ollama 翻譯文字"""
@@ -130,14 +170,17 @@ class OllamaTranslator(TranslationEngine):
         if not text or not text.strip():
             return text
         
-        # 保護專業術語：替換為佔位符
-        term_map = {}
-        protected_text = text
-        for i, term in enumerate(self.PRESERVE_TERMS):
-            if term in protected_text:
-                placeholder = f"__TERM_{i}__"
-                term_map[placeholder] = term
-                protected_text = protected_text.replace(term, placeholder)
+        # 找出文本中存在的專業術語（用於提示詞注入）
+        found_preserve_terms = []
+        found_translations = {}
+        
+        for term in self.preserve_terms:
+            if term in text:
+                found_preserve_terms.append(term)
+        
+        for term, translation in self.translation_dict.items():
+            if term in text:
+                found_translations[term] = translation
             
         # 語言代碼轉換為自然語言描述
         lang_names = {
@@ -152,6 +195,17 @@ class OllamaTranslator(TranslationEngine):
         
         source_name = lang_names.get(source_lang, source_lang)
         target_name = lang_names.get(target_lang, target_lang)
+        
+        # 建立術語提示（如果有找到術語）
+        term_hint = ""
+        if found_preserve_terms or found_translations:
+            hints = []
+            if found_preserve_terms:
+                hints.append(f"保留原文不翻譯：{', '.join(found_preserve_terms[:10])}")  # 限制數量避免提示詞過長
+            if found_translations:
+                trans_hints = [f"{k}→{v}" for k, v in list(found_translations.items())[:10]]
+                hints.append(f"指定翻譯：{', '.join(trans_hints)}")
+            term_hint = "\n【術語規則】\n" + "\n".join(hints) + "\n"
         
         # 建立翻譯提示
         # 針對簡繁轉換使用特殊提示
@@ -171,7 +225,7 @@ class OllamaTranslator(TranslationEngine):
 3. 如果某個字簡繁相同（如「今晚」「已經」），直接保留原字
 4. 只輸出轉換結果，不要任何解釋
 
-簡體中文：{protected_text}
+簡體中文：{text}
 
 繁體中文："""
             else:
@@ -183,20 +237,21 @@ class OllamaTranslator(TranslationEngine):
 3. 如果某個字繁簡相同，直接保留原字
 4. 只輸出轉換結果，不要任何解釋
 
-繁體中文：{protected_text}
+繁體中文：{text}
 
 簡體中文："""
         elif source_lang == "auto":
             prompt = f"""請將以下文字翻譯成{target_name}。
-只輸出{target_name}譯文。
+{term_hint}只輸出{target_name}譯文，不要解釋。
 
-原文：{protected_text}
+原文：{text}
 
 譯文："""
         else:
-            prompt = f"""將以下{source_name}翻譯成{target_name}，只輸出譯文。
+            prompt = f"""將以下{source_name}翻譯成{target_name}。
+{term_hint}只輸出譯文，不要解釋。
 
-原文：{protected_text}
+原文：{text}
 
 譯文："""
         
@@ -263,10 +318,6 @@ class OllamaTranslator(TranslationEngine):
                 if original_chinese_ratio > 0.5 and chinese_ratio < 0.3:
                     logging.warning(f"簡繁轉換誤翻成其他語言，返回原文: {translated[:30]}...")
                     return text
-            
-            # 恢復專業術語
-            for placeholder, term in term_map.items():
-                translated = translated.replace(placeholder, term)
             
             return translated if translated else text
             

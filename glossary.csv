@@ -1,0 +1,162 @@
+# PaddleOCR 翻譯術語表
+# 格式：英文術語,中文翻譯,類別,保留原文(Y/N)
+# 若「保留原文」為 Y，則術語在翻譯時保留英文原文
+# 若提供中文翻譯且「保留原文」為 N，則使用指定的中文翻譯
+
+# === 半導體/MEMS 縮寫（保留原文）===
+MEMS,,semiconductor,Y
+CMOS,,semiconductor,Y
+MUMPs,,semiconductor,Y
+PolyMUMPs,,semiconductor,Y
+SOIMUMPs,,semiconductor,Y
+MetalMUMPs,,semiconductor,Y
+VLSI,,semiconductor,Y
+ASIC,,semiconductor,Y
+FPGA,,semiconductor,Y
+SoC,,semiconductor,Y
+IC,,semiconductor,Y
+PCB,,semiconductor,Y
+RF,,semiconductor,Y
+RFID,,semiconductor,Y
+SOI,,semiconductor,Y
+BOX,,semiconductor,Y
+PSG,,semiconductor,Y
+BPSG,,semiconductor,Y
+TEOS,,semiconductor,Y
+ADC,,semiconductor,Y
+DAC,,semiconductor,Y
+PLL,,semiconductor,Y
+LDO,,semiconductor,Y
+ESD,,semiconductor,Y
+
+# === 製程技術（保留原文）===
+CVD,,process,Y
+PVD,,process,Y
+LPCVD,,process,Y
+PECVD,,process,Y
+ALD,,process,Y
+RIE,,process,Y
+DRIE,,process,Y
+CMP,,process,Y
+EDP,,process,Y
+KOH,,process,Y
+TMAH,,process,Y
+RTP,,process,Y
+MBE,,process,Y
+MOCVD,,process,Y
+
+# === 半導體術語（提供翻譯）===
+wafer,晶圓,semiconductor,N
+foundry,晶圓代工,semiconductor,N
+die,晶粒,semiconductor,N
+chip,晶片,semiconductor,N
+substrate,基板,semiconductor,N
+epitaxy,磊晶,semiconductor,N
+doping,摻雜,semiconductor,N
+implantation,離子佈植,semiconductor,N
+etching,蝕刻,semiconductor,N
+lithography,微影,semiconductor,N
+photoresist,光阻,semiconductor,N
+mask,光罩,semiconductor,N
+deposition,沉積,semiconductor,N
+oxide,氧化層,semiconductor,N
+nitride,氮化層,semiconductor,N
+polysilicon,多晶矽,semiconductor,N
+metallization,金屬化,semiconductor,N
+interconnect,內連線,semiconductor,N
+passivation,鈍化,semiconductor,N
+packaging,封裝,semiconductor,N
+bonding,接合,semiconductor,N
+wire bonding,打線接合,semiconductor,N
+flip chip,覆晶,semiconductor,N
+BGA,球柵陣列封裝,semiconductor,N
+QFP,四方扁平封裝,semiconductor,N
+DIP,雙列直插封裝,semiconductor,N
+
+# === 公司/組織（保留原文）===
+Cronos,,company,Y
+MEMScAP,,company,Y
+MEMSCAP,,company,Y
+TSMC,,company,Y
+Intel,,company,Y
+Samsung,,company,Y
+GlobalFoundries,,company,Y
+UMC,,company,Y
+SMIC,,company,Y
+ASE,,company,Y
+Amkor,,company,Y
+ASML,,company,Y
+Applied Materials,,company,Y
+Lam Research,,company,Y
+KLA,,company,Y
+Synopsys,,company,Y
+Cadence,,company,Y
+Mentor,,company,Y
+Analog Devices,,company,Y
+Texas Instruments,,company,Y
+Infineon,,company,Y
+NXP,,company,Y
+STMicroelectronics,,company,Y
+Qualcomm,,company,Y
+Broadcom,,company,Y
+NVIDIA,,company,Y
+AMD,,company,Y
+MediaTek,,company,Y
+
+# === 通用技術縮寫（保留原文）===
+API,,tech,Y
+SDK,,tech,Y
+CPU,,tech,Y
+GPU,,tech,Y
+NPU,,tech,Y
+TPU,,tech,Y
+RAM,,tech,Y
+ROM,,tech,Y
+SRAM,,tech,Y
+DRAM,,tech,Y
+NAND,,tech,Y
+NOR,,tech,Y
+USB,,tech,Y
+HDMI,,tech,Y
+WiFi,,tech,Y
+Bluetooth,,tech,Y
+IoT,,tech,Y
+AI,,tech,Y
+ML,,tech,Y
+DL,,tech,Y
+NLP,,tech,Y
+OCR,,tech,Y
+HTTP,,tech,Y
+HTTPS,,tech,Y
+TCP,,tech,Y
+IP,,tech,Y
+DNS,,tech,Y
+URL,,tech,Y
+JSON,,tech,Y
+XML,,tech,Y
+HTML,,tech,Y
+CSS,,tech,Y
+PDF,,tech,Y
+
+# === 單位（保留原文）===
+nm,,unit,Y
+μm,,unit,Y
+um,,unit,Y
+mm,,unit,Y
+cm,,unit,Y
+MHz,,unit,Y
+GHz,,unit,Y
+kHz,,unit,Y
+Hz,,unit,Y
+mV,,unit,Y
+V,,unit,Y
+mA,,unit,Y
+A,,unit,Y
+mW,,unit,Y
+W,,unit,Y
+pF,,unit,Y
+nF,,unit,Y
+μF,,unit,Y
+Ω,,unit,Y
+kΩ,,unit,Y
+MΩ,,unit,Y

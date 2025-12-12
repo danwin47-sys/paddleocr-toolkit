@@ -161,6 +161,224 @@ SUPPORTED_IMAGE_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.w
 SUPPORTED_PDF_FORMAT = '.pdf'
 
 
+def fix_english_spacing(text: str) -> str:
+    """
+    修復英文 OCR 結果中的空格問題
+    
+    1. CamelCase 分詞：FoundryService → Foundry Service
+    2. 修復連字符：wellestablished → well-established
+    3. 數字前後空格：Dec.1992and → Dec. 1992 and
+    """
+    import re
+    
+    if not text:
+        return text
+    
+    result = text
+    
+    # 保護不應該被拆分的專業術語
+    PROTECTED_TERMS = {
+        'MUMPs', 'PolyMUMPs', 'SOIMUMPs', 'MetalMUMPs',
+        'MEMScAP', 'MEMSCAP', 'MEMSProcesses',
+        'PaddleOCR', 'PowerPoint', 'JavaScript', 'TypeScript',
+        'GitHub', 'LinkedIn', 'YouTube', 'Facebook',
+        'iPhone', 'iPad', 'macOS', 'iOS', 'WiFi',
+        'TM', 'PhD', 'CEO', 'CTO', 'CFO',
+    }
+    
+    # 先用佔位符保護這些詞
+    protected_map = {}
+    for i, term in enumerate(PROTECTED_TERMS):
+        if term in result:
+            placeholder = f"__PROT_{i}__"
+            protected_map[placeholder] = term
+            result = result.replace(term, placeholder)
+    
+    # 1. CamelCase 分詞（小寫後接大寫）
+    # 例如：FoundryService → Foundry Service
+    result = re.sub(r'([a-z])([A-Z])', r'\1 \2', result)
+    
+    # 1.1 修復小寫後接佔位符（例如 byMEMScAP → by MEMScAP）
+    result = re.sub(r'([a-z])(__PROT_)', r'\1 \2', result)
+    
+    # 2. 大寫字母序列後接小寫（例如 CMOSMems → CMOS Mems）
+    result = re.sub(r'([A-Z]{2,})([A-Z][a-z])', r'\1 \2', result)
+    
+    # 3. 修復數字和字母之間缺少空格
+    result = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', result)  # 數字後接字母
+    # 字母後接數字 - 但不拆分如 v10, Dec1992 中的連接
+    result = re.sub(r'([a-z])(\d)', r'\1 \2', result)  # 小寫後接數字
+    
+    # 4. 修復標點符號後缺少空格
+    result = re.sub(r'\.(\d)', r'. \1', result)  # 句號後接數字
+    result = re.sub(r'\.([A-Z])', r'. \1', result)  # 句號後接大寫
+    result = re.sub(r',([A-Za-z])', r', \1', result)  # 逗號後接字母
+    
+    # 5. 修復括號前後空格
+    result = re.sub(r'([a-zA-Z])\(', r'\1 (', result)
+    result = re.sub(r'\)([a-zA-Z])', r') \1', result)
+    
+    # 5.1 修復常見的黏連詞
+    # Aprogramoffered → A program offered
+    common_splits = {
+        'Aprogram': 'A program',
+        'aprogram': 'a program',
+        'Theprogram': 'The program',
+        'theprogram': 'the program',
+        'programoffered': 'program offered',
+        'isdesigned': 'is designed',
+        'wasestablished': 'was established',
+        'hasbeen': 'has been',
+        'canbe': 'can be',
+        'willbe': 'will be',
+        'tobe': 'to be',
+        'forthe': 'for the',
+        'tothe': 'to the',
+        'ofthe': 'of the',
+        'inthe': 'in the',
+        'onthe': 'on the',
+        'bythe': 'by the',
+        'andthe': 'and the',
+        'isthe': 'is the',
+        'asthe': 'as the',
+        'withthe': 'with the',
+        # 新增
+        'Designof': 'Design of',
+        'designof': 'design of',
+        'micromachiningby': 'micromachining by',
+        'isused': 'is used',
+        'areused': 'are used',
+        'canbeused': 'can be used',
+        'providescustomers': 'provides customers',
+        'includesthe': 'includes the',
+        'suchas': 'such as',
+        'aswellas': 'as well as',
+        'inorder': 'in order',
+        'orderto': 'order to',
+        'dueto': 'due to',
+        'byvarious': 'by various',
+        'forvarious': 'for various',
+        'withcost': 'with cost',
+        'tofabricate': 'to fabricate',
+        'todesign': 'to design',
+        'toannounce': 'to announce',
+    }
+    for wrong, correct in common_splits.items():
+        result = result.replace(wrong, correct)
+    
+    # 6. 修復常見的連字符詞
+    common_hyphenated = {
+        'wellestablished': 'well-established',
+        'costeffective': 'cost-effective',
+        'highperformance': 'high-performance',
+        'lowpower': 'low-power',
+        'stateoftheart': 'state-of-the-art',
+        'realtime': 'real-time',
+        'onchip': 'on-chip',
+        'offchip': 'off-chip',
+        'multiuser': 'multi-user',
+        'Multi User': 'Multi-User',
+        'waferlevel': 'wafer-level',
+        'Wafer Level': 'Wafer-Level',
+    }
+    for wrong, correct in common_hyphenated.items():
+        result = re.sub(wrong, correct, result, flags=re.IGNORECASE)
+    
+    # 恢復被保護的專業術語
+    for placeholder, term in protected_map.items():
+        result = result.replace(placeholder, term)
+    
+    # 7. 清理多餘空格
+    result = re.sub(r' +', ' ', result)
+    
+    return result
+
+
+def detect_pdf_quality(pdf_path: str) -> dict:
+    """
+    偵測 PDF 品質，判斷是否為掃描件或模糊文件
+    
+    Returns:
+        dict: {
+            'is_scanned': bool,      # 是否為掃描件
+            'is_blurry': bool,       # 是否模糊
+            'has_text': bool,        # 是否有可提取的文字
+            'recommended_dpi': int,  # 建議的 DPI
+            'reason': str            # 判斷原因
+        }
+    """
+    try:
+        import fitz
+        
+        result = {
+            'is_scanned': False,
+            'is_blurry': False,
+            'has_text': False,
+            'recommended_dpi': 150,
+            'reason': ''
+        }
+        
+        pdf_doc = fitz.open(pdf_path)
+        
+        if len(pdf_doc) == 0:
+            result['reason'] = 'PDF 無頁面'
+            pdf_doc.close()
+            return result
+        
+        # 只檢查前幾頁
+        pages_to_check = min(3, len(pdf_doc))
+        total_text_length = 0
+        total_images = 0
+        
+        for page_num in range(pages_to_check):
+            page = pdf_doc[page_num]
+            
+            # 檢查可提取的文字
+            text = page.get_text("text")
+            total_text_length += len(text.strip())
+            
+            # 檢查圖片數量
+            images = page.get_images()
+            total_images += len(images)
+        
+        pdf_doc.close()
+        
+        # 判斷邏輯
+        avg_text_per_page = total_text_length / pages_to_check
+        avg_images_per_page = total_images / pages_to_check
+        
+        # 如果幾乎沒有可提取文字但有圖片，很可能是掃描件
+        if avg_text_per_page < 50 and avg_images_per_page >= 1:
+            result['is_scanned'] = True
+            result['recommended_dpi'] = 300
+            result['reason'] = f'偵測為掃描件（平均每頁 {avg_text_per_page:.0f} 字元，{avg_images_per_page:.1f} 張圖片）'
+        
+        # 如果有少量文字，可能是部分掃描
+        elif avg_text_per_page < 200 and avg_images_per_page >= 1:
+            result['is_scanned'] = True
+            result['is_blurry'] = True
+            result['recommended_dpi'] = 200
+            result['reason'] = f'偵測為部分掃描文件（平均每頁 {avg_text_per_page:.0f} 字元）'
+        
+        # 有足夠文字，是一般 PDF
+        else:
+            result['has_text'] = True
+            result['recommended_dpi'] = 150
+            result['reason'] = f'偵測為一般 PDF（平均每頁 {avg_text_per_page:.0f} 字元）'
+        
+        return result
+        
+    except Exception as e:
+        logging.warning(f"PDF 品質偵測失敗: {e}")
+        return {
+            'is_scanned': False,
+            'is_blurry': False,
+            'has_text': False,
+            'recommended_dpi': 150,
+            'reason': f'偵測失敗: {e}'
+        }
+
+
 @dataclass
 class OCRResult:
     """OCR 辨識結果資料結構"""
@@ -1068,6 +1286,14 @@ class PaddleOCRTool:
             
             # 判斷輸入類型
             if input_path_obj.suffix.lower() == '.pdf':
+                # 自動偵測 PDF 品質並調整 DPI（如果用戶未指定）
+                if dpi == 150:  # 使用預設值時才自動調整
+                    quality = detect_pdf_quality(input_path)
+                    if quality['recommended_dpi'] != 150:
+                        print(f"📄 {quality['reason']}")
+                        print(f"   使用 DPI: {quality['recommended_dpi']}")
+                        dpi = quality['recommended_dpi']
+                
                 return self._process_hybrid_pdf(
                     input_path, output_path, markdown_output, dpi, show_progress, result_summary
                 )
@@ -1219,8 +1445,10 @@ class PaddleOCRTool:
         
         # 儲存 Markdown
         if markdown_output and all_markdown:
+            # 應用英文空格修復
+            fixed_markdown = [fix_english_spacing(md) for md in all_markdown]
             with open(markdown_output, 'w', encoding='utf-8') as f:
-                f.write("\n\n---\n\n".join(all_markdown))
+                f.write("\n\n---\n\n".join(fixed_markdown))
             result_summary["markdown_file"] = markdown_output
             print(f"✓ Markdown 已儲存：{markdown_output}")
         
