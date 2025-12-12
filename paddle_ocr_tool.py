@@ -507,7 +507,7 @@ class PDFGenerator:
         
         使用 PDF 渲染模式 3（隱形）來確保文字不可見但可選取/搜尋
         
-        修正版：使用 insert_text 確保文字完整插入
+        智能字體大小計算：根據 bbox 寬度和高度來精確匹配原始文字
         
         Args:
             page: PyMuPDF 頁面物件
@@ -520,43 +520,98 @@ class PDFGenerator:
             # 計算文字區域
             x = result.x
             y = result.y
+            width = result.width
             height = result.height
-            
-            # 計算適當的字體大小（根據邊界框高度）
-            # 使用較小的比例以確保文字不會太大
-            font_size = height * 0.6
-            if font_size < 4:
-                font_size = 4
-            if font_size > 72:  # 限制最大字體
-                font_size = 72
-            
             text = result.text
             
-            # 計算文字基線位置（y 軸位置需要調整到基線）
-            # 文字基線約在 bbox 底部往上 15% 的位置
-            baseline_y = y + height * 0.85
-            
-            # 嘗試多種字體
+            # 選擇最佳字體
             fonts_to_try = ["helv", "china-s", "cour"]
+            best_font = "helv"
+            best_font_size = height * 0.6  # 預設值
             
             for fontname in fonts_to_try:
                 try:
-                    # 使用 insert_text 直接插入文字
-                    page.insert_text(
-                        fitz.Point(x, baseline_y),
-                        text,
-                        fontsize=font_size,
-                        fontname=fontname,
-                        render_mode=0,  # DEBUG: 可見模式（原本是 3 隱形）
-                        color=(1, 0.4, 0.6)  # DEBUG: 粉紅色（原本是黑色）
-                    )
-                    return  # 成功就返回
+                    # 智能字體大小計算：根據 bbox 寬度和高度
+                    # 方法：計算一個初始字體大小，然後調整使文字寬度接近 bbox 寬度
                     
-                except Exception as font_err:
-                    continue  # 嘗試下一種字體
+                    # 先用高度估算初始字體大小
+                    initial_size = height * 0.7
+                    if initial_size < 4:
+                        initial_size = 4
+                    if initial_size > 100:
+                        initial_size = 100
+                    
+                    # 計算文字在此字體大小下的寬度
+                    text_width = fitz.get_text_length(text, fontname=fontname, fontsize=initial_size)
+                    
+                    if text_width > 0 and width > 0:
+                        # 計算寬度比例並調整字體大小
+                        width_ratio = width / text_width
+                        
+                        # 調整字體大小使文字寬度接近 bbox 寬度
+                        adjusted_size = initial_size * width_ratio
+                        
+                        # 但也不能太大（不能超過高度的 90%）
+                        max_by_height = height * 0.9
+                        if adjusted_size > max_by_height:
+                            adjusted_size = max_by_height
+                        
+                        # 限制字體大小範圍
+                        if adjusted_size < 4:
+                            adjusted_size = 4
+                        if adjusted_size > 100:
+                            adjusted_size = 100
+                        
+                        best_font = fontname
+                        best_font_size = adjusted_size
+                        break  # 找到合適的字體就停止
+                    else:
+                        # 無法計算，使用預設值
+                        best_font = fontname
+                        best_font_size = initial_size
+                        break
+                        
+                except Exception:
+                    continue
             
-            # 如果所有字體都失敗，記錄警告
-            logging.warning(f"無法插入文字 '{text[:30]}...'")
+            # 計算文字基線位置
+            # 文字基線約在 bbox 底部往上 (1 - font_size/height) 的位置
+            baseline_offset = best_font_size * 0.2  # 基線下方的空間約為字體大小的 20%
+            baseline_y = y + height - baseline_offset
+            
+            # 確保基線在合理範圍內
+            if baseline_y < y + best_font_size * 0.8:
+                baseline_y = y + best_font_size * 0.8
+            if baseline_y > y + height:
+                baseline_y = y + height
+            
+            # 插入文字
+            try:
+                page.insert_text(
+                    fitz.Point(x, baseline_y),
+                    text,
+                    fontsize=best_font_size,
+                    fontname=best_font,
+                    render_mode=3,  # 隱形模式（可搜尋但不可見）
+                    color=(0, 0, 0)  # 黑色
+                )
+            except Exception as e:
+                # 如果失敗，嘗試其他字體
+                for fontname in fonts_to_try:
+                    if fontname != best_font:
+                        try:
+                            page.insert_text(
+                                fitz.Point(x, baseline_y),
+                                text,
+                                fontsize=best_font_size,
+                                fontname=fontname,
+                                render_mode=3,
+                                color=(0, 0, 0)
+                            )
+                            return
+                        except:
+                            continue
+                logging.warning(f"無法插入文字 '{text[:30]}...': {e}")
             
         except Exception as e:
             logging.warning(f"插入文字失敗 '{result.text[:30]}...': {e}")
