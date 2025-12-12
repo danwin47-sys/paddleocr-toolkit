@@ -507,6 +507,8 @@ class PDFGenerator:
         
         使用 PDF 渲染模式 3（隱形）來確保文字不可見但可選取/搜尋
         
+        修正版：使用 insert_text 確保文字完整插入
+        
         Args:
             page: PyMuPDF 頁面物件
             result: OCR 辨識結果
@@ -518,43 +520,46 @@ class PDFGenerator:
             # 計算文字區域
             x = result.x
             y = result.y
-            width = result.width
             height = result.height
             
             # 計算適當的字體大小（根據邊界框高度）
-            # 使用 0.75 倍高度作為字體大小，這是經驗值
-            font_size = height * 0.75
-            if font_size < 1:
-                font_size = 1
+            # 使用較小的比例以確保文字不會太大
+            font_size = height * 0.6
+            if font_size < 4:
+                font_size = 4
+            if font_size > 72:  # 限制最大字體
+                font_size = 72
             
-            # 建立文字插入點（左下角）
-            # PDF 的文字基線在左下角
-            text_point = fitz.Point(x, y + height * 0.85)
+            text = result.text
             
-            # 插入透明文字
-            # render_mode=3 表示隱形文字（不渲染但可搜尋）
-            page.insert_text(
-                text_point,
-                result.text,
-                fontsize=font_size,
-                fontname="china-s",  # 使用內建中文字體
-                render_mode=3,  # 隱形模式
-                color=(0, 0, 0)  # 黑色（雖然是隱形的）
-            )
+            # 計算文字基線位置（y 軸位置需要調整到基線）
+            # 文字基線約在 bbox 底部往上 15% 的位置
+            baseline_y = y + height * 0.85
+            
+            # 嘗試多種字體
+            fonts_to_try = ["helv", "china-s", "cour"]
+            
+            for fontname in fonts_to_try:
+                try:
+                    # 使用 insert_text 直接插入文字
+                    page.insert_text(
+                        fitz.Point(x, baseline_y),
+                        text,
+                        fontsize=font_size,
+                        fontname=fontname,
+                        render_mode=0,  # DEBUG: 可見模式（原本是 3 隱形）
+                        color=(1, 0.4, 0.6)  # DEBUG: 粉紅色（原本是黑色）
+                    )
+                    return  # 成功就返回
+                    
+                except Exception as font_err:
+                    continue  # 嘗試下一種字體
+            
+            # 如果所有字體都失敗，記錄警告
+            logging.warning(f"無法插入文字 '{text[:30]}...'")
             
         except Exception as e:
-            # 如果使用中文字體失敗，嘗試使用基本字體
-            try:
-                page.insert_text(
-                    fitz.Point(result.x, result.y + result.height * 0.85),
-                    result.text,
-                    fontsize=result.height * 0.75,
-                    fontname="helv",
-                    render_mode=3,
-                    color=(0, 0, 0)
-                )
-            except Exception as e2:
-                print(f"警告：插入文字失敗 '{result.text[:20]}...': {e2}")
+            logging.warning(f"插入文字失敗 '{result.text[:30]}...': {e}")
     
     def save(self) -> bool:
         """
@@ -570,7 +575,7 @@ class PDFGenerator:
             
             self.doc.save(self.output_path)
             self.doc.close()
-            print(f"✓ PDF 已儲存：{self.output_path} ({self.page_count} 頁)")
+            print(f"[OK] PDF 已儲存：{self.output_path} ({self.page_count} 頁)")
             return True
             
         except Exception as e:
@@ -627,7 +632,7 @@ class PaddleOCRTool:
                     use_textline_orientation=use_textline_orientation,
                     device=device
                 )
-                print("✓ PP-StructureV3 初始化完成（結構化文件解析模式）")
+                print("[OK] PP-StructureV3 初始化完成（結構化文件解析模式）")
                 
             elif mode == "vl":
                 if not HAS_VL:
@@ -636,7 +641,7 @@ class PaddleOCRTool:
                     use_doc_orientation_classify=use_orientation_classify,
                     use_doc_unwarping=use_doc_unwarping
                 )
-                print("✓ PaddleOCR-VL 初始化完成（視覺語言模型模式）")
+                print("[OK] PaddleOCR-VL 初始化完成（視覺語言模型模式）")
                 
             elif mode == "formula":
                 if not HAS_FORMULA:
@@ -646,7 +651,7 @@ class PaddleOCRTool:
                     use_doc_unwarping=use_doc_unwarping,
                     device=device
                 )
-                print("✓ PP-FormulaNet 初始化完成（公式識別模式）")
+                print("[OK] PP-FormulaNet 初始化完成（公式識別模式）")
                 
             elif mode == "hybrid":
                 # 混合模式：只使用 PP-StructureV3（內含 OCR）
@@ -663,7 +668,7 @@ class PaddleOCRTool:
                 
                 # 設定 self.ocr 為 structure_engine 以便其他方法使用
                 self.ocr = self.structure_engine
-                print("✓ Hybrid 模式初始化完成（PP-StructureV3 版面分析 + OCR）")
+                print("[OK] Hybrid 模式初始化完成（PP-StructureV3 版面分析 + OCR）")
                 
             else:  # basic 模式
                 self.ocr = PaddleOCR(
@@ -671,7 +676,7 @@ class PaddleOCRTool:
                     use_doc_unwarping=use_doc_unwarping,
                     use_textline_orientation=use_textline_orientation
                 )
-                print("✓ PP-OCRv5 初始化完成（基本文字識別模式）")
+                print("[OK] PP-OCRv5 初始化完成（基本文字識別模式）")
                 
         except Exception as e:
             print(f"初始化失敗: {e}")
@@ -917,14 +922,14 @@ class PaddleOCRTool:
                 with open(md_path, 'w', encoding='utf-8') as f:
                     f.write("\n\n---\n\n".join(all_markdown_content))
                 result_summary["markdown_files"].append(str(md_path))
-                print(f"✓ Markdown 已儲存：{md_path}")
+                print(f"[OK] Markdown 已儲存：{md_path}")
             
             # Excel 輸出完成訊息
             if result_summary.get("excel_files"):
-                print(f"✓ Excel 已儲存：{len(result_summary['excel_files'])} 個檔案")
+                print(f"[OK] Excel 已儲存：{len(result_summary['excel_files'])} 個檔案")
             
             result_summary["pages_processed"] = page_count
-            print(f"✓ 處理完成：{page_count} 頁")
+            print(f"[OK] 處理完成：{page_count} 頁")
             
             return result_summary
             
@@ -1033,13 +1038,13 @@ class PaddleOCRTool:
                     del page_results
                     gc.collect()  # 強制垃圾回收，防止記憶體洩漏
                     
-                    logging.info(f"✓ 第 {page_num + 1}/{total_pages} 頁處理完成")
+                    logging.info(f"[OK] 第 {page_num + 1}/{total_pages} 頁處理完成")
                     
                 except Exception as page_error:
                     error_msg = f"處理第 {page_num + 1} 頁時發生錯誤: {str(page_error)}"
                     logging.error(error_msg)
                     logging.error(traceback.format_exc())
-                    print(f"  ⚠️ {error_msg}")
+                    print(f"  [WARN] {error_msg}")
                     # 清理資源後繼續處理下一頁
                     gc.collect()
                     all_results.append([])
@@ -1052,7 +1057,7 @@ class PaddleOCRTool:
                 logging.info("開始儲存可搜尋 PDF")
                 pdf_generator.save()
             
-            logging.info(f"✓ 完成處理 {total_pages} 頁，成功 {len([r for r in all_results if r])} 頁")
+            logging.info(f"[OK] 完成處理 {total_pages} 頁，成功 {len([r for r in all_results if r])} 頁")
             return all_results, output_path
             
         except Exception as e:
@@ -1208,7 +1213,7 @@ class PaddleOCRTool:
                     logging.info(f"識別到公式: {latex[:50]}...")
             
             result_summary["formulas"] = all_latex
-            print(f"✓ 識別到 {len(all_latex)} 個公式")
+            print(f"[OK] 識別到 {len(all_latex)} 個公式")
             
             # 儲存 LaTeX 檔案
             if latex_output and all_latex:
@@ -1222,7 +1227,7 @@ class PaddleOCRTool:
                         f.write(f"$$ {latex} $$\n\n")
                 
                 result_summary["latex_file"] = latex_output
-                print(f"✓ LaTeX 已儲存：{latex_output}")
+                print(f"[OK] LaTeX 已儲存：{latex_output}")
                 logging.info(f"LaTeX 已儲存：{latex_output}")
             
             return result_summary
@@ -1290,7 +1295,7 @@ class PaddleOCRTool:
                 if dpi == 150:  # 使用預設值時才自動調整
                     quality = detect_pdf_quality(input_path)
                     if quality['recommended_dpi'] != 150:
-                        print(f"📄 {quality['reason']}")
+                        print(f"[品質] {quality['reason']}")
                         print(f"   使用 DPI: {quality['recommended_dpi']}")
                         dpi = quality['recommended_dpi']
                 
@@ -1441,7 +1446,7 @@ class PaddleOCRTool:
         # 儲存可搜尋 PDF
         if pdf_generator.save():
             result_summary["searchable_pdf"] = output_path
-            print(f"✓ 可搜尋 PDF 已儲存：{output_path}")
+            print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
         
         # 儲存 Markdown
         if markdown_output and all_markdown:
@@ -1450,10 +1455,10 @@ class PaddleOCRTool:
             with open(markdown_output, 'w', encoding='utf-8') as f:
                 f.write("\n\n---\n\n".join(fixed_markdown))
             result_summary["markdown_file"] = markdown_output
-            print(f"✓ Markdown 已儲存：{markdown_output}")
+            print(f"[OK] Markdown 已儲存：{markdown_output}")
         
         result_summary["text_content"] = all_text
-        print(f"✓ 混合模式處理完成：{result_summary['pages_processed']} 頁")
+        print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
         
         return result_summary
     
@@ -1483,14 +1488,14 @@ class PaddleOCRTool:
             pdf_generator.add_page(image_path, sorted_results)
             if pdf_generator.save():
                 result_summary["searchable_pdf"] = output_path
-                print(f"✓ 可搜尋 PDF 已儲存：{output_path}")
+                print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
         
         # 儲存 Markdown
         if markdown_output and page_markdown:
             with open(markdown_output, 'w', encoding='utf-8') as f:
                 f.write(page_markdown)
             result_summary["markdown_file"] = markdown_output
-            print(f"✓ Markdown 已儲存：{markdown_output}")
+            print(f"[OK] Markdown 已儲存：{markdown_output}")
         
         result_summary["pages_processed"] = 1
         result_summary["text_content"] = [self.get_text(sorted_results)]
@@ -1588,143 +1593,90 @@ class PaddleOCRTool:
         """
         從 PP-StructureV3 輸出提取文字座標
         
+        策略（修正版）：
+        1. 優先使用 overall_ocr_res 的行級結果（精確座標）
+        2. 如果 overall_ocr_res 不可用，才回退到 parsing_res_list 的區塊座標
+        
+        注意：overall_ocr_res 是行級結果，parsing_res_list 是段落級結果，
+        兩者粒度不同，不應嘗試匹配。
+        
         Args:
             structure_output: PP-StructureV3 的輸出（LayoutParsingResultV2 列表）
-            markdown_text: 可選，Markdown 文字用於過濾 OCR 結果
+            markdown_text: 可選，Markdown 文字用於過濾 OCR 結果（目前不使用）
             
         Returns:
             List[OCRResult]: OCR 結果列表
         """
         ocr_results = []
         
-        # 如果提供了 markdown_text，提取其中的文字用於匹配
-        markdown_texts_set = set()
-        if markdown_text:
-            # 清理 markdown 語法，提取純文字
-            import re
-            # 移除 markdown 標記
-            clean_text = re.sub(r'#+ ', '', markdown_text)  # 移除標題
-            clean_text = re.sub(r'\*\*|__', '', clean_text)  # 移除粗體
-            clean_text = re.sub(r'\*|_', '', clean_text)  # 移除斜體
-            clean_text = re.sub(r'!\[.*?\]\(.*?\)', '', clean_text)  # 移除圖片
-            clean_text = re.sub(r'\[.*?\]\(.*?\)', '', clean_text)  # 移除連結
-            # 分割成行，過濾空行
-            for line in clean_text.split('\n'):
-                line = line.strip()
-                if line and len(line) > 1:  # 忽略單個字符
-                    markdown_texts_set.add(line)
-            logging.info(f"  Markdown 文字行數: {len(markdown_texts_set)}")
-        
         try:
-            
             for res in structure_output:
-                # 方式 1：從 overall_ocr_res 提取（這是主要的 OCR 結果）
+                # ========== 方式 1：直接使用 overall_ocr_res（行級精確座標）==========
                 if 'overall_ocr_res' in res:
                     overall_ocr = res['overall_ocr_res']
-                    
                     if overall_ocr is not None:
-                        logging.info(f"  從 overall_ocr_res 提取")
-                        
-                        # overall_ocr_res 是 dict-like 的 OCRResult 對象
                         try:
-                            # 獲取文字和分數
                             texts = overall_ocr.get('rec_texts', [])
                             scores = overall_ocr.get('rec_scores', [])
-                            
-                            # 優先使用 rec_boxes（格式：[x1, y1, x2, y2]）
                             rec_boxes = overall_ocr.get('rec_boxes')
                             dt_polys = overall_ocr.get('dt_polys', [])
                             
-                            logging.info(f"  texts: {len(texts) if texts else 0}, rec_boxes: {len(rec_boxes) if rec_boxes is not None else 0}")
+                            logging.info(f"  overall_ocr_res: texts={len(texts) if texts else 0}, boxes={len(rec_boxes) if rec_boxes is not None else 0}")
                             
                             if texts:
-                                # 方式 1：使用 rec_boxes（更簡單）
+                                # 優先使用 rec_boxes
                                 if rec_boxes is not None and len(rec_boxes) > 0:
                                     boxes_list = rec_boxes.tolist() if hasattr(rec_boxes, 'tolist') else rec_boxes
-                                    
                                     for i, (box, text) in enumerate(zip(boxes_list, texts)):
-                                        try:
-                                            if text:
-                                                # 如果有 markdown 過濾，檢查文字是否匹配
-                                                if markdown_texts_set:
-                                                    # 檢查 OCR 文字是否在任何 markdown 行中出現
-                                                    text_matched = False
-                                                    for md_line in markdown_texts_set:
-                                                        if text in md_line or md_line in text:
-                                                            text_matched = True
-                                                            break
-                                                    if not text_matched:
-                                                        continue  # 跳過不匹配的文字
-                                                
-                                                # box 格式: [x1, y1, x2, y2] -> 轉換為 bbox 格式 [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
-                                                x1, y1, x2, y2 = float(box[0]), float(box[1]), float(box[2]), float(box[3])
-                                                bbox = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
-                                                conf = float(scores[i]) if i < len(scores) else 0.9
-                                                
-                                                ocr_results.append(OCRResult(
-                                                    text=str(text),
-                                                    confidence=conf,
-                                                    bbox=bbox
-                                                ))
-                                        except Exception as e:
-                                            logging.debug(f"  處理 box {i} 失敗: {e}")
-                                            continue
+                                        if text and str(text).strip():
+                                            x1, y1, x2, y2 = float(box[0]), float(box[1]), float(box[2]), float(box[3])
+                                            bbox = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
+                                            conf = float(scores[i]) if i < len(scores) else 0.9
+                                            ocr_results.append(OCRResult(
+                                                text=str(text),
+                                                confidence=conf,
+                                                bbox=bbox
+                                            ))
                                     logging.info(f"  從 rec_boxes 提取了 {len(ocr_results)} 個結果")
                                 
-                                # 方式 2：使用 dt_polys
+                                # 使用 dt_polys
                                 elif dt_polys and len(dt_polys) > 0:
                                     for i, (poly, text) in enumerate(zip(dt_polys, texts)):
-                                        try:
-                                            if poly is not None and text:
-                                                # 如果有 markdown 過濾，檢查文字是否匹配
-                                                if markdown_texts_set:
-                                                    text_matched = False
-                                                    for md_line in markdown_texts_set:
-                                                        if text in md_line or md_line in text:
-                                                            text_matched = True
-                                                            break
-                                                    if not text_matched:
-                                                        continue
-                                                
-                                                poly_list = poly.tolist() if hasattr(poly, 'tolist') else poly
-                                                # 確保是 [[x,y], [x,y], ...] 格式
-                                                bbox = [[float(p[0]), float(p[1])] for p in poly_list]
-                                                conf = float(scores[i]) if i < len(scores) else 0.9
-                                                
-                                                ocr_results.append(OCRResult(
-                                                    text=str(text),
-                                                    confidence=conf,
-                                                    bbox=bbox
-                                                ))
-                                        except Exception as e:
-                                            logging.debug(f"  處理 poly {i} 失敗: {e}")
-                                            continue
+                                        if poly is not None and text and str(text).strip():
+                                            poly_list = poly.tolist() if hasattr(poly, 'tolist') else poly
+                                            bbox = [[float(p[0]), float(p[1])] for p in poly_list]
+                                            conf = float(scores[i]) if i < len(scores) else 0.9
+                                            ocr_results.append(OCRResult(
+                                                text=str(text),
+                                                confidence=conf,
+                                                bbox=bbox
+                                            ))
                                     logging.info(f"  從 dt_polys 提取了 {len(ocr_results)} 個結果")
                                     
                         except Exception as e:
                             logging.warning(f"  訪問 overall_ocr_res 失敗: {e}")
                             logging.warning(traceback.format_exc())
                 
-                # 方式 2：從 parsing_res_list 的 LayoutBlock 提取
+                # ========== 方式 2：回退到 parsing_res_list（區塊級座標）==========
+                # 只有當 overall_ocr_res 沒有取得結果時才使用
                 if not ocr_results and 'parsing_res_list' in res:
                     parsing_list = res['parsing_res_list']
                     if parsing_list:
-                        logging.info(f"  從 parsing_res_list 提取，共 {len(parsing_list)} 個區塊")
+                        logging.info(f"  回退到 parsing_res_list，共 {len(parsing_list)} 個區塊")
                         
                         for block in parsing_list:
                             try:
-                                # LayoutBlock 有 bbox 和 content 屬性
                                 bbox = getattr(block, 'bbox', None)
                                 content = getattr(block, 'content', None)
                                 
-                                if bbox is not None and content:
-                                    # bbox 格式可能是 [x1, y1, x2, y2]
+                                if bbox is not None and content and str(content).strip():
+                                    content_str = str(content).strip()
                                     if len(bbox) >= 4:
                                         x1, y1, x2, y2 = float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])
                                         bbox_points = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
                                         ocr_results.append(OCRResult(
-                                            text=str(content),
-                                            confidence=0.9,
+                                            text=content_str,
+                                            confidence=0.85,
                                             bbox=bbox_points
                                         ))
                             except Exception as e:
@@ -1900,7 +1852,7 @@ class PaddleOCRTool:
             translated_output = str(base_path) + f"_translated_{target_lang}.pdf" if not no_mono else None
             bilingual_output = str(base_path) + f"_bilingual_{target_lang}.pdf" if not no_dual else None
             
-            print(f"\n🌐 正在處理（翻譯模式）: {input_path}")
+            print(f"\n[翻譯] 正在處理: {input_path}")
             print(f"   來源語言: {source_lang}")
             print(f"   目標語言: {target_lang}")
             print(f"   Ollama 模型: {ollama_model}")
@@ -2068,7 +2020,7 @@ class PaddleOCRTool:
                 with open(markdown_output, 'w', encoding='utf-8') as f:
                     f.write("\n\n---\n\n".join(all_markdown))
                 result_summary["markdown_file"] = markdown_output
-                print(f"✓ Markdown 已儲存：{markdown_output}")
+                print(f"[OK] Markdown 已儲存：{markdown_output}")
             
             # 儲存翻譯 PDF
             if mono_generator and mono_generator.save(translated_output):
@@ -2080,7 +2032,7 @@ class PaddleOCRTool:
                 result_summary["bilingual_pdf"] = bilingual_output
                 bilingual_generator.close()
             
-            print(f"✓ 翻譯處理完成：{result_summary['pages_processed']} 頁")
+            print(f"[OK] 翻譯處理完成：{result_summary['pages_processed']} 頁")
             
             return result_summary
             
@@ -2425,22 +2377,22 @@ def main():
         args.latex_output = None
     
     # 顯示輸出設定摘要
-    print(f"\n📂 輸入：{input_path}")
-    print(f"🔧 模式：{args.mode}")
+    print(f"\n[輸入] {input_path}")
+    print(f"[模式] {args.mode}")
     if args.mode == "basic":
-        print(f"📄 可搜尋 PDF：{'啟用' if args.searchable else '停用'}")
-        print(f"📝 文字輸出：{args.text_output if args.text_output else '停用'}")
+        print(f"[可搜尋 PDF] {'啟用' if args.searchable else '停用'}")
+        print(f"[文字輸出] {args.text_output if args.text_output else '停用'}")
     elif args.mode == "formula":
-        print(f"📐 LaTeX 輸出：{args.latex_output if args.latex_output else '停用'}")
+        print(f"[LaTeX 輸出] {args.latex_output if args.latex_output else '停用'}")
     elif args.mode == "hybrid":
-        print(f"📄 可搜尋 PDF：啟用（混合模式）")
-        print(f"📝 Markdown 輸出：{args.markdown_output if args.markdown_output else '停用'}")
+        print(f"[可搜尋 PDF] 啟用（混合模式）")
+        print(f"[Markdown 輸出] {args.markdown_output if args.markdown_output else '停用'}")
     else:
-        print(f"📝 Markdown 輸出：{args.markdown_output if args.markdown_output else '停用'}")
-        print(f"📊 JSON 輸出：{args.json_output if args.json_output else '停用'}")
-        print(f"📈 Excel 輸出：{args.excel_output if args.excel_output else '停用'}")
+        print(f"[Markdown 輸出] {args.markdown_output if args.markdown_output else '停用'}")
+        print(f"[JSON 輸出] {args.json_output if args.json_output else '停用'}")
+        print(f"[Excel 輸出] {args.excel_output if args.excel_output else '停用'}")
     if not args.no_progress and HAS_TQDM:
-        print(f"📊 進度條：啟用")
+        print(f"[進度條] 啟用")
     print()
     
     # 檢查進階模組可用性
@@ -2484,7 +2436,7 @@ def main():
         if result.get("error"):
             print(f"處理過程中發生錯誤: {result['error']}")
         else:
-            print(f"\n✓ 公式識別完成！共識別 {len(result['formulas'])} 個公式")
+            print(f"\n[OK] 公式識別完成！共識別 {len(result['formulas'])} 個公式")
             if result.get("latex_file"):
                 print(f"  LaTeX 檔案: {result['latex_file']}")
     
@@ -2500,7 +2452,7 @@ def main():
         if result.get("error"):
             print(f"處理過程中發生錯誤: {result['error']}")
         else:
-            print(f"\n✓ 處理完成！共處理 {result['pages_processed']} 頁")
+            print(f"\n[OK] 處理完成！共處理 {result['pages_processed']} 頁")
             if result.get("markdown_files"):
                 print(f"  Markdown 檔案: {', '.join(result['markdown_files'])}")
             if result.get("json_files"):
@@ -2520,7 +2472,7 @@ def main():
                 print("請確認 pdf_translator.py 存在且依賴已安裝")
                 sys.exit(1)
             
-            print(f"🌐 翻譯功能：啟用")
+            print(f"[翻譯功能] 啟用")
             print(f"   來源語言：{args.source_lang}")
             print(f"   目標語言：{args.target_lang}")
             print(f"   Ollama 模型：{args.ollama_model}")
@@ -2546,15 +2498,15 @@ def main():
             if result.get("error"):
                 print(f"處理過程中發生錯誤: {result['error']}")
             else:
-                print(f"\n✓ 翻譯處理完成！共處理 {result['pages_processed']} 頁")
+                print(f"\n[OK] 翻譯處理完成！共處理 {result['pages_processed']} 頁")
                 if result.get("searchable_pdf"):
-                    print(f"  🔍 可搜尋 PDF: {result['searchable_pdf']}")
+                    print(f"  [可搜尋 PDF] {result['searchable_pdf']}")
                 if result.get("markdown_file"):
-                    print(f"  📝 Markdown 檔案: {result['markdown_file']}")
+                    print(f"  [Markdown] {result['markdown_file']}")
                 if result.get("translated_pdf"):
-                    print(f"  🌐 翻譯後 PDF: {result['translated_pdf']}")
+                    print(f"  [翻譯PDF] {result['translated_pdf']}")
                 if result.get("bilingual_pdf"):
-                    print(f"  📖 雙語對照 PDF: {result['bilingual_pdf']}")
+                    print(f"  [雙語PDF] {result['bilingual_pdf']}")
         else:
             # 一般 hybrid 模式（無翻譯）
             result = tool.process_hybrid(
@@ -2568,7 +2520,7 @@ def main():
             if result.get("error"):
                 print(f"處理過程中發生錯誤: {result['error']}")
             else:
-                print(f"\n✓ 混合模式處理完成！共處理 {result['pages_processed']} 頁")
+                print(f"\n[OK] 混合模式處理完成！共處理 {result['pages_processed']} 頁")
                 if result.get("searchable_pdf"):
                     print(f"  可搜尋 PDF: {result['searchable_pdf']}")
                 if result.get("markdown_file"):
@@ -2639,7 +2591,7 @@ def main():
             # 儲存到檔案
             with open(text_output_path, 'w', encoding='utf-8') as f:
                 f.write(combined_text)
-            print(f"✓ 文字已儲存：{text_output_path}")
+            print(f"[OK] 文字已儲存：{text_output_path}")
         
         # 如果兩個輸出都停用，則輸出到終端機
         if not args.text_output and not args.searchable and combined_text:
@@ -2648,7 +2600,7 @@ def main():
             print("=" * 50)
             print(combined_text)
         
-        print("\n✓ 處理完成！")
+        print("\n[OK] 處理完成！")
 
 
 if __name__ == "__main__":
