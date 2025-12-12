@@ -1,0 +1,77 @@
+# -*- coding: utf-8 -*-
+"""
+PaddleOCR Toolkit - 多功能文件辨識與處理套件
+
+本套件使用 PaddleOCR 3.x 進行文字識別，支援多種 OCR 模式：
+- basic: PP-OCRv5 基本文字識別
+- structure: PP-StructureV3 結構化文件解析
+- vl: PaddleOCR-VL 視覺語言模型
+- hybrid: 混合模式（版面分析 + 精確 OCR）
+
+使用方法：
+    from paddleocr_toolkit import PaddleOCRTool, OCRResult, PDFGenerator
+    
+    # 初始化
+    tool = PaddleOCRTool(mode="hybrid")
+    
+    # 處理文件
+    result = tool.process_hybrid("input.pdf")
+
+命令列使用：
+    python -m paddleocr_toolkit input.pdf --mode hybrid
+"""
+
+__version__ = "1.0.0"
+__author__ = "PaddleOCR Toolkit Team"
+
+# 核心模組
+from .core.models import OCRResult, OCRMode, SUPPORTED_IMAGE_FORMATS, SUPPORTED_PDF_FORMAT
+from .core.pdf_generator import PDFGenerator
+
+# 處理器
+from .processors.text_processor import fix_english_spacing
+from .processors.pdf_quality import detect_pdf_quality
+
+# 延遲匯入 PaddleOCRTool（避免循環相依）
+def get_paddle_ocr_tool():
+    """取得 PaddleOCRTool 類別（延遲載入）"""
+    import sys
+    import os
+    # 添加父目錄到路徑
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from paddle_ocr_tool import PaddleOCRTool
+    return PaddleOCRTool
+
+# 公開 API
+__all__ = [
+    # 版本資訊
+    '__version__',
+    '__author__',
+    # 核心類別
+    'OCRResult',
+    'OCRMode',
+    'PDFGenerator',
+    # 處理器
+    'fix_english_spacing',
+    'detect_pdf_quality',
+    # 常數
+    'SUPPORTED_IMAGE_FORMATS',
+    'SUPPORTED_PDF_FORMAT',
+    # 工具函數
+    'get_paddle_ocr_tool',
+]
+
+# 為方便使用，嘗試直接匯入 PaddleOCRTool
+try:
+    import sys
+    import os
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from paddle_ocr_tool import PaddleOCRTool
+    __all__.append('PaddleOCRTool')
+except ImportError:
+    # 如果無法匯入，用戶需要使用 get_paddle_ocr_tool()
+    pass
