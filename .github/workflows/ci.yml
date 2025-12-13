@@ -19,16 +19,15 @@ jobs:
         with:
           python-version: '3.10'
       
-      - name: 安裝基本依賴
+      - name: 安裝依賴
         run: |
           python -m pip install --upgrade pip
-          pip install pytest numpy Pillow PyMuPDF
+          pip install pytest pytest-cov numpy Pillow PyMuPDF requests
       
-      - name: 語法檢查 - paddle_ocr_tool.py
-        run: python -m py_compile paddle_ocr_tool.py
-      
-      - name: 語法檢查 - pdf_translator.py
-        run: python -m py_compile pdf_translator.py
+      - name: 語法檢查 - 主程式
+        run: |
+          python -m py_compile paddle_ocr_tool.py
+          python -m py_compile pdf_translator.py
       
       - name: 語法檢查 - paddleocr_toolkit
         run: |
@@ -41,7 +40,14 @@ jobs:
           python -m py_compile paddleocr_toolkit/processors/batch_processor.py
           python -m py_compile paddleocr_toolkit/processors/ocr_workaround.py
       
-      - name: 執行測試
+      - name: 執行測試（含覆蓋率）
         run: |
-          cd tests
-          python -m pytest -v --tb=short || echo "部分測試需要 PaddleOCR，跳過"
+          pytest tests/ -v --cov=paddleocr_toolkit --cov-report=term-missing --cov-report=html
+      
+      - name: 上傳覆蓋率報告
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 7
