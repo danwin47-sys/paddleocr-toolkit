@@ -7,6 +7,7 @@ import pytest
 import sys
 import os
 import tempfile
+import argparse
 
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,6 +17,7 @@ from paddleocr_toolkit.core.config_loader import (
     deep_merge,
     get_config_value,
     save_config,
+    apply_config_to_args,
     DEFAULT_CONFIG,
 )
 
@@ -43,6 +45,25 @@ class TestDeepMerge:
         
         assert result['ocr']['mode'] == 'hybrid'
         assert result['ocr']['dpi'] == 150  # 保留未覆蓋的值
+    
+    def test_empty_override(self):
+        """測試空覆蓋"""
+        base = {'a': 1}
+        override = {}
+        
+        result = deep_merge(base, override)
+        
+        assert result == {'a': 1}
+    
+    def test_new_nested_key(self):
+        """測試新增巢狀鍵"""
+        base = {'a': {'b': 1}}
+        override = {'a': {'c': 2}}
+        
+        result = deep_merge(base, override)
+        
+        assert result['a']['b'] == 1
+        assert result['a']['c'] == 2
 
 
 class TestGetConfigValue:
@@ -71,6 +92,12 @@ class TestGetConfigValue:
         config = {'version': '1.0.0'}
         
         assert get_config_value(config, 'version') == '1.0.0'
+    
+    def test_none_default(self):
+        """測試 None 預設值"""
+        config = {}
+        
+        assert get_config_value(config, 'missing') is None
 
 
 class TestLoadConfig:
@@ -78,10 +105,8 @@ class TestLoadConfig:
     
     def test_default_config(self):
         """測試載入預設設定"""
-        # 不指定路徑，使用預設
         config = load_config(config_path="nonexistent.yaml")
         
-        # 應該有預設值
         assert 'ocr' in config
         assert 'output' in config
         assert 'compression' in config
@@ -92,6 +117,27 @@ class TestLoadConfig:
         assert DEFAULT_CONFIG['ocr']['mode'] == 'hybrid'
         assert DEFAULT_CONFIG['compression']['jpeg_quality'] == 85
         assert DEFAULT_CONFIG['translation']['ollama_model'] == 'qwen2.5:7b'
+    
+    def test_load_from_existing_file(self):
+        """測試從現有檔案載入"""
+        try:
+            import yaml
+        except ImportError:
+            pytest.skip("PyYAML not installed")
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False, encoding='utf-8') as f:
+            f.write("ocr:\n  mode: basic\n  dpi: 300\n")
+            temp_path = f.name
+        
+        try:
+            config = load_config(temp_path)
+            
+            assert config['ocr']['mode'] == 'basic'
+            assert config['ocr']['dpi'] == 300
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 
 class TestSaveConfig:
@@ -113,11 +159,9 @@ class TestSaveConfig:
             temp_path = f.name
         
         try:
-            # 儲存
             result = save_config(config, temp_path)
             assert result is True
             
-            # 載入
             loaded = load_config(temp_path)
             assert loaded['ocr']['mode'] == 'hybrid'
             assert loaded['ocr']['dpi'] == 200
@@ -125,6 +169,66 @@ class TestSaveConfig:
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+    
+    def test_save_creates_directory(self):
+        """測試儲存時建立目錄"""
+        try:
+            import yaml
+        except ImportError:
+            pytest.skip("PyYAML not installed")
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "subdir", "config.yaml")
+            
+            result = save_config({'test': True}, path)
+            
+            assert result is True
+            assert os.path.exists(path)
+
+
+class TestApplyConfigToArgs:
+    """測試 apply_config_to_args"""
+    
+    def test_apply_ocr_settings(self):
+        """測試套用 OCR 設定"""
+        config = {
+            'ocr': {'mode': 'structure', 'device': 'gpu', 'dpi': 300}
+        }
+        
+        args = argparse.Namespace(
+            mode=None,
+            device=None,
+            dpi=None,
+            no_progress=False,
+            no_compress=False,
+            jpeg_quality=None
+        )
+        
+        apply_config_to_args(config, args)
+        
+        assert args.mode == 'structure'
+        assert args.device == 'gpu'
+        assert args.dpi == 300
+    
+    def test_cli_overrides_config(self):
+        """測試 CLI 參數優先於設定"""
+        config = {
+            'ocr': {'mode': 'structure'}
+        }
+        
+        args = argparse.Namespace(
+            mode='hybrid',  # CLI 指定了值
+            device=None,
+            dpi=None,
+            no_progress=False,
+            no_compress=False,
+            jpeg_quality=None
+        )
+        
+        apply_config_to_args(config, args)
+        
+        # CLI 參數應該保留
+        assert args.mode == 'hybrid'
 
 
 # 執行測試
