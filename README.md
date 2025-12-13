@@ -19,6 +19,8 @@
 | 🔧 文字修正 | 自動修復 OCR 空格和格式問題 |
 | 📊 進度條 | 處理多頁 PDF 時顯示進度 |
 | 🔄 方向校正 | 自動旋轉傾斜文件 |
+| ⚙️ 設定檔支援 | 支援 YAML 設定檔，簡化參數輸入 |
+| 🛠️ 批次處理 | 支援多執行緒批次處理圖片 |
 
 ---
 
@@ -53,6 +55,7 @@ python -m paddleocr_toolkit input.pdf
 ```python
 from paddleocr_toolkit import PaddleOCRTool, OCRResult, PDFGenerator
 from paddleocr_toolkit.processors import fix_english_spacing, detect_pdf_quality
+from paddleocr_toolkit.core import load_config
 
 # 初始化 OCR 工具
 tool = PaddleOCRTool(mode="hybrid")
@@ -61,6 +64,54 @@ tool = PaddleOCRTool(mode="hybrid")
 result = tool.process_hybrid("input.pdf")
 print(result['text_content'])
 ```
+
+---
+
+## ⚙️ 設定檔使用
+
+本工具支援 `config.yaml` 設定檔，可避免每次輸入冗長的命令列參數。
+
+### 1. 建立設定檔
+
+複製 `config.yaml` 到專案根目錄或使用者家目錄：
+
+```yaml
+# config.yaml 範例
+ocr:
+  mode: "hybrid"
+  lang: "ch"
+  use_gpu: false
+  det_db_thresh: 0.3
+
+output:
+  dir: "output"
+  formats:
+    - "pdf"
+    - "markdown"
+    - "json"
+  searchable_pdf: true
+
+pdf:
+  dpi: 300
+  auto_rotate: true
+  quality_check: true
+
+translate:
+  enabled: false
+  source_lang: "auto"
+  target_lang: "en"
+  ollama_model: "qwen2.5:7b"
+```
+
+### 2. 載入順序
+
+工具會依序尋找並載入設定檔（後者覆蓋前者）：
+
+1. 預設設定
+2. 使用者家目錄 `~/.paddleocr_toolkit/config.yaml`
+3. 當前目錄 `config.yaml`
+4. 命令列參數 `--config path/to/config.yaml`
+5. 其他命令列參數（優先級最高）
 
 ---
 
@@ -80,11 +131,12 @@ print(result['text_content'])
 
 ### 基本參數
 
-| 參數 | 說明 | 範例 |
-|------|------|------|
-| `input` | 輸入檔案或目錄 | `input.pdf` |
-| `--mode`, `-m` | OCR 模式 | `--mode hybrid` |
-| `--output`, `-o` | 輸出路徑 | `--output result.pdf` |
+ | 參數 | 說明 | 範例 |
+ |------|------|------|
+ | `input` | 輸入檔案或目錄 | `input.pdf` |
+ | `--config`, `-c` | 指定設定檔路徑 | `--config my_config.yaml` |
+ | `--mode`, `-m` | OCR 模式 | `--mode hybrid` |
+ | `--output`, `-o` | 輸出路徑 | `--output result.pdf` |
 
 ### 輸出格式
 
@@ -138,8 +190,8 @@ print(result['text_content'])
 # 基本 OCR（輸出文字 + 可搜尋 PDF）
 python paddle_ocr_tool.py document.pdf
 
-# 僅輸出文字
-python paddle_ocr_tool.py document.pdf --text-output result.txt --no-searchable
+# 使用設定檔
+python paddle_ocr_tool.py document.pdf --config config.yaml
 ```
 
 ### 混合模式（推薦）
@@ -222,15 +274,23 @@ python paddle_ocr_tool.py document.pdf --mode hybrid --debug-text
 paddleocr-toolkit/
 ├── paddle_ocr_tool.py           # 主程式（CLI 入口）
 ├── pdf_translator.py            # 翻譯模組
+├── config.yaml                  # 設定檔範本
 ├── paddleocr_toolkit/           # Python 套件
 │   ├── __init__.py              # 套件入口
 │   ├── __main__.py              # CLI 入口（python -m）
 │   ├── core/
-│   │   ├── models.py            # 資料模型（OCRResult, OCRMode）
-│   │   └── pdf_generator.py     # PDF 生成器
+│   │   ├── models.py            # 資料模型
+│   │   ├── pdf_generator.py     # PDF 生成器
+│   │   ├── pdf_utils.py         # PDF 工具函數
+│   │   └── config_loader.py     # 設定檔載入器
 │   ├── processors/
-│   │   ├── text_processor.py    # 文字處理（空格修正）
-│   │   └── pdf_quality.py       # PDF 品質偵測
+│   │   ├── text_processor.py    # 文字處理
+│   │   ├── pdf_quality.py       # PDF 品質偵測
+│   │   ├── batch_processor.py   # 批次處理
+│   │   ├── image_preprocessor.py# 影像前處理
+│   │   ├── glossary_manager.py  # 術語管理
+│   │   ├── ocr_workaround.py    # OCR 替代方案
+│   │   └── stats_collector.py   # 統計收集
 │   └── outputs/                 # 輸出格式處理
 ├── requirements.txt             # Python 依賴
 ├── glossary.csv                 # 翻譯術語表
@@ -248,10 +308,18 @@ paddleocr-toolkit/
 from paddleocr_toolkit import PaddleOCRTool, OCRResult, PDFGenerator
 
 # 處理器
-from paddleocr_toolkit.processors import fix_english_spacing, detect_pdf_quality
+from paddleocr_toolkit.processors import (
+    fix_english_spacing,
+    detect_pdf_quality,
+    BatchProcessor
+)
 
 # 核心模組
-from paddleocr_toolkit.core import OCRMode, SUPPORTED_IMAGE_FORMATS
+from paddleocr_toolkit.core import (
+    OCRMode,
+    load_config,
+    pdf_utils
+)
 ```
 
 ### OCRResult 類別
@@ -284,6 +352,16 @@ generator.add_page_from_pixmap(pixmap, ocr_results)
 
 # 儲存
 generator.save()
+```
+
+### 設定檔載入
+
+```python
+from paddleocr_toolkit.core import load_config
+
+# 載入設定
+config = load_config("config.yaml")
+print(config['ocr']['mode'])
 ```
 
 ### 文字處理
