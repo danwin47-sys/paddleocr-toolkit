@@ -602,6 +602,49 @@ class PaddleOCRTool:
             result_summary["error"] = str(e)
             return result_summary
     
+    # ========== PDF 处理辅助方法 ==========
+    
+    def _setup_pdf_generator(self, pdf_path: str, output_path: Optional[str], searchable: bool) -> Tuple[Optional[str], Optional['PDFGenerator']]:
+        """设定 PDF 生成器"""
+        if not searchable:
+            return None, None
+        if not output_path:
+            base_name = Path(pdf_path).stem
+            output_path = str(Path(pdf_path).parent / f"{base_name}_searchable.pdf")
+        logging.info(f"准备生成可搜索 PDF: {output_path}")
+        return output_path, PDFGenerator(output_path, debug_mode=self.debug_mode)
+    
+    def _process_single_pdf_page(
+        self, page, page_num: int, total_pages: int, dpi: int,
+        pdf_generator: Optional['PDFGenerator'], show_progress: bool
+    ) -> List[OCRResult]:
+        """处理单个 PDF 页面"""
+        logging.info(f"开始处理第 {page_num + 1}/{total_pages} 页")
+        if not (show_progress and HAS_TQDM):
+            print(f"  处理第 {page_num + 1}/{total_pages} 页...")
+        
+        # 转换为图片并执行 OCR
+        zoom = dpi / 72.0
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+        img_array = pixmap_to_numpy(pixmap)
+        page_results = self.process_image_array(img_array)
+        
+        # 缩放坐标
+        scale_factor = 72.0 / dpi
+        for result in page_results:
+            result.bbox = [[p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox]
+        
+        # 添加到可搜索 PDF
+        if pdf_generator:
+            original_pixmap = page.get_pixmap()
+            pdf_generator.add_page_from_pixmap(original_pixmap, page_results)
+            del original_pixmap
+        
+        # 清理
+        del pixmap, img_array
+        gc.collect()
+        return page_results
+    
     def process_pdf(
         self,
         pdf_path: str,
@@ -626,103 +669,45 @@ class PaddleOCRTool:
         all_results = []
         
         try:
-            # 開啟 PDF
-            logging.info(f"開啟 PDF: {pdf_path}")
+            # 打开 PDF
+            logging.info(f"打开 PDF: {pdf_path}")
             pdf_doc = fitz.open(pdf_path)
             total_pages = len(pdf_doc)
-            logging.info(f"PDF 共 {total_pages} 頁")
-            print(f"正在處理 PDF: {pdf_path} ({total_pages} 頁)")
+            print(f"正在处理 PDF: {pdf_path} ({total_pages} 页)")
             
-            # 準備 PDF 生成器（如果需要生成可搜尋 PDF）
-            pdf_generator = None
-            if searchable:
-                if not output_path:
-                    base_name = Path(pdf_path).stem
-                    output_path = str(Path(pdf_path).parent / f"{base_name}_searchable.pdf")
-                logging.info(f"準備生成可搜尋 PDF: {output_path}")
-                pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
+            # 设定 PDF 生成器
+            output_path, pdf_generator = self._setup_pdf_generator(pdf_path, output_path, searchable)
             
-            # 處理每一頁（使用進度條）
+            # 处理每一页
             page_iterator = range(total_pages)
             if show_progress and HAS_TQDM:
-                page_iterator = tqdm(
-                    page_iterator,
-                    desc="OCR 處理中",
-                    unit="頁",
-                    ncols=80
-                )
+                page_iterator = tqdm(page_iterator, desc="OCR 处理中", unit="页", ncols=80)
             
             for page_num in page_iterator:
                 try:
-                    logging.info(f"開始處理第 {page_num + 1}/{total_pages} 頁")
-                    if not (show_progress and HAS_TQDM):
-                        print(f"  處理第 {page_num + 1}/{total_pages} 頁...")
-                    
                     page = pdf_doc[page_num]
-                    
-                    # 將頁面轉換為圖片
-                    logging.info(f"  轉換第 {page_num + 1} 頁為圖片 (DPI: {dpi})")
-                    zoom = dpi / 72.0
-                    matrix = fitz.Matrix(zoom, zoom)
-                    pixmap = page.get_pixmap(matrix=matrix)
-                    logging.info(f"  圖片尺寸: {pixmap.width}x{pixmap.height}, 色彩通道: {pixmap.n}")
-                    
-                    # 使用共用工具函數轉換為 numpy 陣列
-                    img_array = pixmap_to_numpy(pixmap)
-                    
-                    # 執行 OCR
-                    logging.info(f"  執行 OCR...")
-                    page_results = self.process_image_array(img_array)
-                    logging.info(f"  第 {page_num + 1} 頁辨識到 {len(page_results)} 個文字區塊")
+                    page_results = self._process_single_pdf_page(
+                        page, page_num, total_pages, dpi, pdf_generator, show_progress
+                    )
                     all_results.append(page_results)
-                    
-                    # 將座標縮放回原始 PDF 尺寸
-                    scale_factor = 72.0 / dpi
-                    for result in page_results:
-                        result.bbox = [[p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox]
-                    
-                    # 如果需要生成可搜尋 PDF
-                    if pdf_generator:
-                        logging.info(f"  新增第 {page_num + 1} 頁到可搜尋 PDF")
-                        # 使用原始頁面尺寸
-                        original_pixmap = page.get_pixmap()
-                        pdf_generator.add_page_from_pixmap(original_pixmap, page_results)
-                        # 清理 pixmap
-                        del original_pixmap
-                    
-                    # 清理本頁使用的資源
-                    del pixmap
-                    del img_array
-                    del page_results
-                    gc.collect()  # 強制垃圾回收，防止記憶體洩漏
-                    
-                    logging.info(f"[OK] 第 {page_num + 1}/{total_pages} 頁處理完成")
-                    
                 except Exception as page_error:
-                    error_msg = f"處理第 {page_num + 1} 頁時發生錯誤: {str(page_error)}"
-                    logging.error(error_msg)
-                    logging.error(traceback.format_exc())
-                    print(f"  [WARN] {error_msg}")
-                    # 清理資源後繼續處理下一頁
-                    gc.collect()
+                    logging.error(f"处理第 {page_num + 1} 页错误: {page_error}")
+                    print(f"  [WARN] 处理第 {page_num + 1} 页错误: {page_error}")
                     all_results.append([])
+                    gc.collect()
             
             pdf_doc.close()
-            logging.info("PDF 文件已關閉")
             
-            # 儲存可搜尋 PDF
+            # 保存可搜索 PDF
             if pdf_generator:
-                logging.info("開始儲存可搜尋 PDF")
                 pdf_generator.save()
             
-            logging.info(f"[OK] 完成處理 {total_pages} 頁，成功 {len([r for r in all_results if r])} 頁")
+            logging.info(f"[OK] 完成处理 {total_pages} 页")
             return all_results, output_path
             
         except Exception as e:
-            error_msg = f"處理 PDF 失敗 ({pdf_path}): {str(e)}"
-            logging.error(error_msg)
-            logging.error(traceback.format_exc())
-            print(f"錯誤：{error_msg}")
+            logging.error(f"处理 PDF 失败 ({pdf_path}): {e}")
+            print(f"错误：处理 PDF 失败: {e}")
             return all_results, None
     
     def process_directory(
