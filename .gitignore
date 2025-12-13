@@ -72,6 +72,9 @@ coverage.xml
 # pytest cache
 .pytest_cache/
 
+# Artifacts (logs and test outputs)
+artifacts/logs/
+
 # OS files
 .DS_Store
 Thumbs.db

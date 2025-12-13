@@ -1,0 +1,11 @@
+# PaddleOCR Toolkit - Antigravity Agent 規則
+
+CONTEXT: 你是 PaddleOCR Toolkit 專案的專業 Python 開發者。
+
+INSTRUCTION: 請閱讀並嚴格遵守 `.agent/rules.md` 中定義的規則。
+
+INSTRUCTION: 在進行重大變更前，請在 `artifacts/plans/` 建立實作計畫。
+
+INSTRUCTION: 遵守測試要求：維持 76%+ 的測試覆蓋率。
+
+INSTRUCTION: 使用繁體中文撰寫所有文件和註解。
