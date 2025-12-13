@@ -329,6 +329,204 @@ class TestOCRResultProperties:
         assert result.y == 20
 
 
+class TestMissingDependencies:
+    """測試缺少依賴時的行為"""
+    
+    def test_init_without_fitz(self, monkeypatch):
+        """測試缺少 PyMuPDF 時拋出錯誤"""
+        import paddleocr_toolkit.core.pdf_generator as module
+        monkeypatch.setattr(module, "HAS_FITZ", False)
+        
+        with pytest.raises(ImportError, match="PyMuPDF"):
+            PDFGenerator("test.pdf")
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_add_page_without_pil(self, monkeypatch):
+        """測試缺少 Pillow 時的降級行為"""
+        import paddleocr_toolkit.core.pdf_generator as module
+        monkeypatch.setattr(module, "HAS_PIL", False)
+        
+        gen = PDFGenerator("test.pdf")
+        result = gen.add_page("test.png", [])
+        
+        # 應該返回 False
+        assert result is False
+
+
+class TestImageFormats:
+    """測試不同圖片格式"""
+    
+    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    def test_add_page_rgba_image(self):
+        """測試 RGBA 圖片（有 alpha 通道）"""
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+            img_path = f.name
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            pdf_path = f.name
+        
+        try:
+            # 建立 RGBA 圖片
+            img = Image.new('RGBA', (100, 100), color=(255, 0, 0, 128))
+            img.save(img_path)
+            
+            gen = PDFGenerator(pdf_path, compress_images=True)
+            result = gen.add_page(img_path, [])
+            
+            # 應該成功轉換為 RGB
+            assert result is True
+            
+        finally:
+            for path in [img_path, pdf_path]:
+                if os.path.exists(path):
+                    os.remove(path)
+    
+    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    def test_add_page_grayscale_image(self):
+        """測試灰階圖片"""
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+            img_path = f.name
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            pdf_path = f.name
+        
+        try:
+            # 建立灰階圖片
+            img = Image.new('L', (100, 100), color=128)
+            img.save(img_path)
+            
+            gen = PDFGenerator(pdf_path, compress_images=True)
+            result = gen.add_page(img_path, [])
+            
+            # 應該成功轉換為 RGB
+            assert result is True
+            
+        finally:
+            for path in [img_path, pdf_path]:
+                if os.path.exists(path):
+                    os.remove(path)
+
+
+class TestPixmapCompression:
+    """測試 Pixmap 壓縮"""
+    
+    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    def test_add_page_from_pixmap_with_compression(self):
+        """測試從 pixmap 新增頁面並壓縮"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path, compress_images=True, jpeg_quality=60)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=200, height=100)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            result = gen.add_page_from_pixmap(pixmap, [])
+            
+            assert result is True
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+class TestTextInsertionEdgeCases:
+    """測試文字插入的邊界條件"""
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_very_small_text_area(self):
+        """測試極小的文字區域"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=100, height=100)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            # 極小的文字區域（高度 < 6）
+            ocr_results = [
+                OCRResult(
+                    text="T",
+                    confidence=0.9,
+                    bbox=[[10, 10], [15, 10], [15, 12], [10, 12]]  # 高度只有 2
+                )
+            ]
+            
+            result = gen.add_page_from_pixmap(pixmap, ocr_results)
+            assert result is True
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_very_large_text_area(self):
+        """測試極大的文字區域"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=500, height=500)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            # 極大的文字區域（高度 > 150）
+            ocr_results = [
+                OCRResult(
+                    text="LARGE",
+                    confidence=0.9,
+                    bbox=[[10, 10], [400, 10], [400, 200], [10, 200]]  # 高度 190
+                )
+            ]
+            
+            result = gen.add_page_from_pixmap(pixmap, ocr_results)
+            assert result is True
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_debug_mode_text_insertion(self):
+        """測試 debug 模式的文字插入（粉紅色文字）"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path, debug_mode=True)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=100, height=100)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            ocr_results = [
+                OCRResult(
+                    text="DEBUG",
+                    confidence=0.9,
+                    bbox=[[10, 10], [50, 10], [50, 30], [10, 30]]
+                )
+            ]
+            
+            result = gen.add_page_from_pixmap(pixmap, ocr_results)
+            assert result is True
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
