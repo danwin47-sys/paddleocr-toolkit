@@ -1932,37 +1932,36 @@ class PaddleOCRTool:
 
 def main():
     """命令列入口點"""
-    # 使用 CLI 模組的參數解析器
-    from paddleocr_toolkit.cli import create_argument_parser
+    # === 1. 導入 CLI 模組 ===
+    from paddleocr_toolkit.cli import (
+        create_argument_parser,
+        process_args_overrides,
+        OutputPathManager,
+        ModeProcessor
+    )
     
+    # === 2. 參數解析 ===
     parser = create_argument_parser()
     args = parser.parse_args()
     
-    # 驗證輸入
+    # === 3. 輸入驗證 ===
     input_path = Path(args.input)
     if not input_path.exists():
         logging.error(f"輸入路徑不存在: {args.input}")
         print(f"錯誤：輸入路徑不存在: {args.input}")
         sys.exit(1)
     
-    # 取得腳本所在目錄和輸入檔案的基本名稱
     script_dir = Path(__file__).parent.resolve()
-    if input_path.is_dir():
-        base_name = input_path.name
-    else:
-        base_name = input_path.stem
     
     logging.info(f"=" * 60)
     logging.info(f"開始執行 PaddleOCR 工具")
     logging.info(f"輸入路徑: {input_path}")
     logging.info(f"OCR 模式: {args.mode}")
     
-    # 處理參數覆蓋（--no-* 和 --all）
-    from paddleocr_toolkit.cli import process_args_overrides
+    # === 5. 處理參數覆蓋 ===
     args = process_args_overrides(args)
     
-    # 根據模式設定預設輸出路徑並顯示摘要
-    from paddleocr_toolkit.cli import OutputPathManager
+    # === 6. 設定輸出路徑 ===
     output_manager = OutputPathManager(str(input_path), args.mode)
     args = output_manager.process_mode_outputs(args, script_dir)
     
@@ -1972,28 +1971,22 @@ def main():
         print(f"[進度條] 啟用")
     print()
     
-    # 檢查進階模組可用性
-    if args.mode == "structure" and not HAS_STRUCTURE:
-        print("錯誤：PP-StructureV3 模組不可用")
-        print("請確認已安裝最新版 paddleocr: pip install -U paddleocr")
-        sys.exit(1)
+    # === 7. 檢查模式依賴 ===
+    mode_dependencies = {
+        "structure": (HAS_STRUCTURE, "PP-StructureV3"),
+        "vl": (HAS_VL, "PaddleOCR-VL"),
+        "formula": (HAS_FORMULA, "FormulaRecPipeline"),
+        "hybrid": (HAS_STRUCTURE, "Hybrid 模式需要 PP-StructureV3")
+    }
     
-    if args.mode == "vl" and not HAS_VL:
-        print("錯誤：PaddleOCR-VL 模組不可用")
-        print("請確認已安裝最新版 paddleocr: pip install -U paddleocr")
-        sys.exit(1)
+    if args.mode in mode_dependencies:
+        available, module_name = mode_dependencies[args.mode]
+        if not available:
+            print(f"錯誤：{module_name} 模組不可用")
+            print("請確認已安裝最新版 paddleocr: pip install -U paddleocr")
+            sys.exit(1)
     
-    if args.mode == "formula" and not HAS_FORMULA:
-        print("錯誤：FormulaRecPipeline 模組不可用")
-        print("請確認已安裝最新版 paddleocr: pip install -U paddleocr")
-        sys.exit(1)
-    
-    if args.mode == "hybrid" and not HAS_STRUCTURE:
-        print("錯誤：Hybrid 模式需要 PP-StructureV3 模組")
-        print("請確認已安裝最新版 paddleocr: pip install -U paddleocr")
-        sys.exit(1)
-    
-    # 初始化 OCR 工具
+    # === 8. 初始化 OCR 工具 ===
     tool = PaddleOCRTool(
         mode=args.mode,
         use_orientation_classify=args.orientation_classify,
@@ -2011,194 +2004,10 @@ def main():
     else:
         print(f"[壓縮] 停用（使用 PNG 無損格式）")
     
-    # 根據模式處理
-    if args.mode == "formula":
-        # 公式識別模式
-        result = tool.process_formula(
-            input_path=str(input_path),
-            latex_output=args.latex_output
-        )
-        
-        if result.get("error"):
-            print(f"處理過程中發生錯誤: {result['error']}")
-        else:
-            print(f"\n[OK] 公式識別完成！共識別 {len(result['formulas'])} 個公式")
-            if result.get("latex_file"):
-                print(f"  LaTeX 檔案: {result['latex_file']}")
-    
-    elif args.mode in ["structure", "vl"]:
-        # 結構化處理模式
-        result = tool.process_structured(
-            input_path=str(input_path),
-            markdown_output=args.markdown_output,
-            json_output=args.json_output,
-            excel_output=args.excel_output,
-            html_output=args.html_output
-        )
-        
-        if result.get("error"):
-            print(f"處理過程中發生錯誤: {result['error']}")
-        else:
-            print(f"\n[OK] 處理完成！共處理 {result['pages_processed']} 頁")
-            if result.get("markdown_files"):
-                print(f"  Markdown 檔案: {', '.join(result['markdown_files'])}")
-            if result.get("json_files"):
-                print(f"  JSON 檔案: {', '.join(result['json_files'])}")
-            if result.get("excel_files"):
-                print(f"  Excel 檔案: {', '.join(result['excel_files'])}")
-            if result.get("html_files"):
-                print(f"  HTML 檔案: {', '.join(result['html_files'])}")
-    
-    elif args.mode == "hybrid":
-        # 混合模式：版面分析 + 精確 OCR
-        show_progress = not args.no_progress
-        
-        # 檢查是否啟用翻譯功能
-        if hasattr(args, 'translate') and args.translate:
-            # 翻譯模式
-            if not HAS_TRANSLATOR:
-                print("錯誤：翻譯模組不可用")
-                print("請確認 pdf_translator.py 存在且依賴已安裝")
-                sys.exit(1)
-            
-            print(f"[翻譯功能] 啟用")
-            print(f"   來源語言：{args.source_lang}")
-            print(f"   目標語言：{args.target_lang}")
-            print(f"   Ollama 模型：{args.ollama_model}")
-            print(f"   純翻譯 PDF：{'停用' if args.no_mono else '啟用'}")
-            print(f"   雙語對照 PDF：{'停用' if args.no_dual else f'啟用 ({args.dual_mode})'}")
-            
-            result = tool.process_translate(
-                input_path=str(input_path),
-                output_path=args.output,
-                source_lang=args.source_lang,
-                target_lang=args.target_lang,
-                ollama_model=args.ollama_model,
-                ollama_url=args.ollama_url,
-                no_mono=args.no_mono,
-                no_dual=args.no_dual,
-                dual_mode=args.dual_mode,
-                dual_translate_first=args.dual_translate_first,
-                font_path=args.font_path,
-                dpi=args.dpi,
-                show_progress=show_progress,
-                json_output=args.json_output,
-                html_output=args.html_output,
-                ocr_workaround=args.ocr_workaround
-            )
-            
-            if result.get("error"):
-                print(f"處理過程中發生錯誤: {result['error']}")
-            else:
-                print(f"\n[OK] 翻譯處理完成！共處理 {result['pages_processed']} 頁")
-                if result.get("searchable_pdf"):
-                    print(f"  [可搜尋 PDF] {result['searchable_pdf']}")
-                if result.get("markdown_file"):
-                    print(f"  [Markdown] {result['markdown_file']}")
-                if result.get("json_file"):
-                    print(f"  [JSON] {result['json_file']}")
-                if result.get("html_file"):
-                    print(f"  [HTML] {result['html_file']}")
-                if result.get("translated_pdf"):
-                    print(f"  [翻譯PDF] {result['translated_pdf']}")
-                if result.get("bilingual_pdf"):
-                    print(f"  [雙語PDF] {result['bilingual_pdf']}")
-        else:
-            # 一般 hybrid 模式（無翻譯）
-            result = tool.process_hybrid(
-                input_path=str(input_path),
-                output_path=args.output,
-                markdown_output=args.markdown_output,
-                json_output=args.json_output,
-                html_output=args.html_output,
-                dpi=args.dpi,
-                show_progress=show_progress
-            )
-            
-            if result.get("error"):
-                print(f"處理過程中發生錯誤: {result['error']}")
-            else:
-                print(f"\n[OK] 混合模式處理完成！共處理 {result['pages_processed']} 頁")
-                if result.get("searchable_pdf"):
-                    print(f"  可搜尋 PDF: {result['searchable_pdf']}")
-                if result.get("markdown_file"):
-                    print(f"  Markdown 檔案: {result['markdown_file']}")
-    
-    else:
-        # basic 模式（原有邏輯）
-        all_text = []
-        show_progress = not args.no_progress
-        
-        # 處理輸入
-        if input_path.is_dir():
-            # 目錄處理
-            results = tool.process_directory(
-                str(input_path),
-                output_path=args.output,
-                searchable=args.searchable,
-                recursive=args.recursive
-            )
-            
-            for file_path, file_results in results.items():
-                text = tool.get_text(file_results)
-                if text:
-                    all_text.append(f"=== {file_path} ===\n{text}")
-        
-        elif input_path.suffix.lower() == SUPPORTED_PDF_FORMAT:
-            # PDF 處理（使用進度條）
-            results, output_path = tool.process_pdf(
-                str(input_path),
-                output_path=args.output,
-                searchable=args.searchable,
-                dpi=args.dpi,
-                show_progress=show_progress
-            )
-            
-            for page_num, page_results in enumerate(results, 1):
-                text = tool.get_text(page_results)
-                if text:
-                    all_text.append(f"=== 第 {page_num} 頁 ===\n{text}")
-        
-        elif input_path.suffix.lower() in SUPPORTED_IMAGE_FORMATS:
-            # 圖片處理
-            results = tool.process_image(str(input_path))
-            
-            if args.searchable:
-                output_path = args.output or str(input_path.with_suffix('.pdf'))
-                pdf_generator = PDFGenerator(output_path, debug_mode=args.debug_text)
-                pdf_generator.add_page(str(input_path), results)
-                pdf_generator.save()
-            
-            text = tool.get_text(results)
-            if text:
-                all_text.append(text)
-        
-        else:
-            print(f"錯誤：不支援的檔案格式: {input_path.suffix}")
-            sys.exit(1)
-        
-        # 輸出結果
-        combined_text = "\n\n".join(all_text)
-        
-        if args.text_output:
-            # 如果輸出路徑不是絕對路徑，則相對於腳本目錄
-            text_output_path = Path(args.text_output)
-            if not text_output_path.is_absolute():
-                text_output_path = script_dir / text_output_path
-            
-            # 儲存到檔案
-            with open(text_output_path, 'w', encoding='utf-8') as f:
-                f.write(combined_text)
-            print(f"[OK] 文字已儲存：{text_output_path}")
-        
-        # 如果兩個輸出都停用，則輸出到終端機
-        if not args.text_output and not args.searchable and combined_text:
-            print("\n" + "=" * 50)
-            print("OCR 辨識結果：")
-            print("=" * 50)
-            print(combined_text)
-        
-        print("\n[OK] 處理完成！")
+    # === 9. 執行 OCR ===
+    processor = ModeProcessor(tool, args, input_path, script_dir)
+    result = processor.process()
+
 
 
 if __name__ == "__main__":
