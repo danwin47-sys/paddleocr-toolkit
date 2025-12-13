@@ -58,8 +58,8 @@ comparison_result.txt
 result.txt
 test_*.md
 
-# PDF files (too large for git, keep only samples)
-# *.pdf
+# PDF files (too large for git)
+*.pdf
 
 # Model cache (created by PaddleOCR)
 .paddleocr/
