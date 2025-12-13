@@ -972,52 +972,33 @@ class PaddleOCRTool:
             result_summary["error"] = str(e)
             return result_summary
     
-    def _process_hybrid_pdf(
+    # ========== Hybrid PDF 处理辅助方法 ==========
+    
+    def _setup_hybrid_generators(
         self,
-        pdf_path: str,
-        output_path: str,
-        markdown_output: str,
-        json_output: Optional[str],
-        html_output: Optional[str],
-        dpi: int,
-        show_progress: bool,
-        result_summary: Dict[str, Any],
-        translate_config: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """處理 PDF 的混合模式
-        
-        同時生成：
-        1. *_hybrid.pdf（原文可搜尋）
-        2. *_erased.pdf（擦除版 + 文字層）
-        3. *_hybrid.md（Markdown）
-        4. *_hybrid.json（JSON，可選）
-        5. *_hybrid.html（HTML，可選）
+        output_path: str
+    ) -> Tuple[PDFGenerator, PDFGenerator, Optional['TextInpainter'], str]:
+        """设定混合模式所需的生成器
         
         Args:
-            translate_config: 翻譯配置（可選），包含 source_lang, target_lang, ollama_model 等
+            output_path: 输出 PDF 路径
+        
+        Returns:
+            Tuple of (pdf_generator, erased_generator, inpainter, erased_output_path)
         """
-        
-        pdf_doc = fitz.open(pdf_path)
-        total_pages = len(pdf_doc)
-        
-        print(f"PDF 共 {total_pages} 頁")
-        logging.info(f"PDF 共 {total_pages} 頁")
-        
-        # ========== 設定輸出路徑 ==========
         erased_output_path = output_path.replace('_hybrid.pdf', '_erased.pdf')
         
-        # ========== 準備 PDF 生成器 ==========
-        # 1. 原文可搜尋 PDF
+        # 原文可搜索 PDF
         pdf_generator = PDFGenerator(
-            output_path, 
+            output_path,
             debug_mode=self.debug_mode,
             compress_images=self.compress_images,
             jpeg_quality=self.jpeg_quality
         )
-        logging.info(f"[DEBUG] PDFGenerator compress_images={pdf_generator.compress_images}, jpeg_quality={pdf_generator.jpeg_quality}")
-        # 2. 擦除版 PDF
+        
+        # 擦除版 PDF
         erased_generator = PDFGenerator(
-            erased_output_path, 
+            erased_output_path,
             debug_mode=self.debug_mode,
             compress_images=self.compress_images,
             jpeg_quality=self.jpeg_quality
@@ -1026,208 +1007,245 @@ class PaddleOCRTool:
         # 擦除器
         inpainter = TextInpainter() if HAS_TRANSLATOR else None
         
-        all_markdown = []
-        all_text = []
-        all_ocr_results = []  # 收集每頁 OCR 結果，用於翻譯
+        logging.info(f"[DEBUG] PDFGenerator compress_images={pdf_generator.compress_images}, jpeg_quality={pdf_generator.jpeg_quality}")
         
-        # 初始化統計收集器
-        stats_collector = StatsCollector(
-            input_file=pdf_path,
-            mode="hybrid",
-            total_pages=total_pages
+        return pdf_generator, erased_generator, inpainter, erased_output_path
+    
+    def _extract_markdown_from_structure_output(
+        self,
+        structure_output,
+        page_num: int
+    ) -> str:
+        """从 PP-StructureV3 输出提取 Markdown
+        
+        Args:
+            structure_output: Structure 引擎输出
+            page_num: 页码（0-based）
+        
+        Returns:
+            str: 页面的 Markdown 文本
+        """
+        page_markdown = f"## 第 {page_num + 1} 页\n\n"
+        
+        for res in structure_output:
+            temp_md_dir = tempfile.mkdtemp()
+            try:
+                if hasattr(res, 'save_to_markdown'):
+                    res.save_to_markdown(save_path=temp_md_dir)
+                    # 读取生成的 Markdown
+                    for md_file in Path(temp_md_dir).glob("*.md"):
+                        with open(md_file, 'r', encoding='utf-8') as f:
+                            page_markdown += f.read()
+                        break
+            except Exception as md_err:
+                logging.warning(f"save_to_markdown 失败: {md_err}")
+                # 回退：使用 markdown 属性
+                if hasattr(res, 'markdown') and isinstance(res.markdown, str):
+                    page_markdown += res.markdown
+            finally:
+                shutil.rmtree(temp_md_dir, ignore_errors=True)
+        
+        return page_markdown
+    
+    def _generate_dual_pdfs(
+        self,
+        pixmap,
+        img_array: np.ndarray,
+        sorted_results: List[OCRResult],
+        pdf_generator: PDFGenerator,
+        erased_generator: PDFGenerator,
+        inpainter: Optional['TextInpainter']
+    ) -> None:
+        """生成原文 PDF 和擦除版 PDF
+        
+        Args:
+            pixmap: PyMuPDF pixmap 对象
+            img_array: 图片数组
+            sorted_results: OCR 结果列表
+            pdf_generator: 原文 PDF 生成器
+            erased_generator: 擦除版 PDF 生成器
+            inpainter: 文字擦除器
+        """
+        img_array_copy = img_array.copy()
+        
+        # 1. 原文可搜索 PDF
+        pdf_generator.add_page_from_pixmap(pixmap, sorted_results)
+        
+        # 2. 擦除版 PDF
+        if inpainter:
+            # 收集 bboxes
+            bboxes = [
+                result.bbox 
+                for result in sorted_results 
+                if result.text and result.text.strip()
+            ]
+            
+            if bboxes:
+                # 在图片上擦除文字区域
+                erased_image = inpainter.erase_multiple_regions(
+                    img_array_copy, bboxes, fill_color=(255, 255, 255)
+                )
+            else:
+                erased_image = img_array_copy
+            
+            # 保存擦除版图片并添加到 erased_generator
+            tmp_erased_path = tempfile.mktemp(suffix='.png')
+            try:
+                Image.fromarray(erased_image).save(tmp_erased_path)
+                # 擦除版 PDF 也添加文字层（用于后续翻译）
+                erased_generator.add_page(tmp_erased_path, sorted_results)
+            finally:
+                if os.path.exists(tmp_erased_path):
+                    os.remove(tmp_erased_path)
+    
+    def _process_single_hybrid_page(
+        self,
+        page,
+        page_num: int,
+        dpi: int,
+        pdf_generator: PDFGenerator,
+        erased_generator: PDFGenerator,
+        inpainter: Optional['TextInpainter']
+    ) -> Tuple[str, str, List[OCRResult]]:
+        """处理单一页面（混合模式）
+        
+        Args:
+            page: PyMuPDF 页面对象
+            page_num: 页码（0-based）
+            dpi: 解析度
+            pdf_generator: PDF 生成器
+            erased_generator: 擦除版生成器
+            inpainter: 文字擦除器
+        
+        Returns:
+            Tuple of (page_markdown, page_text, ocr_results)
+        """
+        logging.info(f"处理第 {page_num + 1} 页")
+        
+        # 转换为图片
+        zoom = dpi / 72.0
+        matrix = fitz.Matrix(zoom, zoom)
+        pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+        
+        # 使用共用工具函数转换为 numpy 数组
+        img_array = pixmap_to_numpy(pixmap)
+        
+        # 步骤 1：版面分析
+        logging.info(f"  执行版面分析...")
+        structure_output = self.structure_engine.predict(input=img_array)
+        
+        # 步骤 2：提取 Markdown
+        page_markdown = self._extract_markdown_from_structure_output(
+            structure_output, page_num
         )
         
-        # 處理每一頁
-        page_iterator = range(total_pages)
-        if show_progress and HAS_TQDM:
-            page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁", ncols=80)
-        
-        for page_num in page_iterator:
+        # 提取版面区块信息
+        layout_blocks = []
+        for res in structure_output:
             try:
-                stats_collector.start_page(page_num)
-                logging.info(f"處理第 {page_num + 1}/{total_pages} 頁")
-                
-                page = pdf_doc[page_num]
-                
-                # 轉換為圖片
-                zoom = dpi / 72.0
-                matrix = fitz.Matrix(zoom, zoom)
-                pixmap = page.get_pixmap(matrix=matrix, alpha=False)
-                
-                # 使用共用工具函數轉換為 numpy 陣列
-                img_array = pixmap_to_numpy(pixmap)
-                
-                # 步驟 1：使用 Structure 引擎取得版面資訊和 Markdown
-                logging.info(f"  執行版面分析...")
-                structure_output = self.structure_engine.predict(input=img_array)
-                
-                # 直接從 PP-StructureV3 取得高精度 Markdown
-                page_markdown = f"## 第 {page_num + 1} 頁\n\n"
-                for res in structure_output:
-                    # 使用 save_to_markdown 保存到臨時目錄
-                    temp_md_dir = tempfile.mkdtemp()
-                    try:
-                        if hasattr(res, 'save_to_markdown'):
-                            res.save_to_markdown(save_path=temp_md_dir)
-                            # 讀取生成的 Markdown
-                            for md_file in Path(temp_md_dir).glob("*.md"):
-                                with open(md_file, 'r', encoding='utf-8') as f:
-                                    page_markdown += f.read()
-                                break
-                    except Exception as md_err:
-                        logging.warning(f"save_to_markdown 失敗: {md_err}")
-                        # 回退：使用 markdown 屬性
-                        if hasattr(res, 'markdown') and isinstance(res.markdown, str):
-                            page_markdown += res.markdown
-                    finally:
-                        shutil.rmtree(temp_md_dir, ignore_errors=True)
-                
-                # 從 PP-StructureV3 輸出提取版面區塊資訊
-                layout_blocks = []
-                for res in structure_output:
-                    try:
-                        if hasattr(res, 'layout_parsing_result'):
-                            # 嘗試從 layout_parsing_result 提取
-                            lp_result = res.layout_parsing_result
-                            if hasattr(lp_result, 'blocks'):
-                                layout_blocks.extend(lp_result.blocks)
-                        if hasattr(res, 'blocks'):
-                            layout_blocks.extend(res.blocks)
-                        elif isinstance(res, dict):
-                            blocks = res.get('blocks', []) or res.get('layout_blocks', [])
-                            if blocks:
-                                layout_blocks.extend(blocks)
-                    except Exception as block_err:
-                        logging.debug(f"提取版面區塊失敗: {block_err}")
-                
-                logging.info(f"  取得 {len(layout_blocks)} 個版面區塊")
-                
-                # 步驟 2：從 PP-StructureV3 輸出提取文字座標，並使用 Markdown 過濾
-                logging.info(f"  提取文字座標（使用 Markdown 匹配過濾）...")
-                sorted_results = self._extract_ocr_from_structure(structure_output, markdown_text=page_markdown)
-                logging.info(f"  _extract_ocr_from_structure 返回 {len(sorted_results)} 個結果")
-                
-                if sorted_results:
-                    logging.info(f"  第一個結果: text='{sorted_results[0].text[:20] if sorted_results[0].text else ''}...', x={sorted_results[0].x}, y={sorted_results[0].y}")
-                else:
-                    logging.warning(f"  未提取到任何 OCR 結果!")
-                
-                # ========== 步驟 3：同時生成兩個 PDF ==========
-                if sorted_results:
-                    # 需要複製 img_array（因為後面會用到）
-                    img_array_copy = img_array.copy()
-                    
-                    # 3.1 生成原文可搜尋 PDF（*_hybrid.pdf）
-                    # 直接使用 pixmap，避免 I/O 開銷
-                    pdf_generator.add_page_from_pixmap(pixmap, sorted_results)
-                    
-                    # 3.2 生成擦除版 PDF（*_erased.pdf）
-                    if inpainter:
-                        # 收集 bboxes
-                        bboxes = [result.bbox for result in sorted_results if result.text and result.text.strip()]
-                        
-                        if bboxes:
-                            # 在圖片上擦除文字區域
-                            erased_image = inpainter.erase_multiple_regions(
-                                img_array_copy, bboxes, fill_color=(255, 255, 255)
-                            )
-                        else:
-                            erased_image = img_array_copy
-                        
-                        # 儲存擦除版圖片並添加到 erased_generator
-                        tmp_erased_path = tempfile.mktemp(suffix='.png')
-                        try:
-                            Image.fromarray(erased_image).save(tmp_erased_path)
-                            # 擦除版 PDF 也添加文字層（用於後續翻譯）
-                            erased_generator.add_page(tmp_erased_path, sorted_results)
-                        finally:
-                            if os.path.exists(tmp_erased_path):
-                                os.remove(tmp_erased_path)
-                
-                # 收集 Markdown、文字和 OCR 結果
-                all_markdown.append(page_markdown)
-                page_text = self.get_text(sorted_results)
-                all_text.append(page_text)
-                all_ocr_results.append(sorted_results)  # 收集 OCR 結果用於翻譯
-                
-                result_summary["pages_processed"] += 1
-                
-                # 記錄頁面統計
-                stats_collector.finish_page(
-                    page_num=page_num,
-                    text=page_text,
-                    ocr_results=sorted_results
-                )
-                
-                # 清理記憶體
-                del pixmap
-                gc.collect()
-                
-            except Exception as page_error:
-                logging.error(f"處理第 {page_num + 1} 頁時發生錯誤: {page_error}")
-                logging.error(traceback.format_exc())
-                continue
+                if hasattr(res, 'layout_parsing_result'):
+                    lp_result = res.layout_parsing_result
+                    if hasattr(lp_result, 'blocks'):
+                        layout_blocks.extend(lp_result.blocks)
+                if hasattr(res, 'blocks'):
+                    layout_blocks.extend(res.blocks)
+                elif isinstance(res, dict):
+                    blocks = res.get('blocks', []) or res.get('layout_blocks', [])
+                    if blocks:
+                        layout_blocks.extend(blocks)
+            except Exception as block_err:
+                logging.debug(f"提取版面区块失败: {block_err}")
         
-        pdf_doc.close()
+        logging.info(f"  取得 {len(layout_blocks)} 个版面区块")
         
-        # 儲存可搜尋 PDF
-        if pdf_generator.save():
-            result_summary["searchable_pdf"] = output_path
-            print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
+        # 步骤 3：提取 OCR 坐标（使用 Markdown 匹配过滤）
+        logging.info(f"  提取文字坐标（使用 Markdown 匹配过滤）...")
+        sorted_results = self._extract_ocr_from_structure(
+            structure_output, markdown_text=page_markdown
+        )
+        logging.info(f"  返回 {len(sorted_results)} 个结果")
         
-        # 儲存擦除版 PDF
-        if erased_generator.save():
-            result_summary["erased_pdf"] = erased_output_path
-            print(f"[OK] 擦除版 PDF 已儲存：{erased_output_path}")
+        # 步骤 4：生成双 PDF
+        if sorted_results:
+            self._generate_dual_pdfs(
+                pixmap, img_array, sorted_results,
+                pdf_generator, erased_generator, inpainter
+            )
         
-        # 儲存 Markdown
-        if markdown_output and all_markdown:
-            # 應用英文空格修復
-            fixed_markdown = [fix_english_spacing(md) for md in all_markdown]
-            with open(markdown_output, 'w', encoding='utf-8') as f:
-                f.write("\n\n---\n\n".join(fixed_markdown))
-            result_summary["markdown_file"] = markdown_output
-            print(f"[OK] Markdown 已儲存：{markdown_output}")
+        # 提取文字
+        page_text = self.get_text(sorted_results)
         
-        # ========== JSON 輸出（如果啟用）==========
-        if json_output:
-            try:
-                import json
-                # 將 OCR 結果轉換為可序列化的格式
-                json_data = {
-                    "input": pdf_path,
-                    "pages": []
+        # 清理
+        del pixmap
+        gc.collect()
+        
+        return page_markdown, page_text, sorted_results
+    
+    def _save_markdown_output(
+        self,
+        all_markdown: List[str],
+        markdown_output: str,
+        result_summary: Dict[str, Any]
+    ) -> None:
+        """保存 Markdown 输出"""
+        # 应用英文空格修复
+        fixed_markdown = [fix_english_spacing(md) for md in all_markdown]
+        with open(markdown_output, 'w', encoding='utf-8') as f:
+            f.write("\n\n---\n\n".join(fixed_markdown))
+        result_summary["markdown_file"] = markdown_output
+        print(f"[OK] Markdown 已保存：{markdown_output}")
+    
+    def _save_json_output(
+        self,
+        all_ocr_results: List[List[OCRResult]],
+        json_output: str,
+        pdf_path: str,
+        result_summary: Dict[str, Any]
+    ) -> None:
+        """保存 JSON 输出"""
+        try:
+            import json
+            # 将 OCR 结果转换为可序列化的格式
+            json_data = {
+                "input": pdf_path,
+                "pages": []
+            }
+            for page_num, page_results in enumerate(all_ocr_results, 1):
+                page_data = {
+                    "page": page_num,
+                    "text_blocks": []
                 }
-                for page_num, page_results in enumerate(all_ocr_results, 1):
-                    page_data = {
-                        "page": page_num,
-                        "text_blocks": []
-                    }
-                    for result in page_results:
-                        page_data["text_blocks"].append({
-                            "text": result.text,
-                            "confidence": result.confidence,
-                            "bbox": [[float(p[0]), float(p[1])] for p in result.bbox]
-                        })
-                    json_data["pages"].append(page_data)
-                
-                with open(json_output, 'w', encoding='utf-8') as f:
-                    json.dump(json_data, f, ensure_ascii=False, indent=2)
-                result_summary["json_file"] = json_output
-                print(f"[OK] JSON 已儲存：{json_output}")
-            except Exception as json_err:
-                logging.warning(f"JSON 輸出失敗: {json_err}")
-        
-        # ========== HTML 輸出（如果啟用）==========
-        if html_output:
-            try:
-                # 將 Markdown 轉換為 HTML
-                html_content = f"""<!DOCTYPE html>
+                for result in page_results:
+                    page_data["text_blocks"].append({
+                        "text": result.text,
+                        "confidence": result.confidence,
+                        "bbox": [[float(p[0]), float(p[1])] for p in result.bbox]
+                    })
+                json_data["pages"].append(page_data)
+            
+            with open(json_output, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=2)
+            result_summary["json_file"] = json_output
+            print(f"[OK] JSON 已保存：{json_output}")
+        except Exception as json_err:
+            logging.warning(f"JSON 输出失败: {json_err}")
+    
+    def _save_html_output(
+        self,
+        all_markdown: List[str],
+        html_output: str,
+        pdf_path: str,
+        result_summary: Dict[str, Any]
+    ) -> None:
+        """保存 HTML 输出"""
+        try:
+            # 将 Markdown 转换为 HTML
+            html_content = f"""<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{Path(pdf_path).stem} - OCR 結果</title>
+    <title>{Path(pdf_path).stem} - OCR 结果</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; }}
@@ -1243,59 +1261,182 @@ class PaddleOCRTool:
 </head>
 <body>
 """
-                # 簡單的 Markdown 到 HTML 轉換
-                for md in all_markdown:
-                    fixed_md = fix_english_spacing(md)
-                    # 基本轉換
-                    lines = fixed_md.split('\n')
-                    for line in lines:
-                        if line.startswith('### '):
-                            html_content += f"<h3>{line[4:]}</h3>\n"
-                        elif line.startswith('## '):
-                            html_content += f"<h2>{line[3:]}</h2>\n"
-                        elif line.startswith('# '):
-                            html_content += f"<h1>{line[2:]}</h1>\n"
-                        elif line.startswith('- '):
-                            html_content += f"<li>{line[2:]}</li>\n"
-                        elif line.startswith('* '):
-                            html_content += f"<li>{line[2:]}</li>\n"
-                        elif line.strip() == '---':
-                            html_content += "<hr>\n"
-                        elif line.strip():
-                            html_content += f"<p>{line}</p>\n"
-                    html_content += "<hr>\n"
-                
-                html_content += """
+            # 简单的 Markdown 到 HTML 转换
+            for md in all_markdown:
+                fixed_md = fix_english_spacing(md)
+                # 基本转换
+                lines = fixed_md.split('\n')
+                for line in lines:
+                    if line.startswith('### '):
+                        html_content += f"<h3>{line[4:]}</h3>\n"
+                    elif line.startswith('## '):
+                        html_content += f"<h2>{line[3:]}</h2>\n"
+                    elif line.startswith('# '):
+                        html_content += f"<h1>{line[2:]}</h1>\n"
+                    elif line.startswith('- '):
+                        html_content += f"<li>{line[2:]}</li>\n"
+                    elif line.startswith('* '):
+                        html_content += f"<li>{line[2:]}</li>\n"
+                    elif line.strip() == '---':
+                        html_content += "<hr>\n"
+                    elif line.strip():
+                        html_content += f"<p>{line}</p>\n"
+                html_content += "<hr>\n"
+            
+            html_content += """
 </body>
 </html>"""
+            
+            with open(html_output, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            result_summary["html_file"] = html_output
+            print(f"[OK] HTML 已保存：{html_output}")
+        except Exception as html_err:
+            logging.warning(f"HTML 输出失败: {html_err}")
+    
+    def _save_hybrid_outputs(
+        self,
+        all_markdown: List[str],
+        all_ocr_results: List[List[OCRResult]],
+        markdown_output: Optional[str],
+        json_output: Optional[str],
+        html_output: Optional[str],
+        pdf_path: str,
+        result_summary: Dict[str, Any]
+    ) -> None:
+        """保存混合模式的各种输出文件（统筹方法）"""
+        # 保存 Markdown
+        if markdown_output and all_markdown:
+            self._save_markdown_output(all_markdown, markdown_output, result_summary)
+        
+        # 保存 JSON
+        if json_output:
+            self._save_json_output(all_ocr_results, json_output, pdf_path, result_summary)
+        
+        # 保存 HTML
+        if html_output:
+            self._save_html_output(all_markdown, html_output, pdf_path, result_summary)
+    
+
+    def _process_hybrid_pdf(
+        self,
+        pdf_path: str,
+        output_path: str,
+        markdown_output: str,
+        json_output: Optional[str],
+        html_output: Optional[str],
+        dpi: int,
+        show_progress: bool,
+        result_summary: Dict[str, Any],
+        translate_config: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """处理 PDF 的混合模式
+        
+        同时生成：
+        1. *_hybrid.pdf（原文可搜索）
+        2. *_erased.pdf（擦除版 + 文字层）
+        3. *_hybrid.md（Markdown）
+        4. *_hybrid.json（JSON，可选）
+        5. *_hybrid.html（HTML，可选）
+        
+        Args:
+            translate_config: 翻译配置（可选），包含 source_lang, target_lang, ollama_model 等
+        """
+        
+        # === 1. 初始化 ===
+        pdf_doc = fitz.open(pdf_path)
+        total_pages = len(pdf_doc)
+        
+        print(f"PDF 共 {total_pages} 页")
+        logging.info(f"PDF 共 {total_pages} 页")
+        
+        # 设定生成器
+        pdf_gen, erased_gen, inpainter, erased_path = self._setup_hybrid_generators(output_path)
+        
+        # 初始化收集器
+        all_markdown = []
+        all_text = []
+        all_ocr_results = []  # 收集每页 OCR 结果，用于翻译
+        
+        # 初始化统计收集器
+        stats_collector = StatsCollector(
+            input_file=pdf_path,
+            mode="hybrid",
+            total_pages=total_pages
+        )
+        
+        # === 2. 处理所有页面 ===
+        page_iterator = range(total_pages)
+        if show_progress and HAS_TQDM:
+            page_iterator = tqdm(page_iterator, desc="混合模式处理中", unit="页", ncols=80)
+        
+        for page_num in page_iterator:
+            try:
+                stats_collector.start_page(page_num)
+                page = pdf_doc[page_num]
                 
-                with open(html_output, 'w', encoding='utf-8') as f:
-                    f.write(html_content)
-                result_summary["html_file"] = html_output
-                print(f"[OK] HTML 已儲存：{html_output}")
-            except Exception as html_err:
-                logging.warning(f"HTML 輸出失敗: {html_err}")
+                # 处理单页
+                page_md, page_txt, ocr_res = self._process_single_hybrid_page(
+                    page, page_num, dpi, pdf_gen, erased_gen, inpainter
+                )
+                
+                # 收集结果
+                all_markdown.append(page_md)
+                all_text.append(page_txt)
+                all_ocr_results.append(ocr_res)
+                
+                result_summary["pages_processed"] += 1
+                
+                # 记录页面统计
+                stats_collector.finish_page(
+                    page_num=page_num,
+                    text=page_txt,
+                    ocr_results=ocr_res
+                )
+                
+            except Exception as page_error:
+                logging.error(f"处理第 {page_num + 1} 页时发生错误: {page_error}")
+                logging.error(traceback.format_exc())
+                continue
+        
+        pdf_doc.close()
+        
+        # === 3. 保存 PDF ===
+        if pdf_gen.save():
+            result_summary["searchable_pdf"] = output_path
+            print(f"[OK] 可搜索 PDF 已保存：{output_path}")
+        
+        if erased_gen.save():
+            result_summary["erased_pdf"] = erased_path
+            print(f"[OK] 擦除版 PDF 已保存：{erased_path}")
+        
+        # === 4. 保存其他输出 ===
+        self._save_hybrid_outputs(
+            all_markdown, all_ocr_results,
+            markdown_output, json_output, html_output,
+            pdf_path, result_summary
+        )
         
         result_summary["text_content"] = all_text
         
-        # ========== 翻譯處理（如果啟用）==========
-        # Debug 模式時關閉翻譯功能
+        # === 5. 翻译处理（如果启用）===
+        # Debug 模式时关闭翻译功能
         if translate_config and HAS_TRANSLATOR:
             if self.debug_mode:
-                print(f"[DEBUG] Debug 模式已啟用，跳過翻譯處理")
-                logging.info("Debug 模式已啟用，跳過翻譯處理")
+                print(f"[DEBUG] Debug 模式已启用，跳过翻译处理")
+                logging.info("Debug 模式已启用，跳过翻译处理")
             else:
                 self._process_translation_on_pdf(
-                    erased_pdf_path=erased_output_path,
+                    erased_pdf_path=erased_path,
                     ocr_results_per_page=all_ocr_results,
                     translate_config=translate_config,
                     result_summary=result_summary,
                     dpi=dpi
                 )
         
-        print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
+        # === 6. 完成统计 ===
+        print(f"[OK] 混合模式处理完成：{result_summary['pages_processed']} 页")
         
-        # 完成統計並顯示摘要
         final_stats = stats_collector.finish()
         final_stats.print_summary()
         result_summary["stats"] = final_stats.to_dict()
