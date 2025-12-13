@@ -1725,6 +1725,309 @@ class PaddleOCRTool:
         
         return sorted_results
     
+    # ========== Translation 处理辅助方法 ==========
+    
+    def _setup_translation_tools(
+        self,
+        erased_pdf_path: str,
+        translate_config: Dict[str, Any]
+    ) -> Tuple:
+        """设定翻译所需的工具和生成器
+        
+        Args:
+            erased_pdf_path: 擦除版 PDF 路径
+            translate_config: 翻译配置
+        
+        Returns:
+            Tuple of (translator, renderer, pdf_doc, hybrid_doc,
+                      mono_generator, bilingual_generator, 
+                      translated_path, bilingual_path)
+        """
+        # 初始化翻译器和绘制器
+        translator = OllamaTranslator(
+            model=translate_config['ollama_model'],
+            base_url=translate_config['ollama_url']
+        )
+        renderer = TextRenderer(font_path=translate_config.get('font_path'))
+        
+        # 打开 PDF
+        pdf_doc = fitz.open(erased_pdf_path)
+        
+        # 打开原始 hybrid PDF（用于双语）
+        hybrid_pdf_path = erased_pdf_path.replace('_erased.pdf', '_hybrid.pdf')
+        hybrid_doc = None
+        if not translate_config['no_dual'] and os.path.exists(hybrid_pdf_path):
+            hybrid_doc = fitz.open(hybrid_pdf_path)
+        
+        # 创建输出路径
+        base_path = erased_pdf_path.replace('_erased.pdf', '')
+        target_lang = translate_config['target_lang']
+        translated_path = f"{base_path}_translated_{target_lang}.pdf" \
+            if not translate_config['no_mono'] else None
+        bilingual_path = f"{base_path}_bilingual_{target_lang}.pdf" \
+            if not translate_config['no_dual'] else None
+        
+        # 创建生成器
+        mono_generator = MonolingualPDFGenerator() if translated_path else None
+        bilingual_generator = BilingualPDFGenerator(
+            mode=translate_config['dual_mode'],
+            translate_first=translate_config.get('dual_translate_first', False)
+        ) if bilingual_path else None
+        
+        return (translator, renderer, pdf_doc, hybrid_doc,
+                mono_generator, bilingual_generator, 
+                translated_path, bilingual_path)
+    
+    def _get_page_images(
+        self,
+        pdf_doc,
+        hybrid_doc,
+        page_num: int,
+        dpi: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """获取擦除版和原始版页面图片
+        
+        Args:
+            pdf_doc: 擦除版 PDF 文档
+            hybrid_doc: 原始 hybrid PDF 文档
+            page_num: 页码（0-based）
+            dpi: 解析度
+        
+        Returns:
+            Tuple of (erased_image, original_image)
+        """
+        zoom = dpi / 72.0
+        matrix = fitz.Matrix(zoom, zoom)
+        
+        # 获取擦除版图片
+        erased_page = pdf_doc[page_num]
+        erased_pixmap = erased_page.get_pixmap(matrix=matrix)
+        erased_image = pixmap_to_numpy(erased_pixmap, copy=True)
+        
+        # 获取原始图片（用于双语）
+        original_image = erased_image.copy()
+        if hybrid_doc:
+            hybrid_page = hybrid_doc[page_num]
+            hybrid_pixmap = hybrid_page.get_pixmap(matrix=matrix)
+            original_image = pixmap_to_numpy(hybrid_pixmap, copy=True)
+        
+        return erased_image, original_image
+    
+    def _translate_page_texts(
+        self,
+        page_ocr_results: List[OCRResult],
+        translator,
+        source_lang: str,
+        target_lang: str,
+        page_num: int
+    ) -> List:
+        """翻译页面的所有文字
+        
+        Args:
+            page_ocr_results: 页面的 OCR 结果
+            translator: 翻译器对象
+            source_lang: 来源语言
+            target_lang: 目标语言
+            page_num: 页码（0-based）
+        
+        Returns:
+            List[TranslatedBlock]: 翻译后的文字块列表
+        """
+        # 收集需要翻译的文字
+        texts_to_translate = []
+        bboxes = []
+        for result in page_ocr_results:
+            if result.text and result.text.strip():
+                texts_to_translate.append(result.text)
+                bboxes.append(result.bbox)
+        
+        if not texts_to_translate:
+            return []
+        
+        logging.info(f"第 {page_num + 1} 页: 翻译 {len(texts_to_translate)} 个文字区块")
+        
+        # 批次翻译
+        translated_texts = translator.translate_batch(
+            texts_to_translate, source_lang, target_lang, show_progress=False
+        )
+        
+        # 创建 TranslatedBlock 列表
+        translated_blocks = []
+        for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
+            translated_blocks.append(TranslatedBlock(
+                original_text=orig,
+                translated_text=trans,
+                bbox=bbox
+            ))
+        
+        return translated_blocks
+    
+    def _render_translated_text(
+        self,
+        erased_image: np.ndarray,
+        erased_page,  # PyMuPDF page object
+        translated_blocks: List,
+        renderer,
+        use_ocr_workaround: bool,
+        dpi: int
+    ) -> np.ndarray:
+        """在擦除版图片上绘制翻译文字
+        
+        Args:
+            erased_image: 擦除版图片
+            erased_page: PyMuPDF 页面对象（OCR workaround 模式需要）
+            translated_blocks: 翻译后的文字块列表
+            renderer: TextRenderer 对象
+            use_ocr_workaround: 是否使用 OCR 补救模式
+            dpi: 解析度
+        
+        Returns:
+            np.ndarray: 绘制了翻译文字的图片
+        """
+        if use_ocr_workaround:
+            # OCR 补救模式：直接在 PDF 页面上操作
+            logging.info("使用 OCR 补救模式绘制翻译文字")
+            workaround = OCRWorkaround(margin=2.0, force_black=True)
+            
+            for block in translated_blocks:
+                # 计算坐标
+                x = min(p[0] for p in block.bbox)
+                y = min(p[1] for p in block.bbox)
+                width = max(p[0] for p in block.bbox) - x
+                height = max(p[1] for p in block.bbox) - y
+                
+                text_block = TextBlock(
+                    text=block.translated_text,
+                    x=x, y=y, width=width, height=height
+                )
+                workaround.add_text_with_mask(erased_page, text_block, block.translated_text)
+            
+            # 从修改后的页面获取图片
+            zoom = dpi / 72.0
+            matrix = fitz.Matrix(zoom, zoom)
+            modified_pixmap = erased_page.get_pixmap(matrix=matrix)
+            translated_image = pixmap_to_numpy(modified_pixmap, copy=True)
+        else:
+            # 标准模式：使用 TextRenderer
+            translated_image = erased_image.copy()
+            translated_image = renderer.render_multiple_texts(
+                translated_image, translated_blocks
+            )
+        
+        return translated_image
+    
+    def _process_single_translation_page(
+        self,
+        page_num: int,
+        ocr_results_per_page: List[List[OCRResult]],
+        pdf_doc,
+        hybrid_doc,
+        translator,
+        renderer,
+        mono_generator,
+        bilingual_generator,
+        translate_config: Dict[str, Any],
+        dpi: int
+    ) -> None:
+        """处理单页翻译
+        
+        完整流程：获取图片 → 翻译 → 绘制 → 添加到生成器
+        
+        Args:
+            page_num: 页码（0-based）
+            ocr_results_per_page: 每页的 OCR 结果
+            pdf_doc: 擦除版 PDF 文档
+            hybrid_doc: 原始 hybrid PDF 文档
+            translator: 翻译器对象
+            renderer: TextRenderer 对象
+            mono_generator: 单语 PDF 生成器
+            bilingual_generator: 双语 PDF 生成器
+            translate_config: 翻译配置
+            dpi: 解析度
+        """
+        # 检查 OCR 结果
+        if page_num >= len(ocr_results_per_page):
+            logging.warning(f"第 {page_num + 1} 页没有 OCR 结果")
+            return
+        
+        page_ocr_results = ocr_results_per_page[page_num]
+        
+        # 获取页面图片
+        erased_image, original_image = self._get_page_images(
+            pdf_doc, hybrid_doc, page_num, dpi
+        )
+        
+        # 如果没有 OCR 结果，直接添加空白页
+        if not page_ocr_results:
+            if mono_generator:
+                mono_generator.add_page(erased_image)
+            if bilingual_generator:
+                bilingual_generator.add_bilingual_page(original_image, erased_image)
+            return
+        
+        # 翻译文字
+        translated_blocks = self._translate_page_texts(
+            page_ocr_results, translator,
+            translate_config['source_lang'],
+            translate_config['target_lang'],
+            page_num
+        )
+        
+        # 如果没有需要翻译的文字
+        if not translated_blocks:
+            if mono_generator:
+                mono_generator.add_page(erased_image)
+            if bilingual_generator:
+                bilingual_generator.add_bilingual_page(original_image, erased_image)
+            return
+        
+        # 绘制翻译文字
+        erased_page = pdf_doc[page_num] if translate_config.get('ocr_workaround') else None
+        translated_image = self._render_translated_text(
+            erased_image, erased_page, translated_blocks,
+            renderer, translate_config.get('ocr_workaround', False), dpi
+        )
+        
+        # 添加到生成器
+        if mono_generator:
+            mono_generator.add_page(translated_image)
+        if bilingual_generator:
+            bilingual_generator.add_bilingual_page(original_image, translated_image)
+        
+        # 清理
+        gc.collect()
+    
+    def _save_translation_pdfs(
+        self,
+        mono_generator,
+        bilingual_generator,
+        translated_path: Optional[str],
+        bilingual_path: Optional[str],
+        result_summary: Dict[str, Any]
+    ) -> None:
+        """保存翻译版和双语版 PDF
+        
+        Args:
+            mono_generator: 单语 PDF 生成器
+            bilingual_generator: 双语 PDF 生成器
+            translated_path: 翻译版 PDF 路径
+            bilingual_path: 双语版 PDF 路径
+            result_summary: 结果摘要（会被更新）
+        """
+        # 保存翻译版 PDF
+        if mono_generator and translated_path:
+            if mono_generator.save(translated_path):
+                result_summary["translated_pdf"] = translated_path
+                print(f"[OK] 翻译 PDF 已保存：{translated_path}")
+            mono_generator.close()
+        
+        # 保存双语版 PDF
+        if bilingual_generator and bilingual_path:
+            if bilingual_generator.save(bilingual_path):
+                result_summary["bilingual_pdf"] = bilingual_path
+                print(f"[OK] 双语对照 PDF 已保存：{bilingual_path}")
+            bilingual_generator.close()
+    
     def _sort_ocr_by_position(self, ocr_results: List[OCRResult]) -> List[OCRResult]:
         """按位置排序 OCR 結果（從上到下、從左到右）"""
         
@@ -1760,219 +2063,81 @@ class PaddleOCRTool:
 
     def _process_translation_on_pdf(
         self,
-        erased_pdf_path: str,  # 使用擦除版 PDF 作為翻譯基礎
+        erased_pdf_path: str,  # 使用擦除版 PDF 作为翻译基础
         ocr_results_per_page: List[List[OCRResult]],
         translate_config: Dict[str, Any],
         result_summary: Dict[str, Any],
         dpi: int = 150
     ) -> None:
-        """
-        在擦除版 PDF 基礎上進行翻譯處理
+        """在擦除版 PDF 基础上进行翻译处理
         
         流程：
-        1. 開啟 *_erased.pdf（已擦除）
-        2. 翻譯文字
-        3. 在擦除後的圖片上繪製翻譯文字
+        1. 打开 *_erased.pdf（已擦除）
+        2. 翻译文字
+        3. 在擦除后的图片上绘制翻译文字
         4. 生成 *_translated_{lang}.pdf 和 *_bilingual_{lang}.pdf
         
         Args:
-            erased_pdf_path: 已擦除的 PDF 路徑（*_erased.pdf）
-            ocr_results_per_page: 每頁的 OCR 結果列表
-            translate_config: 翻譯配置
-            result_summary: 結果摘要（會被更新）
-            dpi: PDF 轉圖片時使用的 DPI
+            erased_pdf_path: 已擦除的 PDF 路径（*_erased.pdf）
+            ocr_results_per_page: 每页的 OCR 结果列表
+            translate_config: 翻译配置
+            result_summary: 结果摘要（会被更新）
+            dpi: PDF 转图片时使用的 DPI
         """
-        print(f"\n[翻譯] 開始翻譯處理...")
-        logging.info(f"開始翻譯處理: {erased_pdf_path}")
+        print(f"\n[翻译] 开始翻译处理...")
+        logging.info(f"开始翻译处理: {erased_pdf_path}")
         
-        source_lang = translate_config.get('source_lang', 'auto')
-        target_lang = translate_config.get('target_lang', 'en')
-        ollama_model = translate_config.get('ollama_model', 'qwen2.5:7b')
-        ollama_url = translate_config.get('ollama_url', 'http://localhost:11434')
-        no_mono = translate_config.get('no_mono', False)
-        no_dual = translate_config.get('no_dual', False)
-        dual_mode = translate_config.get('dual_mode', 'alternating')
-        font_path = translate_config.get('font_path', None)
-        # OCR 補救模式（直接在 PDF 上操作，適用於掃描件）
-        use_ocr_workaround = translate_config.get('ocr_workaround', False)
-        # 翻譯 debug 模式（暫時不用，預設關閉，之後會用）
-        translate_debug = translate_config.get('translate_debug', False)
-        
-        print(f"   來源語言: {source_lang}")
-        print(f"   目標語言: {target_lang}")
-        print(f"   Ollama 模型: {ollama_model}")
+        print(f"   来源语言: {translate_config.get('source_lang', 'auto')}")
+        print(f"   目标语言: {translate_config.get('target_lang', 'en')}")
+        print(f"   Ollama 模型: {translate_config.get('ollama_model', 'qwen2.5:7b')}")
         
         try:
-            # 初始化翻譯器和繪製器
-            translator = OllamaTranslator(model=ollama_model, base_url=ollama_url)
-            renderer = TextRenderer(font_path=font_path)  # 用於繪製翻譯文字
+            # === 1. 初始化工具 ===
+            (translator, renderer, pdf_doc, hybrid_doc,
+             mono_gen, bilingual_gen, 
+             trans_path, bi_path) = self._setup_translation_tools(
+                erased_pdf_path, translate_config
+            )
             
-            # 開啟擦除版 PDF
-            pdf_doc = fitz.open(erased_pdf_path)
             total_pages = len(pdf_doc)
             
-            # 開啟原始 hybrid.pdf 用於生成雙語對照
-            hybrid_pdf_path = erased_pdf_path.replace('_erased.pdf', '_hybrid.pdf')
-            hybrid_doc = None
-            if not no_dual and os.path.exists(hybrid_pdf_path):
-                hybrid_doc = fitz.open(hybrid_pdf_path)
-            
-            # 建立輸出路徑
-            base_path = erased_pdf_path.replace('_erased.pdf', '')
-            translated_path = f"{base_path}_translated_{target_lang}.pdf" if not no_mono else None
-            bilingual_path = f"{base_path}_bilingual_{target_lang}.pdf" if not no_dual else None
-            
-            # 建立 PDF 生成器
-            mono_generator = MonolingualPDFGenerator() if translated_path else None
-            bilingual_generator = BilingualPDFGenerator(
-                mode=dual_mode,
-                translate_first=translate_config.get('dual_translate_first', False)
-            ) if bilingual_path else None
-            
-            # 進度條
+            # === 2. 处理所有页面 ===
             page_iter = range(total_pages)
             if HAS_TQDM:
-                page_iter = tqdm(page_iter, desc="翻譯頁面", unit="頁", ncols=80)
+                page_iter = tqdm(page_iter, desc="翻译页面", unit="页", ncols=80)
             
             for page_num in page_iter:
                 try:
-                    # 取得該頁的 OCR 結果
-                    if page_num >= len(ocr_results_per_page):
-                        logging.warning(f"第 {page_num + 1} 頁沒有 OCR 結果")
-                        continue
-                    
-                    page_ocr_results = ocr_results_per_page[page_num]
-                    
-                    # ========== 取得擦除版圖片（已經擦除過了）==========
-                    erased_page = pdf_doc[page_num]
-                    zoom = dpi / 72.0
-                    matrix = fitz.Matrix(zoom, zoom)
-                    erased_pixmap = erased_page.get_pixmap(matrix=matrix)
-                    
-                    # 使用共用工具函數轉換為 numpy 陣列
-                    erased_image = pixmap_to_numpy(erased_pixmap, copy=True)
-                    
-                    # 取得原始圖片（用於雙語對照）
-                    original_image = erased_image.copy()
-                    if hybrid_doc:
-                        hybrid_page = hybrid_doc[page_num]
-                        hybrid_pixmap = hybrid_page.get_pixmap(matrix=matrix)
-                        original_image = pixmap_to_numpy(hybrid_pixmap, copy=True)
-                    
-                    if not page_ocr_results:
-                        # 沒有文字需要翻譯，保留擦除版圖片
-                        if mono_generator:
-                            mono_generator.add_page(erased_image)
-                        if bilingual_generator:
-                            bilingual_generator.add_bilingual_page(original_image, erased_image)
-                        continue
-                    
-                    # 收集需要翻譯的文字和 bbox
-                    texts_to_translate = []
-                    valid_results = []
-                    bboxes = []
-                    for result in page_ocr_results:
-                        if result.text and result.text.strip():
-                            texts_to_translate.append(result.text)
-                            valid_results.append(result)
-                            bboxes.append(result.bbox)
-                    
-                    if not texts_to_translate:
-                        if mono_generator:
-                            mono_generator.add_page(erased_image)
-                        if bilingual_generator:
-                            bilingual_generator.add_bilingual_page(original_image, erased_image)
-                        continue
-                    
-                    logging.info(f"第 {page_num + 1} 頁: 翻譯 {len(texts_to_translate)} 個文字區塊")
-                    
-                    # ========== 批次翻譯 ==========
-                    translated_texts = translator.translate_batch(
-                        texts_to_translate, source_lang, target_lang, show_progress=False
+                    self._process_single_translation_page(
+                        page_num, ocr_results_per_page,
+                        pdf_doc, hybrid_doc,
+                        translator, renderer,
+                        mono_gen, bilingual_gen,
+                        translate_config, dpi
                     )
-                    
-                    # ========== 在擦除後的圖片上繪製翻譯文字 ==========
-                    translated_blocks = []
-                    for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
-                        translated_blocks.append(TranslatedBlock(
-                            original_text=orig,
-                            translated_text=trans,
-                            bbox=bbox
-                        ))
-                    
-                    if use_ocr_workaround:
-                        # ========== OCR 補救模式：直接在 PDF 頁面上操作 ==========
-                        logging.info(f"使用 OCR 補救模式繪製翻譯文字")
-                        workaround = OCRWorkaround(margin=2.0, force_black=True)
-                        
-                        for block in translated_blocks:
-                            # 計算座標
-                            x = min(p[0] for p in block.bbox)
-                            y = min(p[1] for p in block.bbox)
-                            width = max(p[0] for p in block.bbox) - x
-                            height = max(p[1] for p in block.bbox) - y
-                            
-                            text_block = TextBlock(
-                                text=block.translated_text,
-                                x=x,
-                                y=y,
-                                width=width,
-                                height=height
-                            )
-                            workaround.add_text_with_mask(erased_page, text_block, block.translated_text)
-                        
-                        # OCR workaround 模式下，translated_image 直接從修改後的頁面取得
-                        modified_pixmap = erased_page.get_pixmap(matrix=matrix)
-                        translated_image = pixmap_to_numpy(modified_pixmap, copy=True)
-                    else:
-                        # ========== 標準模式：使用 TextRenderer ==========
-                        translated_image = erased_image.copy()
-                        translated_image = renderer.render_multiple_texts(
-                            translated_image, translated_blocks
-                        )
-                    
-                    # 添加到純翻譯 PDF
-                    if mono_generator:
-                        mono_generator.add_page(translated_image)
-                    
-                    # 添加到雙語對照 PDF
-                    if bilingual_generator:
-                        bilingual_generator.add_bilingual_page(original_image, translated_image)
-                    
-                    # 清理記憶體
-                    del erased_pixmap
-                    gc.collect()
-                    
                 except Exception as page_err:
-                    logging.error(f"翻譯第 {page_num + 1} 頁時發生錯誤: {page_err}")
+                    logging.error(f"翻译第 {page_num + 1} 页时发生错误: {page_err}")
                     logging.error(traceback.format_exc())
                     continue
             
+            # === 3. 保存输出 ===
             pdf_doc.close()
             if hybrid_doc:
                 hybrid_doc.close()
             
-            # 儲存翻譯版 PDF
-            if mono_generator and translated_path:
-                if mono_generator.save(translated_path):
-                    result_summary["translated_pdf"] = translated_path
-                    print(f"[OK] 翻譯 PDF 已儲存：{translated_path}")
-                mono_generator.close()
+            self._save_translation_pdfs(
+                mono_gen, bilingual_gen,
+                trans_path, bi_path,
+                result_summary
+            )
             
-            # 儲存雙語版 PDF
-            if bilingual_generator and bilingual_path:
-                if bilingual_generator.save(bilingual_path):
-                    result_summary["bilingual_pdf"] = bilingual_path
-                    print(f"[OK] 雙語對照 PDF 已儲存：{bilingual_path}")
-                bilingual_generator.close()
-            
-            print(f"[OK] 翻譯處理完成")
+            print(f"[OK] 翻译处理完成")
             
         except Exception as e:
-            error_msg = f"翻譯處理失敗: {str(e)}"
+            error_msg = f"翻译处理失败: {str(e)}"
             logging.error(error_msg)
             logging.error(traceback.format_exc())
-            print(f"錯誤：{error_msg}")
+            print(f"错误：{error_msg}")
             result_summary["translation_error"] = str(e)
 
     def process_translate(
