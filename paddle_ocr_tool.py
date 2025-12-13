@@ -61,6 +61,9 @@ try:
         OCRResult,
         PDFGenerator,
         OCRMode,
+        pixmap_to_numpy,
+        page_to_numpy,
+        get_dpi_matrix,
     )
     HAS_TOOLKIT = True
 except ImportError:
@@ -655,14 +658,8 @@ class PaddleOCRTool:
                     pixmap = page.get_pixmap(matrix=matrix)
                     logging.info(f"  圖片尺寸: {pixmap.width}x{pixmap.height}, 色彩通道: {pixmap.n}")
                     
-                    # 轉換為 numpy 陣列以供 PaddleOCR 使用
-                    img_array = np.frombuffer(pixmap.samples, dtype=np.uint8)
-                    img_array = img_array.reshape(pixmap.height, pixmap.width, pixmap.n)
-                    
-                    # 如果是 RGBA，轉換為 RGB
-                    if pixmap.n == 4:
-                        img_array = img_array[:, :, :3]
-                        logging.info(f"  已轉換 RGBA 為 RGB")
+                    # 使用共用工具函數轉換為 numpy 陣列
+                    img_array = pixmap_to_numpy(pixmap)
                     
                     # 執行 OCR
                     logging.info(f"  執行 OCR...")
@@ -1057,12 +1054,8 @@ class PaddleOCRTool:
                 matrix = fitz.Matrix(zoom, zoom)
                 pixmap = page.get_pixmap(matrix=matrix, alpha=False)
                 
-                # 轉換為 numpy 陣列
-                img_array = np.frombuffer(pixmap.samples, dtype=np.uint8)
-                img_array = img_array.reshape(pixmap.height, pixmap.width, pixmap.n)
-                # pixmap.n 應該為 3 (RGB)，但保留檢查以防萬一
-                if pixmap.n == 4:
-                    img_array = img_array[:, :, :3]
+                # 使用共用工具函數轉換為 numpy 陣列
+                img_array = pixmap_to_numpy(pixmap)
                 
                 # 步驟 1：使用 Structure 引擎取得版面資訊和 Markdown
                 logging.info(f"  執行版面分析...")
@@ -1715,20 +1708,15 @@ class PaddleOCRTool:
                     matrix = fitz.Matrix(zoom, zoom)
                     erased_pixmap = erased_page.get_pixmap(matrix=matrix)
                     
-                    erased_image = np.frombuffer(erased_pixmap.samples, dtype=np.uint8)
-                    erased_image = erased_image.reshape(erased_pixmap.height, erased_pixmap.width, erased_pixmap.n).copy()
-                    if erased_pixmap.n == 4:
-                        erased_image = erased_image[:, :, :3].copy()
+                    # 使用共用工具函數轉換為 numpy 陣列
+                    erased_image = pixmap_to_numpy(erased_pixmap, copy=True)
                     
                     # 取得原始圖片（用於雙語對照）
                     original_image = erased_image.copy()
                     if hybrid_doc:
                         hybrid_page = hybrid_doc[page_num]
                         hybrid_pixmap = hybrid_page.get_pixmap(matrix=matrix)
-                        original_image = np.frombuffer(hybrid_pixmap.samples, dtype=np.uint8)
-                        original_image = original_image.reshape(hybrid_pixmap.height, hybrid_pixmap.width, hybrid_pixmap.n).copy()
-                        if hybrid_pixmap.n == 4:
-                            original_image = original_image[:, :, :3].copy()
+                        original_image = pixmap_to_numpy(hybrid_pixmap, copy=True)
                     
                     if not page_ocr_results:
                         # 沒有文字需要翻譯，保留擦除版圖片
@@ -1794,10 +1782,7 @@ class PaddleOCRTool:
                         
                         # OCR workaround 模式下，translated_image 直接從修改後的頁面取得
                         modified_pixmap = erased_page.get_pixmap(matrix=matrix)
-                        translated_image = np.frombuffer(modified_pixmap.samples, dtype=np.uint8)
-                        translated_image = translated_image.reshape(modified_pixmap.height, modified_pixmap.width, modified_pixmap.n).copy()
-                        if modified_pixmap.n == 4:
-                            translated_image = translated_image[:, :, :3].copy()
+                        translated_image = pixmap_to_numpy(modified_pixmap, copy=True)
                     else:
                         # ========== 標準模式：使用 TextRenderer ==========
                         translated_image = erased_image.copy()
