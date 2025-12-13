@@ -521,18 +521,22 @@ class PDFGenerator:
     使 PDF 可搜尋、可選取文字，同時保持原始視覺外觀。
     """
     
-    def __init__(self, output_path: str, debug_mode: bool = False):
+    def __init__(self, output_path: str, debug_mode: bool = False, compress_images: bool = False, jpeg_quality: int = 85):
         """
         初始化 PDF 生成器
         
         Args:
             output_path: 輸出 PDF 的檔案路徑
             debug_mode: 如果為 True，文字會顯示為粉紅色（方便調試）
+            compress_images: 如果為 True，使用 JPEG 壓縮圖片以減少檔案大小
+            jpeg_quality: JPEG 壓縮品質（0-100，預設 85）
         """
         self.output_path = output_path
         self.doc = fitz.open()  # 建立新的空白 PDF
         self.page_count = 0
         self.debug_mode = debug_mode
+        self.compress_images = compress_images
+        self.jpeg_quality = max(0, min(100, jpeg_quality))  # 確保在 0-100 範圍內
     
     def add_page(self, image_path: str, ocr_results: List[OCRResult]) -> bool:
         """
@@ -558,7 +562,22 @@ class PDFGenerator:
             
             # 插入圖片作為背景
             rect = fitz.Rect(0, 0, img_width, img_height)
-            page.insert_image(rect, filename=image_path)
+            
+            if self.compress_images:
+                # 使用 JPEG 壓縮以減少檔案大小
+                import io
+                # 確保是 RGB 模式
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                # 儲存為 JPEG 到記憶體緩衝區
+                jpeg_buffer = io.BytesIO()
+                img.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                jpeg_data = jpeg_buffer.getvalue()
+                # 插入 JPEG 資料
+                page.insert_image(rect, stream=jpeg_data)
+            else:
+                # 直接插入原始圖片（PNG 格式，無損但較大）
+                page.insert_image(rect, filename=image_path)
             
             # 疊加透明文字層
             for result in ocr_results:
@@ -592,9 +611,23 @@ class PDFGenerator:
                 height=img_height
             )
             
-            # 插入 pixmap 作為背景
+            # 插入圖片作為背景
             rect = fitz.Rect(0, 0, img_width, img_height)
-            page.insert_image(rect, pixmap=pixmap)
+            
+            if self.compress_images:
+                # 使用 JPEG 壓縮以減少檔案大小
+                import io
+                # 將 pixmap 轉換為 PIL Image
+                pil_image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
+                # 儲存為 JPEG 到記憶體緩衝區
+                jpeg_buffer = io.BytesIO()
+                pil_image.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                jpeg_data = jpeg_buffer.getvalue()
+                # 插入 JPEG 資料
+                page.insert_image(rect, stream=jpeg_data)
+            else:
+                # 直接插入 pixmap（PNG 格式，無損但較大）
+                page.insert_image(rect, pixmap=pixmap)
             
             # 疊加透明文字層
             for result in ocr_results:
@@ -771,7 +804,9 @@ class PaddleOCRTool:
         use_doc_unwarping: bool = False,
         use_textline_orientation: bool = False,
         device: str = "gpu",
-        debug_mode: bool = False
+        debug_mode: bool = False,
+        compress_images: bool = False,
+        jpeg_quality: int = 85
     ):
         """
         初始化 PaddleOCR 工具
@@ -783,12 +818,16 @@ class PaddleOCRTool:
             use_textline_orientation: 是否啟用文字行方向偵測
             device: 運算設備 ('gpu' 或 'cpu')
             debug_mode: DEBUG 模式，將隱形文字改為粉紅色可見文字
+            compress_images: 啟用 JPEG 壓縮以減少 PDF 檔案大小
+            jpeg_quality: JPEG 壓縮品質（0-100）
         """
         self.debug_mode = debug_mode
         self.mode = mode
         self.use_orientation_classify = use_orientation_classify
         self.use_doc_unwarping = use_doc_unwarping
         self.device = device
+        self.compress_images = compress_images
+        self.jpeg_quality = jpeg_quality
         
         # 初始化對應的 OCR 引擎
         print(f"正在初始化 PaddleOCR 3.x (模式: {mode})...")
@@ -1565,9 +1604,20 @@ class PaddleOCRTool:
         
         # ========== 準備 PDF 生成器 ==========
         # 1. 原文可搜尋 PDF
-        pdf_generator = PDFGenerator(output_path, debug_mode=self.debug_mode)
+        pdf_generator = PDFGenerator(
+            output_path, 
+            debug_mode=self.debug_mode,
+            compress_images=self.compress_images,
+            jpeg_quality=self.jpeg_quality
+        )
+        logging.info(f"[DEBUG] PDFGenerator compress_images={pdf_generator.compress_images}, jpeg_quality={pdf_generator.jpeg_quality}")
         # 2. 擦除版 PDF
-        erased_generator = PDFGenerator(erased_output_path, debug_mode=self.debug_mode)
+        erased_generator = PDFGenerator(
+            erased_output_path, 
+            debug_mode=self.debug_mode,
+            compress_images=self.compress_images,
+            jpeg_quality=self.jpeg_quality
+        )
         
         # 擦除器
         inpainter = TextInpainter() if HAS_TRANSLATOR else None
@@ -1590,11 +1640,12 @@ class PaddleOCRTool:
                 # 轉換為圖片
                 zoom = dpi / 72.0
                 matrix = fitz.Matrix(zoom, zoom)
-                pixmap = page.get_pixmap(matrix=matrix)
+                pixmap = page.get_pixmap(matrix=matrix, alpha=False)
                 
                 # 轉換為 numpy 陣列
                 img_array = np.frombuffer(pixmap.samples, dtype=np.uint8)
                 img_array = img_array.reshape(pixmap.height, pixmap.width, pixmap.n)
+                # pixmap.n 應該為 3 (RGB)，但保留檢查以防萬一
                 if pixmap.n == 4:
                     img_array = img_array[:, :, :3]
                 
@@ -1659,13 +1710,8 @@ class PaddleOCRTool:
                     img_array_copy = img_array.copy()
                     
                     # 3.1 生成原文可搜尋 PDF（*_hybrid.pdf）
-                    tmp_path = tempfile.mktemp(suffix='.png')
-                    try:
-                        Image.fromarray(img_array_copy).save(tmp_path)
-                        pdf_generator.add_page(tmp_path, sorted_results)
-                    finally:
-                        if os.path.exists(tmp_path):
-                            os.remove(tmp_path)
+                    # 直接使用 pixmap，避免 I/O 開銷
+                    pdf_generator.add_page_from_pixmap(pixmap, sorted_results)
                     
                     # 3.2 生成擦除版 PDF（*_erased.pdf）
                     if inpainter:
@@ -2649,6 +2695,19 @@ def main():
         help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便調試文字位置）"
     )
     
+    parser.add_argument(
+        "--no-compress",
+        action="store_true",
+        help="停用 PDF 壓縮：使用 PNG 無損格式（檔案較大但品質最佳）"
+    )
+    
+    parser.add_argument(
+        "--jpeg-quality",
+        type=int,
+        default=85,
+        help="JPEG 壓縮品質（0-100，預設 85）。較低值 = 較小檔案但品質較差"
+    )
+    
     # ========== 翻譯選項 ==========
     translate_group = parser.add_argument_group('翻譯選項', '使用 Ollama 本地模型翻譯 PDF 內容')
     
@@ -2856,8 +2915,16 @@ def main():
         use_doc_unwarping=args.unwarping,
         use_textline_orientation=args.textline_orientation,
         device=args.device,
-        debug_mode=args.debug_text
+        debug_mode=args.debug_text,
+        compress_images=not args.no_compress,
+        jpeg_quality=args.jpeg_quality
     )
+    
+    # 顯示壓縮設定
+    if not args.no_compress:
+        print(f"[壓縮] 啟用（JPEG 品質：{args.jpeg_quality}%）")
+    else:
+        print(f"[壓縮] 停用（使用 PNG 無損格式）")
     
     # 根據模式處理
     if args.mode == "formula":
