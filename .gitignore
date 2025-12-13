@@ -38,7 +38,7 @@ env/
 # Logs
 *.log
 
-# Test outputs
+# Test outputs (generated files)
 *_ocr.txt
 *_searchable.pdf
 *_ocr.md
@@ -46,18 +46,31 @@ env/
 *_tables.xlsx
 *_formula.tex
 *_hybrid.md
-*_ocr_page*.json
-*_hybrid.html
+*_hybrid.pdf
 *_hybrid.json
+*_hybrid.html
+*_erased.pdf
+*_translated_*.pdf
+*_bilingual_*.pdf
+*_ocr_page*.json
 accuracy_report.txt
 comparison_result.txt
 result.txt
+test_*.md
 
-# PDF files (too large for git)
-*.pdf
+# PDF files (too large for git, keep only samples)
+# *.pdf
 
 # Model cache (created by PaddleOCR)
 .paddleocr/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# pytest cache
+.pytest_cache/
 
 # OS files
 .DS_Store

@@ -1,5 +1,7 @@
 # PaddleOCR Toolkit
 
+[![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
+
 🔍 **多功能 OCR 文件辨識與處理工具**
 
 基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，支援多種 OCR 模式和輸出格式。
