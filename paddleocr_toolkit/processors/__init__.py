@@ -23,6 +23,17 @@ from .stats_collector import (
     ProcessingStats,
     StatsCollector
 )
+from .glossary_manager import (
+    GlossaryManager,
+    GlossaryEntry,
+    create_sample_glossary
+)
+from .ocr_workaround import (
+    OCRWorkaround,
+    TextBlock,
+    detect_scanned_document,
+    should_use_ocr_workaround
+)
 
 __all__ = [
     # 文字處理
@@ -48,6 +59,16 @@ __all__ = [
     'PageStats',
     'ProcessingStats',
     'StatsCollector',
+    # 術語表
+    'GlossaryManager',
+    'GlossaryEntry',
+    'create_sample_glossary',
+    # OCR 補救
+    'OCRWorkaround',
+    'TextBlock',
+    'detect_scanned_document',
+    'should_use_ocr_workaround',
 ]
+
 
 
