@@ -12,6 +12,12 @@ from .image_preprocessor import (
     preprocess_for_ocr,
     auto_preprocess
 )
+from .batch_processor import (
+    pdf_to_images_parallel,
+    batch_process_images,
+    BatchProcessor,
+    get_optimal_workers
+)
 
 __all__ = [
     # 文字處理
@@ -28,4 +34,10 @@ __all__ = [
     'sharpen',
     'preprocess_for_ocr',
     'auto_preprocess',
+    # 批次處理
+    'pdf_to_images_parallel',
+    'batch_process_images',
+    'BatchProcessor',
+    'get_optimal_workers',
 ]
+
