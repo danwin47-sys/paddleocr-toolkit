@@ -1,0 +1,54 @@
+# PaddleOCR Toolkit 設定檔
+# 將此檔案放在專案目錄或使用 --config 指定路徑
+
+# ============ OCR 設定 ============
+ocr:
+  # OCR 模式: basic, structure, vl, formula, hybrid
+  mode: hybrid
+  # 運算設備: cpu, gpu
+  device: cpu
+  # PDF 轉圖片解析度
+  dpi: 150
+  # 文件方向校正
+  orientation_classify: false
+  # 文件彎曲校正
+  unwarping: false
+
+# ============ 輸出設定 ============
+output:
+  # 生成可搜尋 PDF
+  searchable: true
+  # 輸出所有格式
+  all_formats: false
+  # 顯示進度條
+  show_progress: true
+  # DEBUG 模式（粉紅色文字）
+  debug_text: false
+
+# ============ PDF 壓縮 ============
+compression:
+  # 啟用 JPEG 壓縮
+  enabled: true
+  # JPEG 品質 (0-100)
+  jpeg_quality: 85
+
+# ============ 翻譯設定 ============
+translation:
+  # 啟用翻譯
+  enabled: false
+  # 來源語言 (auto=自動偵測)
+  source_lang: auto
+  # 目標語言
+  target_lang: en
+  # Ollama 模型
+  ollama_model: qwen2.5:7b
+  # Ollama API 地址
+  ollama_url: http://localhost:11434
+  # 輸出純翻譯 PDF
+  mono_pdf: true
+  # 輸出雙語對照 PDF
+  dual_pdf: true
+  # 雙語模式: alternating, side-by-side
+  dual_mode: alternating
+  # 使用 OCR 補救模式
+  ocr_workaround: false

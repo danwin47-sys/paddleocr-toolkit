@@ -14,6 +14,13 @@ from .pdf_utils import (
     get_page_size,
     copy_page,
 )
+from .config_loader import (
+    load_config,
+    save_config,
+    apply_config_to_args,
+    get_config_value,
+    DEFAULT_CONFIG,
+)
 
 __all__ = [
     # 資料模型
@@ -32,4 +39,10 @@ __all__ = [
     'create_pdf',
     'get_page_size',
     'copy_page',
+    # 設定檔
+    'load_config',
+    'save_config',
+    'apply_config_to_args',
+    'get_config_value',
+    'DEFAULT_CONFIG',
 ]

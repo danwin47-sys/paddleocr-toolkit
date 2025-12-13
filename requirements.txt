@@ -24,6 +24,9 @@ wordninja>=2.0.0
 # ============ Translation (可選) ============
 requests>=2.31.0
 
+# ============ Configuration ============
+pyyaml>=6.0.0
+
 # ============ Development & Testing ============
 pytest>=7.0.0
 pytest-cov>=4.0.0
