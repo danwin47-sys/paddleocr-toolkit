@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-PDF Generator 單元測試
+PDF Generator 單元測試（擴展版）
 """
 
 import pytest
 import sys
 import os
 import numpy as np
+import tempfile
 
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,6 +17,12 @@ try:
     HAS_FITZ = True
 except ImportError:
     HAS_FITZ = False
+
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
 
 from paddleocr_toolkit.core.pdf_generator import PDFGenerator
 from paddleocr_toolkit.core.models import OCRResult
@@ -30,6 +37,8 @@ class TestPDFGeneratorInit:
         gen = PDFGenerator("test_output.pdf")
         assert gen is not None
         assert gen.output_path == "test_output.pdf"
+        assert gen.debug_mode is False
+        assert gen.compress_images is False
     
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_init_with_compression(self):
@@ -37,6 +46,21 @@ class TestPDFGeneratorInit:
         gen = PDFGenerator("test.pdf", compress_images=True, jpeg_quality=75)
         assert gen.compress_images is True
         assert gen.jpeg_quality == 75
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_init_with_debug(self):
+        """測試 debug 模式"""
+        gen = PDFGenerator("test.pdf", debug_mode=True)
+        assert gen.debug_mode is True
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_jpeg_quality_bounds(self):
+        """測試 JPEG 品質邊界"""
+        gen = PDFGenerator("test.pdf", jpeg_quality=150)  # 超過上限
+        assert gen.jpeg_quality == 100
+        
+        gen2 = PDFGenerator("test.pdf", jpeg_quality=-10)  # 低於下限
+        assert gen2.jpeg_quality == 0
 
 
 class TestPDFGeneratorAddPage:
@@ -45,25 +69,148 @@ class TestPDFGeneratorAddPage:
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_page_from_pixmap(self):
         """測試從 Pixmap 添加頁面"""
-        import tempfile
-        
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
             temp_path = f.name
         
         try:
             gen = PDFGenerator(temp_path)
             
-            # 建立測試 Pixmap
             doc = fitz.open()
             page = doc.new_page(width=200, height=100)
             pixmap = page.get_pixmap()
             doc.close()
             
-            # 添加頁面
             result = gen.add_page_from_pixmap(pixmap, [])
             
             assert result is True
             assert len(gen.doc) == 1
+            assert gen.page_count == 1
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    def test_add_page_from_image_file(self):
+        """測試從圖片檔案添加頁面"""
+        # 建立測試圖片
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+            img_path = f.name
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            pdf_path = f.name
+        
+        try:
+            # 建立簡單圖片
+            img = Image.new('RGB', (100, 100), color='white')
+            img.save(img_path)
+            
+            gen = PDFGenerator(pdf_path)
+            result = gen.add_page(img_path, [])
+            
+            assert result is True
+            assert gen.page_count == 1
+            
+        finally:
+            for path in [img_path, pdf_path]:
+                if os.path.exists(path):
+                    os.remove(path)
+    
+    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    def test_add_page_with_compression(self):
+        """測試壓縮模式添加頁面"""
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+            img_path = f.name
+        
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            pdf_path = f.name
+        
+        try:
+            img = Image.new('RGB', (100, 100), color='red')
+            img.save(img_path)
+            
+            gen = PDFGenerator(pdf_path, compress_images=True, jpeg_quality=50)
+            result = gen.add_page(img_path, [])
+            
+            assert result is True
+            
+        finally:
+            for path in [img_path, pdf_path]:
+                if os.path.exists(path):
+                    os.remove(path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_add_page_nonexistent_file(self):
+        """測試添加不存在的檔案"""
+        gen = PDFGenerator("test.pdf")
+        
+        result = gen.add_page("nonexistent.png", [])
+        
+        assert result is False
+
+
+class TestPDFGeneratorWithOCR:
+    """測試帶 OCR 結果的頁面"""
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_add_page_with_ocr_results(self):
+        """測試添加帶 OCR 結果的頁面"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=200, height=100)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            ocr_results = [
+                OCRResult(
+                    text="Hello World",
+                    confidence=0.95,
+                    bbox=[[10, 10], [100, 10], [100, 30], [10, 30]]
+                ),
+                OCRResult(
+                    text="Test",
+                    confidence=0.90,
+                    bbox=[[10, 50], [50, 50], [50, 70], [10, 70]]
+                )
+            ]
+            
+            result = gen.add_page_from_pixmap(pixmap, ocr_results)
+            
+            assert result is True
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_add_page_with_empty_text(self):
+        """測試空文字的 OCR 結果"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            doc = fitz.open()
+            page = doc.new_page(width=100, height=100)
+            pixmap = page.get_pixmap()
+            doc.close()
+            
+            ocr_results = [
+                OCRResult(
+                    text="   ",  # 空白文字
+                    confidence=0.95,
+                    bbox=[[10, 10], [50, 10], [50, 30], [10, 30]]
+                )
+            ]
+            
+            result = gen.add_page_from_pixmap(pixmap, ocr_results)
+            assert result is True
             
         finally:
             if os.path.exists(temp_path):
@@ -76,15 +223,12 @@ class TestPDFGeneratorSave:
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_save_pdf(self):
         """測試儲存 PDF"""
-        import tempfile
-        
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
             temp_path = f.name
         
         try:
             gen = PDFGenerator(temp_path)
             
-            # 添加一頁
             doc = fitz.open()
             page = doc.new_page(width=100, height=100)
             pixmap = page.get_pixmap()
@@ -92,11 +236,65 @@ class TestPDFGeneratorSave:
             
             gen.add_page_from_pixmap(pixmap, [])
             
-            # 儲存
             result = gen.save()
             
             assert result is True
             assert os.path.exists(temp_path)
+            
+            # 驗證 PDF 可以開啟
+            saved_doc = fitz.open(temp_path)
+            assert len(saved_doc) == 1
+            saved_doc.close()
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_save_empty_pdf(self):
+        """測試儲存空 PDF"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            # 沒有添加頁面就儲存
+            result = gen.save()
+            
+            # 空 PDF 儲存應該回傳 False
+            assert result is False
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_save_multiple_pages(self):
+        """測試儲存多頁 PDF"""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            temp_path = f.name
+        
+        try:
+            gen = PDFGenerator(temp_path)
+            
+            # 添加多頁
+            for i in range(3):
+                doc = fitz.open()
+                page = doc.new_page(width=100, height=100)
+                pixmap = page.get_pixmap()
+                doc.close()
+                gen.add_page_from_pixmap(pixmap, [])
+            
+            result = gen.save()
+            
+            assert result is True
+            assert gen.page_count == 3
+            
+            # 驗證 PDF 可以開啟
+            saved_doc = fitz.open(temp_path)
+            assert len(saved_doc) == 3
+            saved_doc.close()
             
         finally:
             if os.path.exists(temp_path):
@@ -114,7 +312,6 @@ class TestOCRResultProperties:
             bbox=[[0, 0], [100, 0], [100, 50], [0, 50]]
         )
         
-        # x, y, width, height
         assert result.x == 0
         assert result.y == 0
         assert result.width == 100
@@ -122,16 +319,14 @@ class TestOCRResultProperties:
     
     def test_rotated_bbox(self):
         """測試旋轉的邊界框"""
-        # 斜向邊界框
         result = OCRResult(
             text="test",
             confidence=0.9,
             bbox=[[10, 20], [110, 30], [108, 80], [8, 70]]
         )
         
-        # 應該正確計算
-        assert result.x == 8  # min x
-        assert result.y == 20  # min y
+        assert result.x == 8
+        assert result.y == 20
 
 
 # 執行測試
