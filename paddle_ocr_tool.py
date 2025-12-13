@@ -53,6 +53,9 @@ try:
         StatsCollector,
         PageStats,
         ProcessingStats,
+        OCRWorkaround,
+        TextBlock,
+        detect_scanned_document,
     )
     from paddleocr_toolkit.core import (
         OCRResult,
@@ -1656,6 +1659,8 @@ class PaddleOCRTool:
         no_dual = translate_config.get('no_dual', False)
         dual_mode = translate_config.get('dual_mode', 'alternating')
         font_path = translate_config.get('font_path', None)
+        # OCR 補救模式（直接在 PDF 上操作，適用於掃描件）
+        use_ocr_workaround = translate_config.get('ocr_workaround', False)
         # 翻譯 debug 模式（暫時不用，預設關閉，之後會用）
         translate_debug = translate_config.get('translate_debug', False)
         
@@ -1766,10 +1771,39 @@ class PaddleOCRTool:
                             bbox=bbox
                         ))
                     
-                    translated_image = erased_image.copy()
-                    translated_image = renderer.render_multiple_texts(
-                        translated_image, translated_blocks
-                    )
+                    if use_ocr_workaround:
+                        # ========== OCR 補救模式：直接在 PDF 頁面上操作 ==========
+                        logging.info(f"使用 OCR 補救模式繪製翻譯文字")
+                        workaround = OCRWorkaround(margin=2.0, force_black=True)
+                        
+                        for block in translated_blocks:
+                            # 計算座標
+                            x = min(p[0] for p in block.bbox)
+                            y = min(p[1] for p in block.bbox)
+                            width = max(p[0] for p in block.bbox) - x
+                            height = max(p[1] for p in block.bbox) - y
+                            
+                            text_block = TextBlock(
+                                text=block.translated_text,
+                                x=x,
+                                y=y,
+                                width=width,
+                                height=height
+                            )
+                            workaround.add_text_with_mask(erased_page, text_block, block.translated_text)
+                        
+                        # OCR workaround 模式下，translated_image 直接從修改後的頁面取得
+                        modified_pixmap = erased_page.get_pixmap(matrix=matrix)
+                        translated_image = np.frombuffer(modified_pixmap.samples, dtype=np.uint8)
+                        translated_image = translated_image.reshape(modified_pixmap.height, modified_pixmap.width, modified_pixmap.n).copy()
+                        if modified_pixmap.n == 4:
+                            translated_image = translated_image[:, :, :3].copy()
+                    else:
+                        # ========== 標準模式：使用 TextRenderer ==========
+                        translated_image = erased_image.copy()
+                        translated_image = renderer.render_multiple_texts(
+                            translated_image, translated_blocks
+                        )
                     
                     # 添加到純翻譯 PDF
                     if mono_generator:
@@ -1831,7 +1865,8 @@ class PaddleOCRTool:
         dpi: int = 150,
         show_progress: bool = True,
         json_output: Optional[str] = None,
-        html_output: Optional[str] = None
+        html_output: Optional[str] = None,
+        ocr_workaround: bool = False
     ) -> Dict[str, Any]:
         """
         翻譯 PDF 並生成多種輸出（簡化版，調用 process_hybrid）
@@ -1887,6 +1922,7 @@ class PaddleOCRTool:
             'dual_mode': dual_mode,
             'dual_translate_first': dual_translate_first,
             'font_path': font_path,
+            'ocr_workaround': ocr_workaround,
         }
         
         # 直接調用 process_hybrid，傳入翻譯配置
@@ -2202,6 +2238,12 @@ def main():
         help="自訂字體路徑（用於繪製翻譯文字）"
     )
     
+    translate_group.add_argument(
+        "--ocr-workaround",
+        action="store_true",
+        help="使用 OCR 補救模式繪製翻譯文字（適用於掃描件，直接在 PDF 上操作）"
+    )
+    
     args = parser.parse_args()
     
     # 驗證輸入
@@ -2422,7 +2464,8 @@ def main():
                 dpi=args.dpi,
                 show_progress=show_progress,
                 json_output=args.json_output,
-                html_output=args.html_output
+                html_output=args.html_output,
+                ocr_workaround=args.ocr_workaround
             )
             
             if result.get("error"):
