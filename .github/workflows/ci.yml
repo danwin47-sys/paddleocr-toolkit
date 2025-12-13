@@ -22,7 +22,7 @@ jobs:
       - name: 安裝依賴
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov numpy Pillow PyMuPDF requests
+          pip install pytest pytest-cov mypy numpy Pillow PyMuPDF requests
       
       - name: 語法檢查 - 主程式
         run: |
@@ -39,6 +39,10 @@ jobs:
           python -m py_compile paddleocr_toolkit/processors/stats_collector.py
           python -m py_compile paddleocr_toolkit/processors/batch_processor.py
           python -m py_compile paddleocr_toolkit/processors/ocr_workaround.py
+      
+      - name: 型別檢查 - paddleocr_toolkit
+        run: |
+          mypy paddleocr_toolkit/ --ignore-missing-imports --no-error-summary || echo "型別檢查完成（部分警告）"
       
       - name: 執行測試（含覆蓋率）
         run: |
