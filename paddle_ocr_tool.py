@@ -426,6 +426,97 @@ class PaddleOCRTool:
                     pass
             return results
     
+    # ========== Structured 处理辅助方法 ==========
+    
+    def _setup_structured_output_paths(
+        self,
+        markdown_output: Optional[str],
+        json_output: Optional[str],
+        script_dir: Path
+    ) -> Tuple[Optional[Path], Optional[Path]]:
+        """设定 structured 模式的输出路径"""
+        md_path, json_path = None, None
+        
+        if markdown_output:
+            md_path = Path(markdown_output)
+            if not md_path.is_absolute():
+                md_path = script_dir / md_path
+            md_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        if json_output:
+            json_path = Path(json_output)
+            if not json_path.is_absolute():
+                json_path = script_dir / json_path
+            json_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        return md_path, json_path
+    
+    def _process_with_tempdir(self, res, save_method_name: str, glob_pattern: str, process_func) -> None:
+        """使用临时目录处理输出的通用方法"""
+        temp_dir = tempfile.mkdtemp()
+        try:
+            save_method = getattr(res, save_method_name, None)
+            if save_method:
+                save_method(save_path=temp_dir)
+                for file in Path(temp_dir).glob(glob_pattern):
+                    process_func(file)
+        except Exception as e:
+            logging.warning(f"{save_method_name} 失败: {e}")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+    
+    def _save_structured_page_outputs(
+        self, res, page_count: int, markdown_output: Optional[str],
+        json_output: Optional[str], excel_output: Optional[str], html_output: Optional[str],
+        md_path: Optional[Path], json_path: Optional[Path], input_path: str,
+        script_dir: Path, all_markdown_content: List[str], result_summary: Dict[str, Any]
+    ) -> None:
+        """保存单页的各种输出"""
+        # Markdown
+        if markdown_output:
+            self._process_with_tempdir(res, 'save_to_markdown', '*.md', 
+                lambda f: all_markdown_content.append(f"<!-- Page {page_count} -->\n" + open(f, 'r', encoding='utf-8').read()))
+        
+        # JSON
+        if json_output and json_path:
+            def save_json(file):
+                target = json_path.parent / f"{json_path.stem}_page{page_count}.json"
+                shutil.copy(file, target)
+                result_summary["json_files"].append(str(target))
+            self._process_with_tempdir(res, 'save_to_json', '*.json', save_json)
+        
+        # Excel
+        if excel_output:
+            if not HAS_OPENPYXL:
+                if page_count == 1:
+                    print("警告：需要安装 openpyxl: pip install openpyxl")
+            else:
+                excel_path = Path(excel_output)
+                def save_excel(file):
+                    target = excel_path.parent / f"{excel_path.stem}_page{page_count}.xlsx" if excel_path.suffix == '.xlsx' \
+                        else Path(excel_output) / f"{Path(input_path).stem}_page{page_count}.xlsx"
+                    shutil.copy(file, target)
+                    result_summary["excel_files"].append(str(target))
+                self._process_with_tempdir(res, 'save_to_xlsx', '*.xlsx', save_excel)
+        
+        # HTML
+        if html_output:
+            html_path = Path(html_output) if Path(html_output).is_absolute() else script_dir / html_output
+            def save_html(file):
+                target = html_path.parent / f"{html_path.stem}_page{page_count}.html" if html_path.suffix == '.html' \
+                    else (html_path.mkdir(parents=True, exist_ok=True) or html_path) / f"{Path(input_path).stem}_page{page_count}.html"
+                shutil.copy(file, target)
+                result_summary["html_files"].append(str(target))
+            self._process_with_tempdir(res, 'save_to_html', '*.html', save_html)
+    
+    def _save_structured_markdown(self, all_markdown_content: List[str], md_path: Path, result_summary: Dict[str, Any]) -> None:
+        """保存合并后的 Markdown 文件"""
+        if all_markdown_content:
+            with open(md_path, 'w', encoding='utf-8') as f:
+                f.write("\n\n---\n\n".join(all_markdown_content))
+            result_summary["markdown_files"].append(str(md_path))
+            print(f"[OK] Markdown 已保存：{md_path}")
+    
     def process_structured(
         self,
         input_path: str,
@@ -450,7 +541,7 @@ class PaddleOCRTool:
             Dict[str, Any]: 處理結果摘要
         """
         if self.mode not in ["structure", "vl"]:
-            raise ValueError(f"process_structured 僅適用於 structure 或 vl 模式，當前模式: {self.mode}")
+            raise ValueError(f"process_structured 仅适用于 structure 或 vl 模式，当前模式: {self.mode}")
         
         result_summary = {
             "input": input_path,
@@ -463,133 +554,51 @@ class PaddleOCRTool:
         }
         
         try:
-            print(f"正在處理: {input_path}")
+            print(f"正在处理: {input_path}")
             
-            # 使用 predict() 方法處理
+            # 使用 predict() 方法处理
             output = self.ocr.predict(input=input_path)
             
-            # 取得腳本所在目錄作為預設輸出目錄
+            # 获取脚本所在目录作为默认输出目录
             script_dir = Path(__file__).parent.resolve()
             
-            # 處理輸出路徑
-            if markdown_output:
-                md_path = Path(markdown_output)
-                if not md_path.is_absolute():
-                    md_path = script_dir / md_path
-                md_output_dir = md_path.parent
-                md_output_dir.mkdir(parents=True, exist_ok=True)
+            # 设定输出路径
+            md_path, json_path = self._setup_structured_output_paths(
+                markdown_output, json_output, script_dir
+            )
             
-            if json_output:
-                json_path = Path(json_output)
-                if not json_path.is_absolute():
-                    json_path = script_dir / json_path
-                json_output_dir = json_path.parent
-                json_output_dir.mkdir(parents=True, exist_ok=True)
-            
-            # 處理每個結果
+            # 处理每个结果
             page_count = 0
             all_markdown_content = []
             
             for res in output:
                 page_count += 1
                 
-                # 使用內建的儲存方法
-                if markdown_output:
-                    # 建立臨時目錄來收集 markdown
-                    temp_dir = tempfile.mkdtemp()
-                    try:
-                        res.save_to_markdown(save_path=temp_dir)
-                        # 收集生成的 markdown 內容
-                        for md_file in Path(temp_dir).glob("*.md"):
-                            with open(md_file, 'r', encoding='utf-8') as f:
-                                all_markdown_content.append(f"<!-- Page {page_count} -->\n" + f.read())
-                    finally:
-                        shutil.rmtree(temp_dir, ignore_errors=True)
-                
-                if json_output:
-                    temp_dir = tempfile.mkdtemp()
-                    try:
-                        res.save_to_json(save_path=temp_dir)
-                        # 複製生成的 JSON 到目標位置
-                        for json_file in Path(temp_dir).glob("*.json"):
-                            target_json = json_path.parent / f"{json_path.stem}_page{page_count}.json"
-                            shutil.copy(json_file, target_json)
-                            result_summary["json_files"].append(str(target_json))
-                    finally:
-                        shutil.rmtree(temp_dir, ignore_errors=True)
-                
-                # 輸出 Excel（表格）
-                if excel_output:
-                    if not HAS_OPENPYXL:
-                        print("警告：需要安裝 openpyxl: pip install openpyxl")
-                    else:
-                        temp_dir = tempfile.mkdtemp()
-                        try:
-                            # 嘗試呼叫 save_to_xlsx（如果結果物件支援）
-                            if hasattr(res, 'save_to_xlsx'):
-                                res.save_to_xlsx(save_path=temp_dir)
-                                # 複製生成的 Excel 到目標位置
-                                excel_path = Path(excel_output)
-                                for xlsx_file in Path(temp_dir).glob("*.xlsx"):
-                                    if excel_path.suffix == '.xlsx':
-                                        target_xlsx = excel_path.parent / f"{excel_path.stem}_page{page_count}.xlsx"
-                                    else:
-                                        target_xlsx = Path(excel_output) / f"{Path(input_path).stem}_page{page_count}.xlsx"
-                                    shutil.copy(xlsx_file, target_xlsx)
-                                    result_summary["excel_files"].append(str(target_xlsx))
-                        except Exception as excel_err:
-                            logging.warning(f"Excel 輸出失敗 (頁 {page_count}): {excel_err}")
-                        finally:
-                            shutil.rmtree(temp_dir, ignore_errors=True)
-                
-                # 輸出 HTML
-                if html_output:
-                    temp_dir = tempfile.mkdtemp()
-                    try:
-                        # 嘗試呼叫 save_to_html（如果結果物件支援）
-                        if hasattr(res, 'save_to_html'):
-                            res.save_to_html(save_path=temp_dir)
-                            # 複製生成的 HTML 到目標位置
-                            html_path = Path(html_output)
-                            if not html_path.is_absolute():
-                                html_path = script_dir / html_path
-                            for html_file in Path(temp_dir).glob("*.html"):
-                                if html_path.suffix == '.html':
-                                    target_html = html_path.parent / f"{html_path.stem}_page{page_count}.html"
-                                else:
-                                    html_path.mkdir(parents=True, exist_ok=True)
-                                    target_html = html_path / f"{Path(input_path).stem}_page{page_count}.html"
-                                shutil.copy(html_file, target_html)
-                                result_summary["html_files"].append(str(target_html))
-                        else:
-                            logging.warning(f"結果物件不支援 save_to_html 方法")
-                    except Exception as html_err:
-                        logging.warning(f"HTML 輸出失敗 (頁 {page_count}): {html_err}")
-                    finally:
-                        shutil.rmtree(temp_dir, ignore_errors=True)
+                # 保存单页的各种输出
+                self._save_structured_page_outputs(
+                    res, page_count, markdown_output, json_output,
+                    excel_output, html_output, md_path, json_path,
+                    input_path, script_dir, all_markdown_content, result_summary
+                )
             
-            # 合併所有 markdown 內容到單一檔案
-            if markdown_output and all_markdown_content:
-                with open(md_path, 'w', encoding='utf-8') as f:
-                    f.write("\n\n---\n\n".join(all_markdown_content))
-                result_summary["markdown_files"].append(str(md_path))
-                print(f"[OK] Markdown 已儲存：{md_path}")
+            # 保存合并的 Markdown
+            if markdown_output and md_path:
+                self._save_structured_markdown(all_markdown_content, md_path, result_summary)
             
-            # Excel 輸出完成訊息
+            # 完成消息
             if result_summary.get("excel_files"):
-                print(f"[OK] Excel 已儲存：{len(result_summary['excel_files'])} 個檔案")
+                print(f"[OK] Excel 已保存：{len(result_summary['excel_files'])} 个文件")
             
-            # HTML 輸出完成訊息
             if result_summary.get("html_files"):
-                print(f"[OK] HTML 已儲存：{len(result_summary['html_files'])} 個檔案")
+                print(f"[OK] HTML 已保存：{len(result_summary['html_files'])} 个文件")
             
             result_summary["pages_processed"] = page_count
-            print(f"[OK] 處理完成：{page_count} 頁")
+            print(f"[OK] 处理完成：{page_count} 页")
             
             return result_summary
             
         except Exception as e:
-            print(f"錯誤：處理失敗 ({input_path}): {e}")
+            print(f"错误：处理失败 ({input_path}): {e}")
             result_summary["error"] = str(e)
             return result_summary
     
