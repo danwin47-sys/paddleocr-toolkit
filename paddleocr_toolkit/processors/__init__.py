@@ -18,6 +18,11 @@ from .batch_processor import (
     BatchProcessor,
     get_optimal_workers
 )
+from .stats_collector import (
+    PageStats,
+    ProcessingStats,
+    StatsCollector
+)
 
 __all__ = [
     # 文字處理
@@ -39,5 +44,10 @@ __all__ = [
     'batch_process_images',
     'BatchProcessor',
     'get_optimal_workers',
+    # 統計收集
+    'PageStats',
+    'ProcessingStats',
+    'StatsCollector',
 ]
+
 
