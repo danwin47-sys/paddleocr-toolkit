@@ -189,9 +189,10 @@ def fix_english_spacing(text: str, use_wordninja: bool = True) -> str:
     for wrong, correct in MERGE_TERMS.items():
         result = result.replace(wrong, correct)
     
-    # 用佔位符保護專業術語
+    # 用佔位符保護專業術語（按長度排序，長的先處理）
     protected_map = {}
-    for i, term in enumerate(PROTECTED_TERMS):
+    sorted_terms = sorted(PROTECTED_TERMS, key=len, reverse=True)
+    for i, term in enumerate(sorted_terms):
         if term in result:
             placeholder = f"__PROT_{i}__"
             protected_map[placeholder] = term

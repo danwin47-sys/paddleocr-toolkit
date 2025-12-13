@@ -45,6 +45,24 @@ from datetime import datetime
 # 停用模型來源檢查以加快啟動速度（已有本機模型時不需要連線檢查）
 os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'
 
+# ===== 從 paddleocr_toolkit 套件匯入模組 =====
+try:
+    from paddleocr_toolkit.processors import (
+        fix_english_spacing as toolkit_fix_english_spacing,
+        detect_pdf_quality as toolkit_detect_pdf_quality,
+        GlossaryManager,
+        StatsCollector,
+        auto_preprocess,
+    )
+    from paddleocr_toolkit.core import (
+        OCRResult as ToolkitOCRResult,
+        PDFGenerator as ToolkitPDFGenerator,
+        OCRMode as ToolkitOCRMode,
+    )
+    HAS_TOOLKIT = True
+except ImportError:
+    HAS_TOOLKIT = False
+
 # 設定日誌
 def setup_logging(log_file: Optional[str] = None):
     """設定日誌記錄"""
