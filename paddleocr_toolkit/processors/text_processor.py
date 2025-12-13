@@ -19,6 +19,7 @@ except ImportError:
 
 # OCR 錯誤合併修正
 MERGE_TERMS = {
+    # MEMS 術語
     'Poly MUMPs': 'PolyMUMPs',
     'Poly MUMPS': 'PolyMUMPs',
     'SOIMUMP s': 'SOIMUMPs',
@@ -30,24 +31,58 @@ MERGE_TERMS = {
     'MEMSc ap': 'MEMScAP',
     'MEMSProcesses': 'MEMS Processes',
     'MEMSprocesses': 'MEMS processes',
+    
+    # 符號空格修復
     '2025©': '2025 ©',
     '2024©': '2024 ©',
     '2023©': '2023 ©',
+    '2022©': '2022 ©',
     '©Chiu': '© Chiu',
     ',Yi': ', Yi',
     ',Fall': ', Fall',
     'Fall,2': 'Fall, 2',
+    
+    # 數字後黏連修復
     '81runs': '81 runs',
     '82runs': '82 runs',
     '9thrun': '9th run',
+    
+    # 常見黏連詞
     'micromachiningby': 'micromachining by',
     'micromachiningfor': 'micromachining for',
-    # 版本號 OCR 錯誤修正
+    
+    # 版本號 OCR 錯誤修正（數字 1 被丟失）
     '.v0.pdf': '.v10.pdf',
     '.v0.doc': '.v10.doc',
+    '.v0.docx': '.v10.docx',
     '_v0.pdf': '_v10.pdf',
     '_v0.doc': '_v10.doc',
     'dr.v0': 'dr.v10',
+    '_v0_': '_v10_',
+    '-v0-': '-v10-',
+    # v1x 系列
+    '.v1.pdf': '.v11.pdf' if False else '.v1.pdf',  # 保持不變，只修復確定錯誤
+    '.v2.pdf': '.v12.pdf' if False else '.v2.pdf',
+    
+    # 常見數字 OCR 錯誤
+    ' l ': ' 1 ',  # 小寫 L 誤識為 1
+    ' O ': ' 0 ',  # 大寫 O 誤識為 0
+    ' ll ': ' 11 ',
+    
+    # 檔案名稱修正
+    '.pdi': '.pdf',
+    '.PD F': '.PDF',
+    '. pdf': '.pdf',
+    
+    # 日期格式修正
+    '202 5': '2025',
+    '202 4': '2024',
+    '1 9': '19',
+    '2 0': '20',
+    
+    # 單位修正
+    'u m': 'μm',
+    'u M': 'μM',
 }
 
 # 受保護的專業術語（不應被拆分）
