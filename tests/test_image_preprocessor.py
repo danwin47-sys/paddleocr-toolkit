@@ -180,6 +180,47 @@ class TestDeskew:
         
         # 沒有線條時應該返回原圖
         assert result.shape == image.shape
+    
+    @pytest.mark.skipif(not HAS_CV2, reason="OpenCV not installed")
+    def test_deskew_grayscale_input(self):
+        """測試灰階圖片輸入"""
+        # 建立灰階圖片
+        gray_image = np.ones((100, 100), dtype=np.uint8) * 255
+        # 畫一條直線
+        cv2.line(gray_image, (10, 10), (90, 90), 0, 2)
+        
+        result = deskew(gray_image)
+        
+        # 驗證結果
+        assert result.shape == gray_image.shape
+        # 灰階輸入應返回與輸入相同維度的圖片
+        assert len(result.shape) == 2 or (len(result.shape) == 3 and result.shape[2] == 3)
+    
+    @pytest.mark.skipif(not HAS_CV2, reason="OpenCV not installed")
+    def test_deskew_small_angle(self):
+        """測試小角度（< 0.5 度）不旋轉"""
+        # 建立幾乎水平的線條圖片
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 255
+        # 畫一條幾乎水平的線
+        cv2.line(image, (10, 50), (90, 50), (0, 0, 0), 2)
+        
+        result = deskew(image)
+        
+        # 角度很小時應該直接返回（雖然可能經過處理）
+        assert result.shape == image.shape
+    
+    def test_deskew_without_cv2(self, monkeypatch):
+        """測試缺少 cv2 時的降級行為"""
+        # Mock HAS_CV2 = False
+        import paddleocr_toolkit.processors.image_preprocessor as module
+        monkeypatch.setattr(module, "HAS_CV2", False)
+        
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 128
+        
+        # 應該返回原圖
+        result = deskew(image)
+        assert np.array_equal(result, image)
+
 
 
 class TestPreprocessForOCR:
@@ -222,6 +263,37 @@ class TestPreprocessForOCR:
         )
         
         assert np.array_equal(result, image)
+    
+    @pytest.mark.skipif(not HAS_CV2, reason="OpenCV not installed")
+    def test_preprocess_with_binarize(self):
+        """測試啟用二值化的預處理"""
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 128
+        
+        result = preprocess_for_ocr(
+            image,
+            enhance=True,
+            binarize_img=True  # 測試這個分支
+        )
+        
+        assert result is not None
+        assert result.shape == image.shape
+    
+    @pytest.mark.skipif(not HAS_CV2, reason="OpenCV not installed")
+    def test_preprocess_all_options_enabled(self):
+        """測試啟用所有預處理選項"""
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 128
+        
+        result = preprocess_for_ocr(
+            image,
+            enhance=True,
+            denoise_img=True,
+            deskew_img=True,
+            binarize_img=True,
+            sharpen_img=True
+        )
+        
+        assert result is not None
+        assert result.shape == image.shape
 
 
 class TestAutoPreprocess:
@@ -244,6 +316,25 @@ class TestAutoPreprocess:
         result = auto_preprocess(image, is_scanned=True)
         
         assert result.shape == image.shape
+
+
+class TestMissingDependencies:
+    """測試缺少依賴時的降級行為"""
+    
+    def test_functions_without_cv2(self, monkeypatch):
+        """測試缺少 cv2 時的降級行為"""
+        # Mock HAS_CV2 = False
+        import paddleocr_toolkit.processors.image_preprocessor as module
+        monkeypatch.setattr(module, "HAS_CV2", False)
+        
+        image = np.ones((100, 100, 3), dtype=np.uint8) * 128
+        
+        # 測試所有函數都返回原圖（降級行為）
+        assert np.array_equal(enhance_contrast(image), image)
+        assert np.array_equal(denoise(image), image)
+        assert np.array_equal(binarize(image), image)
+        assert np.array_equal(sharpen(image), image)
+
 
 
 # 執行測試
