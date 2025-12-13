@@ -48,20 +48,22 @@ os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'
 # ===== 從 paddleocr_toolkit 套件匯入模組 =====
 try:
     from paddleocr_toolkit.processors import (
-        fix_english_spacing as toolkit_fix_english_spacing,
-        detect_pdf_quality as toolkit_detect_pdf_quality,
-        GlossaryManager,
+        fix_english_spacing,
+        detect_pdf_quality,
         StatsCollector,
-        auto_preprocess,
+        PageStats,
+        ProcessingStats,
     )
     from paddleocr_toolkit.core import (
-        OCRResult as ToolkitOCRResult,
-        PDFGenerator as ToolkitPDFGenerator,
-        OCRMode as ToolkitOCRMode,
+        OCRResult,
+        PDFGenerator,
+        OCRMode,
     )
     HAS_TOOLKIT = True
 except ImportError:
     HAS_TOOLKIT = False
+    print("錯誤：無法匯入 paddleocr_toolkit，請確認套件完整性")
+    sys.exit(1)
 
 # 設定日誌
 def setup_logging(log_file: Optional[str] = None):
@@ -173,12 +175,6 @@ except ImportError:
 
 
 # OCR 模式枚舉
-class OCRMode(Enum):
-    BASIC = "basic"           # PP-OCRv5 基本文字識別
-    STRUCTURE = "structure"   # PP-StructureV3 結構化文件解析
-    VL = "vl"                 # PaddleOCR-VL 視覺語言模型
-    FORMULA = "formula"       # PP-FormulaNet 公式識別
-    HYBRID = "hybrid"         # 混合模式：版面分析 + 精確 OCR
 
 
 # 支援的檔案格式
@@ -186,602 +182,10 @@ SUPPORTED_IMAGE_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.w
 SUPPORTED_PDF_FORMAT = '.pdf'
 
 
-def fix_english_spacing(text: str, use_wordninja: bool = True) -> str:
-    """
-    修復英文 OCR 結果中的空格問題
-    
-    策略：
-    1. 保護專業術語不被拆分
-    2. CamelCase 分詞：FoundryService → Foundry Service
-    3. wordninja 智能分詞（可選）：aprogramoffered → a program offered
-    4. 修復連字符詞：wellestablished → well-established
-    5. 數字前後空格：Dec.1992and → Dec. 1992 and
-    
-    Args:
-        text: 輸入文字
-        use_wordninja: 是否使用 wordninja 智能分詞（預設開啟）
-    """
-    import re
-    
-    if not text:
-        return text
-    
-    result = text
-    
-    # ========== 0. 首先合併被 OCR 錯誤分詞的術語 ==========
-    # OCR 可能會把 PolyMUMPs 識別為 Poly MUMPs
-    MERGE_TERMS = {
-        'Poly MUMPs': 'PolyMUMPs',
-        'Poly MUMPS': 'PolyMUMPs',
-        'SOIMUMP s': 'SOIMUMPs',
-        'SOI MUMPs': 'SOIMUMPs',
-        'Metal MUMPs': 'MetalMUMPs',
-        # MEMScAP 各種錯誤識別
-        'MEMS cAP': 'MEMScAP',
-        'MEMSc AP': 'MEMScAP',
-        'MEMSC AP': 'MEMScAP',
-        'MEMSc ap': 'MEMScAP',
-        # MEMS Processes（保留空格）
-        'MEMSProcesses': 'MEMS Processes',
-        'MEMSprocesses': 'MEMS processes',
-        # 符號空格修復
-        '2025©': '2025 ©',
-        '2024©': '2024 ©',
-        '2023©': '2023 ©',
-        '©Chiu': '© Chiu',
-        # 逗號後加空格
-        ',Yi': ', Yi',
-        ',Fall': ', Fall',
-        'Fall,2': 'Fall, 2',  # Fall,2025 → Fall, 2025
-        # 數字後黏連修復
-        '81runs': '81 runs',
-        '82runs': '82 runs',
-        '9thrun': '9th run',
-        # 常見黏連詞
-        'micromachiningby': 'micromachining by',
-        'micromachiningfor': 'micromachining for',
-        # 版本號 OCR 錯誤修正（1 被丟失）
-        '.v0.pdf': '.v10.pdf',
-        '.v0.doc': '.v10.doc',
-        '_v0.pdf': '_v10.pdf',
-        '_v0.doc': '_v10.doc',
-        'dr.v0': 'dr.v10',
-    }
-    for wrong, correct in MERGE_TERMS.items():
-        result = result.replace(wrong, correct)
-    
-    # 保護不應該被拆分的專業術語
-    PROTECTED_TERMS = {
-        # MEMS 相關術語（不應被拆分）
-        'MUMPs', 'PolyMUMPs', 'SOIMUMPs', 'MetalMUMPs',
-        'MEMScAP', 'MEMSCAP', 'MEMSProcesses', 'MEMSdevices',
-        'micromachining', 'Micromachining', 'MICROMACHINING',
-        'FoundryService', 'CMOS', 'MEMS', 'OCR', 'PDF',
-        # 科技術語
-        'PaddleOCR', 'PowerPoint', 'JavaScript', 'TypeScript',
-        'GitHub', 'LinkedIn', 'YouTube', 'Facebook',
-        'iPhone', 'iPad', 'macOS', 'iOS', 'WiFi',
-        # 常見縮寫
-        'TM', 'PhD', 'CEO', 'CTO', 'CFO',
-        # 序數後綴（不應在數字和 th/st/nd/rd 之間加空格）
-        '0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th',
-        '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th',
-        '20th', '21st', '22nd', '23rd', '24th', '25th', '30th', '40th', '50th',
-        # 版本號
-        'v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10',
-    }
-    
-    # 先用佔位符保護這些詞
-    protected_map = {}
-    for i, term in enumerate(PROTECTED_TERMS):
-        if term in result:
-            placeholder = f"__PROT_{i}__"
-            protected_map[placeholder] = term
-            result = result.replace(term, placeholder)
-    
-    # 1. CamelCase 分詞（小寫後接大寫）
-    # 例如：FoundryService → Foundry Service
-    result = re.sub(r'([a-z])([A-Z])', r'\1 \2', result)
-    
-    # 1.1 修復小寫後接佔位符（例如 byMEMScAP → by MEMScAP）
-    result = re.sub(r'([a-z])(__PROT_)', r'\1 \2', result)
-    
-    # 2. 大寫字母序列後接小寫（例如 CMOSMems → CMOS Mems）
-    result = re.sub(r'([A-Z]{2,})([A-Z][a-z])', r'\1 \2', result)
-    
-    # 3. 修復數字和字母之間缺少空格
-    # 但排除版本號（v10）和序數（9th）
-    result = re.sub(r'(\d)([a-zA-Z])', lambda m: m.group(0) if m.group(2).lower() in ['t','s','n','r','v'] else m.group(1) + ' ' + m.group(2), result)
-    # 小寫後接數字（但排除 v + 數字）
-    result = re.sub(r'([a-uw-z])(\d)', r'\1 \2', result)  # 排除 v
-    
-    # 4. 修復標點符號後缺少空格
-    result = re.sub(r'\.(\d)', r'. \1', result)  # 句號後接數字
-    result = re.sub(r'\.([A-Z])', r'. \1', result)  # 句號後接大寫
-    result = re.sub(r',([A-Za-z])', r', \1', result)  # 逗號後接字母
-    
-    # 5. 修復括號前後空格
-    result = re.sub(r'([a-zA-Z])\(', r'\1 (', result)
-    result = re.sub(r'\)([a-zA-Z])', r') \1', result)
-    
-    # 5.1 修復常見的黏連詞
-    # Aprogramoffered → A program offered
-    common_splits = {
-        'Aprogram': 'A program',
-        'aprogram': 'a program',
-        'Theprogram': 'The program',
-        'theprogram': 'the program',
-        'programoffered': 'program offered',
-        'isdesigned': 'is designed',
-        'wasestablished': 'was established',
-        'hasbeen': 'has been',
-        'canbe': 'can be',
-        'willbe': 'will be',
-        'tobe': 'to be',
-        'forthe': 'for the',
-        'tothe': 'to the',
-        'ofthe': 'of the',
-        'inthe': 'in the',
-        'onthe': 'on the',
-        'bythe': 'by the',
-        'andthe': 'and the',
-        'isthe': 'is the',
-        'asthe': 'as the',
-        'withthe': 'with the',
-        # 新增
-        'Designof': 'Design of',
-        'designof': 'design of',
-        'micromachiningby': 'micromachining by',
-        'isused': 'is used',
-        'areused': 'are used',
-        'canbeused': 'can be used',
-        'providescustomers': 'provides customers',
-        'includesthe': 'includes the',
-        'suchas': 'such as',
-        'aswellas': 'as well as',
-        'inorder': 'in order',
-        'orderto': 'order to',
-        'dueto': 'due to',
-        'byvarious': 'by various',
-        'forvarious': 'for various',
-        'withcost': 'with cost',
-        'tofabricate': 'to fabricate',
-        'todesign': 'to design',
-        'toannounce': 'to announce',
-    }
-    for wrong, correct in common_splits.items():
-        result = result.replace(wrong, correct)
-    
-    # 6. 修復常見的連字符詞
-    common_hyphenated = {
-        'wellestablished': 'well-established',
-        'costeffective': 'cost-effective',
-        'highperformance': 'high-performance',
-        'lowpower': 'low-power',
-        'stateoftheart': 'state-of-the-art',
-        'realtime': 'real-time',
-        'onchip': 'on-chip',
-        'offchip': 'off-chip',
-        'multiuser': 'multi-user',
-        'Multi User': 'Multi-User',
-        'waferlevel': 'wafer-level',
-        'Wafer Level': 'Wafer-Level',
-    }
-    for wrong, correct in common_hyphenated.items():
-        result = re.sub(wrong, correct, result, flags=re.IGNORECASE)
-    
-    # 7. wordninja 智能分詞（處理長連字）
-    if use_wordninja and HAS_WORDNINJA:
-        # 找出長度超過閾值的連續小寫單詞並嘗試分詞
-        def split_long_words(match):
-            word = match.group(0)
-            if len(word) > 10:  # 只處理長單詞
-                # 使用 wordninja 分詞
-                parts = wordninja.split(word.lower())
-                if len(parts) > 1:
-                    # 保持首字母大小寫
-                    if word[0].isupper():
-                        parts[0] = parts[0].capitalize()
-                    return ' '.join(parts)
-            return word
-        
-        # 匹配沒有空格的長單詞
-        result = re.sub(r'\b[A-Za-z]{11,}\b', split_long_words, result)
-    
-    # 恢復被保護的專業術語
-    for placeholder, term in protected_map.items():
-        result = result.replace(placeholder, term)
-    
-    # 8. 清理多餘空格
-    result = re.sub(r' +', ' ', result)
-    
-    return result
 
 
-def detect_pdf_quality(pdf_path: str) -> dict:
-    """
-    偵測 PDF 品質，判斷是否為掃描件或模糊文件
-    
-    Returns:
-        dict: {
-            'is_scanned': bool,      # 是否為掃描件
-            'is_blurry': bool,       # 是否模糊
-            'has_text': bool,        # 是否有可提取的文字
-            'recommended_dpi': int,  # 建議的 DPI
-            'reason': str            # 判斷原因
-        }
-    """
-    try:
-        import fitz
-        
-        result = {
-            'is_scanned': False,
-            'is_blurry': False,
-            'has_text': False,
-            'recommended_dpi': 150,
-            'reason': ''
-        }
-        
-        pdf_doc = fitz.open(pdf_path)
-        
-        if len(pdf_doc) == 0:
-            result['reason'] = 'PDF 無頁面'
-            pdf_doc.close()
-            return result
-        
-        # 只檢查前幾頁
-        pages_to_check = min(3, len(pdf_doc))
-        total_text_length = 0
-        total_images = 0
-        
-        for page_num in range(pages_to_check):
-            page = pdf_doc[page_num]
-            
-            # 檢查可提取的文字
-            text = page.get_text("text")
-            total_text_length += len(text.strip())
-            
-            # 檢查圖片數量
-            images = page.get_images()
-            total_images += len(images)
-        
-        pdf_doc.close()
-        
-        # 判斷邏輯
-        avg_text_per_page = total_text_length / pages_to_check
-        avg_images_per_page = total_images / pages_to_check
-        
-        # 如果幾乎沒有可提取文字但有圖片，很可能是掃描件
-        if avg_text_per_page < 50 and avg_images_per_page >= 1:
-            result['is_scanned'] = True
-            result['recommended_dpi'] = 300
-            result['reason'] = f'偵測為掃描件（平均每頁 {avg_text_per_page:.0f} 字元，{avg_images_per_page:.1f} 張圖片）'
-        
-        # 如果有少量文字，可能是部分掃描
-        elif avg_text_per_page < 200 and avg_images_per_page >= 1:
-            result['is_scanned'] = True
-            result['is_blurry'] = True
-            result['recommended_dpi'] = 200
-            result['reason'] = f'偵測為部分掃描文件（平均每頁 {avg_text_per_page:.0f} 字元）'
-        
-        # 有足夠文字，是一般 PDF
-        else:
-            result['has_text'] = True
-            result['recommended_dpi'] = 150
-            result['reason'] = f'偵測為一般 PDF（平均每頁 {avg_text_per_page:.0f} 字元）'
-        
-        return result
-        
-    except Exception as e:
-        logging.warning(f"PDF 品質偵測失敗: {e}")
-        return {
-            'is_scanned': False,
-            'is_blurry': False,
-            'has_text': False,
-            'recommended_dpi': 150,
-            'reason': f'偵測失敗: {e}'
-        }
 
 
-@dataclass
-class OCRResult:
-    """OCR 辨識結果資料結構"""
-    text: str                    # 辨識的文字
-    confidence: float            # 信賴度 (0-1)
-    bbox: List[List[float]]      # 邊界框座標 [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
-    
-    @property
-    def x(self) -> float:
-        """左上角 X 座標"""
-        return min(p[0] for p in self.bbox)
-    
-    @property
-    def y(self) -> float:
-        """左上角 Y 座標"""
-        return min(p[1] for p in self.bbox)
-    
-    @property
-    def width(self) -> float:
-        """邊界框寬度"""
-        xs = [p[0] for p in self.bbox]
-        return max(xs) - min(xs)
-    
-    @property
-    def height(self) -> float:
-        """邊界框高度"""
-        ys = [p[1] for p in self.bbox]
-        return max(ys) - min(ys)
-
-
-class PDFGenerator:
-    """
-    PDF 生成器 - 使用 Umi-OCR 邏輯建立雙層可搜尋 PDF
-    
-    透過 PyMuPDF 在原始圖片上疊加透明文字層，
-    使 PDF 可搜尋、可選取文字，同時保持原始視覺外觀。
-    """
-    
-    def __init__(self, output_path: str, debug_mode: bool = False, compress_images: bool = False, jpeg_quality: int = 85):
-        """
-        初始化 PDF 生成器
-        
-        Args:
-            output_path: 輸出 PDF 的檔案路徑
-            debug_mode: 如果為 True，文字會顯示為粉紅色（方便調試）
-            compress_images: 如果為 True，使用 JPEG 壓縮圖片以減少檔案大小
-            jpeg_quality: JPEG 壓縮品質（0-100，預設 85）
-        """
-        self.output_path = output_path
-        self.doc = fitz.open()  # 建立新的空白 PDF
-        self.page_count = 0
-        self.debug_mode = debug_mode
-        self.compress_images = compress_images
-        self.jpeg_quality = max(0, min(100, jpeg_quality))  # 確保在 0-100 範圍內
-    
-    def add_page(self, image_path: str, ocr_results: List[OCRResult]) -> bool:
-        """
-        新增一頁到 PDF
-        
-        Args:
-            image_path: 原始圖片路徑
-            ocr_results: OCR 辨識結果列表
-            
-        Returns:
-            bool: 是否成功新增頁面
-        """
-        try:
-            # 開啟圖片以取得尺寸
-            img = Image.open(image_path)
-            img_width, img_height = img.size
-            
-            # 建立新頁面，尺寸與圖片相同
-            page = self.doc.new_page(
-                width=img_width,
-                height=img_height
-            )
-            
-            # 插入圖片作為背景
-            rect = fitz.Rect(0, 0, img_width, img_height)
-            
-            if self.compress_images:
-                # 使用 JPEG 壓縮以減少檔案大小
-                import io
-                # 確保是 RGB 模式
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                # 儲存為 JPEG 到記憶體緩衝區
-                jpeg_buffer = io.BytesIO()
-                img.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
-                jpeg_data = jpeg_buffer.getvalue()
-                # 插入 JPEG 資料
-                page.insert_image(rect, stream=jpeg_data)
-            else:
-                # 直接插入原始圖片（PNG 格式，無損但較大）
-                page.insert_image(rect, filename=image_path)
-            
-            # 疊加透明文字層
-            for result in ocr_results:
-                self._insert_invisible_text(page, result)
-            
-            self.page_count += 1
-            return True
-            
-        except Exception as e:
-            print(f"警告：新增頁面失敗 ({image_path}): {e}")
-            return False
-    
-    def add_page_from_pixmap(self, pixmap: fitz.Pixmap, ocr_results: List[OCRResult]) -> bool:
-        """
-        從 PyMuPDF Pixmap 新增一頁到 PDF
-        
-        Args:
-            pixmap: PyMuPDF 的 Pixmap 物件
-            ocr_results: OCR 辨識結果列表
-            
-        Returns:
-            bool: 是否成功新增頁面
-        """
-        try:
-            img_width = pixmap.width
-            img_height = pixmap.height
-            
-            # 建立新頁面
-            page = self.doc.new_page(
-                width=img_width,
-                height=img_height
-            )
-            
-            # 插入圖片作為背景
-            rect = fitz.Rect(0, 0, img_width, img_height)
-            
-            if self.compress_images:
-                # 使用 JPEG 壓縮以減少檔案大小
-                import io
-                # 將 pixmap 轉換為 PIL Image
-                pil_image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
-                # 儲存為 JPEG 到記憶體緩衝區
-                jpeg_buffer = io.BytesIO()
-                pil_image.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
-                jpeg_data = jpeg_buffer.getvalue()
-                # 插入 JPEG 資料
-                page.insert_image(rect, stream=jpeg_data)
-            else:
-                # 直接插入 pixmap（PNG 格式，無損但較大）
-                page.insert_image(rect, pixmap=pixmap)
-            
-            # 疊加透明文字層
-            for result in ocr_results:
-                self._insert_invisible_text(page, result)
-            
-            self.page_count += 1
-            return True
-            
-        except Exception as e:
-            print(f"警告：新增頁面失敗: {e}")
-            return False
-    
-    def _insert_invisible_text(self, page: fitz.Page, result: OCRResult) -> None:
-        """
-        在頁面上插入透明文字
-        
-        使用 PDF 渲染模式 3（隱形）來確保文字不可見但可選取/搜尋
-        
-        智能字體大小計算：根據 bbox 寬度和高度來精確匹配原始文字
-        
-        Args:
-            page: PyMuPDF 頁面物件
-            result: OCR 辨識結果
-        """
-        if not result.text.strip():
-            return
-        
-        try:
-            # 計算文字區域
-            x = result.x
-            y = result.y
-            width = result.width
-            height = result.height
-            text = result.text
-            
-            # 選擇最佳字體
-            fonts_to_try = ["helv", "china-s", "cour"]
-            best_font = "helv"
-            best_font_size = height * 0.6  # 預設值
-            
-            for fontname in fonts_to_try:
-                try:
-                    # 智能字體大小計算：根據 bbox 寬度和高度
-                    # 方法：計算一個初始字體大小，然後調整使文字寬度接近 bbox 寬度
-                    
-                    # 先用高度估算初始字體大小
-                    initial_size = height * 0.7
-                    if initial_size < 4:
-                        initial_size = 4
-                    if initial_size > 100:
-                        initial_size = 100
-                    
-                    # 計算文字在此字體大小下的寬度
-                    text_width = fitz.get_text_length(text, fontname=fontname, fontsize=initial_size)
-                    
-                    if text_width > 0 and width > 0:
-                        # 計算寬度比例並調整字體大小
-                        width_ratio = width / text_width
-                        
-                        # 調整字體大小使文字寬度接近 bbox 寬度
-                        adjusted_size = initial_size * width_ratio
-                        
-                        # 但也不能太大（不能超過高度的 90%）
-                        max_by_height = height * 0.9
-                        if adjusted_size > max_by_height:
-                            adjusted_size = max_by_height
-                        
-                        # 限制字體大小範圍
-                        if adjusted_size < 4:
-                            adjusted_size = 4
-                        if adjusted_size > 100:
-                            adjusted_size = 100
-                        
-                        best_font = fontname
-                        best_font_size = adjusted_size
-                        break  # 找到合適的字體就停止
-                    else:
-                        # 無法計算，使用預設值
-                        best_font = fontname
-                        best_font_size = initial_size
-                        break
-                        
-                except Exception:
-                    continue
-            
-            # 計算文字基線位置
-            # 文字基線約在 bbox 底部往上 (1 - font_size/height) 的位置
-            baseline_offset = best_font_size * 0.2  # 基線下方的空間約為字體大小的 20%
-            baseline_y = y + height - baseline_offset
-            
-            # 確保基線在合理範圍內
-            if baseline_y < y + best_font_size * 0.8:
-                baseline_y = y + best_font_size * 0.8
-            if baseline_y > y + height:
-                baseline_y = y + height
-            # 根據 debug_mode 設定文字樣式
-            if self.debug_mode:
-                render_mode = 0  # 可見模式
-                text_color = (1, 0.4, 0.6)  # 粉紅色
-            else:
-                render_mode = 3  # 隱形模式（可搜尋但不可見）
-                text_color = (0, 0, 0)  # 黑色
-            
-            # 插入文字
-            try:
-                page.insert_text(
-                    fitz.Point(x, baseline_y),
-                    text,
-                    fontsize=best_font_size,
-                    fontname=best_font,
-                    render_mode=render_mode,
-                    color=text_color
-                )
-            except Exception as e:
-                # 如果失敗，嘗試其他字體
-                for fontname in fonts_to_try:
-                    if fontname != best_font:
-                        try:
-                            page.insert_text(
-                                fitz.Point(x, baseline_y),
-                                text,
-                                fontsize=best_font_size,
-                                fontname=fontname,
-                                render_mode=render_mode,
-                                color=text_color
-                            )
-                            return
-                        except:
-                            continue
-                logging.warning(f"無法插入文字 '{text[:30]}...': {e}")
-            
-        except Exception as e:
-            logging.warning(f"插入文字失敗 '{result.text[:30]}...': {e}")
-    
-    def save(self) -> bool:
-        """
-        儲存 PDF 檔案
-        
-        Returns:
-            bool: 是否成功儲存
-        """
-        try:
-            if self.page_count == 0:
-                print("警告：沒有頁面可儲存")
-                return False
-            
-            self.doc.save(self.output_path)
-            self.doc.close()
-            print(f"[OK] PDF 已儲存：{self.output_path} ({self.page_count} 頁)")
-            return True
-            
-        except Exception as e:
-            print(f"錯誤：儲存 PDF 失敗: {e}")
-            return False
 
 
 class PaddleOCRTool:
@@ -1626,6 +1030,13 @@ class PaddleOCRTool:
         all_text = []
         all_ocr_results = []  # 收集每頁 OCR 結果，用於翻譯
         
+        # 初始化統計收集器
+        stats_collector = StatsCollector(
+            input_file=pdf_path,
+            mode="hybrid",
+            total_pages=total_pages
+        )
+        
         # 處理每一頁
         page_iterator = range(total_pages)
         if show_progress and HAS_TQDM:
@@ -1633,6 +1044,7 @@ class PaddleOCRTool:
         
         for page_num in page_iterator:
             try:
+                stats_collector.start_page(page_num)
                 logging.info(f"處理第 {page_num + 1}/{total_pages} 頁")
                 
                 page = pdf_doc[page_num]
@@ -1743,6 +1155,13 @@ class PaddleOCRTool:
                 all_ocr_results.append(sorted_results)  # 收集 OCR 結果用於翻譯
                 
                 result_summary["pages_processed"] += 1
+                
+                # 記錄頁面統計
+                stats_collector.finish_page(
+                    page_num=page_num,
+                    text=page_text,
+                    ocr_results=sorted_results
+                )
                 
                 # 清理記憶體
                 del pixmap
@@ -1879,6 +1298,11 @@ class PaddleOCRTool:
                 )
         
         print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
+        
+        # 完成統計並顯示摘要
+        final_stats = stats_collector.finish()
+        final_stats.print_summary()
+        result_summary["stats"] = final_stats.to_dict()
         
         return result_summary
     

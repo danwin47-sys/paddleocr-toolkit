@@ -31,13 +31,15 @@ class PDFGenerator:
     使 PDF 可搜尋、可選取文字，同時保持原始視覺外觀。
     """
     
-    def __init__(self, output_path: str, debug_mode: bool = False):
+    def __init__(self, output_path: str, debug_mode: bool = False, compress_images: bool = False, jpeg_quality: int = 85):
         """
         初始化 PDF 生成器
         
         Args:
             output_path: 輸出 PDF 的檔案路徑
             debug_mode: 如果為 True，文字會顯示為粉紅色（方便調試）
+            compress_images: 如果為 True，使用 JPEG 壓縮圖片以減少檔案大小
+            jpeg_quality: JPEG 壓縮品質（0-100，預設 85）
         """
         if not HAS_FITZ:
             raise ImportError("PyMuPDF (fitz) 未安裝，請執行: pip install pymupdf")
@@ -46,6 +48,8 @@ class PDFGenerator:
         self.doc = fitz.open()  # 建立新的空白 PDF
         self.page_count = 0
         self.debug_mode = debug_mode
+        self.compress_images = compress_images
+        self.jpeg_quality = max(0, min(100, jpeg_quality))
     
     def add_page(self, image_path: str, ocr_results: List[OCRResult]) -> bool:
         """
@@ -75,7 +79,22 @@ class PDFGenerator:
             
             # 插入圖片作為背景
             rect = fitz.Rect(0, 0, img_width, img_height)
-            page.insert_image(rect, filename=image_path)
+            
+            if self.compress_images:
+                # 使用 JPEG 壓縮以減少檔案大小
+                import io
+                # 確保是 RGB 模式
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                # 儲存為 JPEG 到記憶體緩衝區
+                jpeg_buffer = io.BytesIO()
+                img.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                jpeg_data = jpeg_buffer.getvalue()
+                # 插入 JPEG 資料
+                page.insert_image(rect, stream=jpeg_data)
+            else:
+                # 直接插入原始圖片（PNG 格式，無損但較大）
+                page.insert_image(rect, filename=image_path)
             
             # 疊加透明文字層
             for result in ocr_results:
@@ -111,7 +130,23 @@ class PDFGenerator:
             
             # 插入 pixmap 作為背景
             rect = fitz.Rect(0, 0, img_width, img_height)
-            page.insert_image(rect, pixmap=pixmap)
+            
+            if self.compress_images:
+                # 使用 JPEG 壓縮以減少檔案大小
+                import io
+                # 將 pixmap 轉換為 PIL Image
+                # 注意：這裡假設 pixmap 已經是 RGB 模式 (alpha=False)
+                pil_image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
+                
+                # 儲存為 JPEG 到記憶體緩衝區
+                jpeg_buffer = io.BytesIO()
+                pil_image.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                jpeg_data = jpeg_buffer.getvalue()
+                # 插入 JPEG 資料
+                page.insert_image(rect, stream=jpeg_data)
+            else:
+                # 直接插入 pixmap（PNG 格式，無損但較大）
+                page.insert_image(rect, pixmap=pixmap)
             
             # 疊加透明文字層
             for result in ocr_results:
