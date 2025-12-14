@@ -365,6 +365,7 @@ class PaddleOCRTool:
             print(f"初始化失敗: {e}")
             raise
     
+    
     def _parse_predict_result(self, predict_result) -> List[OCRResult]:
         """
         解析 PaddleOCR 3.x predict() 方法的回傳結果
@@ -375,6 +376,11 @@ class PaddleOCRTool:
         Returns:
             List[OCRResult]: OCR 辨識結果列表
         """
+        # 優先使用 Stage 3 結果解析器
+        if self._using_stage3 and hasattr(self, 'result_parser'):
+            return self.result_parser.parse_basic_result(predict_result)
+        
+        # 傳統實現（向後兼容）
         results = []
         
         try:
@@ -727,6 +733,17 @@ class PaddleOCRTool:
             Tuple[List[List[OCRResult]], Optional[str]]: 
                 (每頁的 OCR 結果列表, 輸出檔案路徑)
         """
+        # === Stage 3: 使用 PDFProcessor ===
+        if self._using_stage3 and hasattr(self, 'pdf_processor'):
+            return self.pdf_processor.process_pdf(
+                pdf_path=pdf_path,
+                output_path=output_path,
+                searchable=searchable,
+                dpi=dpi,
+                show_progress=show_progress
+            )
+        
+        # === 傳統實現（向後兼容） ===
         all_results = []
         
         try:
