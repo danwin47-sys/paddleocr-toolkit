@@ -1,13 +1,18 @@
 # PaddleOCR Toolkit
 
 [![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-346%20passed-success)]()
-[![Coverage](https://img.shields.io/badge/coverage-83%25-green)]()
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue)]()
+[![Tests](https://img.shields.io/badge/tests-391%20passed-success)](https://github.com/danwin47-sys/paddleocr-toolkit/actions)
+[![Coverage](https://img.shields.io/badge/coverage-84%25-green)](https://codecov.io/gh/danwin47-sys/paddleocr-toolkit)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
 
 🔍 **專業級 OCR 文件辨識與處理工具**
 
 基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能優化，提供生產級代碼質量。
+
+**📚 [快速開始](docs/QUICK_START.md) | [API文檔](docs/API_GUIDE.md) | [示例工具](examples/) | [貢獻指南](CONTRIBUTING.md)**
 
 ---
 
@@ -26,6 +31,7 @@
 | 🔄 方向校正 | 自动旋转倾斜文档 |
 | ⚙️ 设定档支持 | 支持 YAML 设定档，简化参数输入 |
 | 🛠️ 批次处理 | 支持多线程批次处理图片 |
+| 🎨 CLI美化 | Rich UI支持，炫酷终端界面 |
 
 ### 🆕 性能优化（Stage 2）
 
@@ -38,23 +44,23 @@
 
 ### 🧩 模块化架构（Stage 3）
 
-**专业化组件**:
+**26个专业化组件**:
 
-- `OCREngineManager` - 统一引擎管理
-- `OCRResultParser` - 智能结果解析
-- `PDFProcessor` - 专业 PDF 处理
-- `StructureProcessor` - 版面分析
-- `TranslationProcessor` - 翻译流程
-- `OutputManager` - 多格式输出
+- **CLI层**: `argument_parser`, `config_handler`, `mode_processor`, `output_manager`, `rich_ui`
+- **核心层**: `ocr_engine`, `result_parser`, `pdf_generator`, `pdf_utils`, `streaming_utils`, `config_loader`, `models`
+- **处理器层**: `batch_processor`, `pdf_processor`, `image_preprocessor`, `structure_processor`, `translation_processor`
+- **输出层**: `output_manager`
 
 ### 📊 代碼質量
 
-- ✅ **346 個單元測試**（100% 通過率）
-- ✅ **83% 測試覆蓋率**
+- ✅ **391 個單元測試**（100% 通過率）⬆️
+- ✅ **84% 測試覆蓋率**⬆️
 - ✅ **100% 類型提示**
 - ✅ **100% Docstrings**
-- ✅ **模組化設計**（19 個專業化模組）
+- ✅ **模組化設計**（26 個專業化模組）⬆️
 - ✅ **代碼格式化**（Black + isort）
+- ✅ **CI/CD流程**（GitHub Actions）🆕
+- ✅ **Docker支持**（生產級配置）🆕
 
 ---
 
