@@ -6,6 +6,7 @@ PaddleOCR Toolkit - 文字處理器
 """
 
 import re
+from functools import lru_cache
 
 # 可選依賴：英文分詞
 try:
@@ -162,9 +163,10 @@ COMMON_HYPHENATED = {
 }
 
 
+@lru_cache(maxsize=10000)
 def fix_english_spacing(text: str, use_wordninja: bool = True) -> str:
     """
-    修復英文 OCR 結果中的空格問題
+    修復英文 OCR 結果中的空格問題（帶快取優化）
     
     策略：
     1. 保護專業術語不被拆分
@@ -172,6 +174,11 @@ def fix_english_spacing(text: str, use_wordninja: bool = True) -> str:
     3. wordninja 智能分詞（可選）
     4. 修復連字符詞
     5. 數字前後空格
+    
+    快取優化：
+    - 相同文字直接返回快取結果
+    - 最多快取 10000 個結果
+    - 大幅提升重複文字處理速度
     
     Args:
         text: 輸入文字
