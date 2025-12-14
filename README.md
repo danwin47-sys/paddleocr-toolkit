@@ -278,29 +278,39 @@ paddleocr-toolkit/
 ├── paddleocr_toolkit/           # Python 套件
 │   ├── __init__.py              # 套件入口
 │   ├── __main__.py              # CLI 入口（python -m）
-│   ├── cli/                     # 🆕 CLI 模組（重構後）
+│   ├── cli/                     # 🆕 CLI 模組（Stage 2 重構）
 │   │   ├── argument_parser.py   # 命令列參數解析
 │   │   ├── output_manager.py    # 輸出路徑管理
 │   │   ├── config_handler.py    # 設定檔處理
 │   │   └── mode_processor.py    # 模式處理器
-│   ├── core/
+│   ├── core/                    # 核心模組
 │   │   ├── models.py            # 資料模型
 │   │   ├── pdf_generator.py     # PDF 生成器
 │   │   ├── pdf_utils.py         # PDF 工具函數
-│   │   └── config_loader.py     # 設定檔載入器
-│   ├── processors/
+│   │   ├── config_loader.py     # 設定檔載入器
+│   │   ├── ocr_engine.py        # 🆕 OCR 引擎管理器（Stage 3）
+│   │   ├── result_parser.py     # 🆕 結果解析器（Stage 3）
+│   │   ├── streaming_utils.py   # 🆕 串流處理工具（性能優化）
+│   │   └── buffered_writer.py   # 🆕 緩衝寫入器（性能優化）
+│   ├── processors/              # 處理器模組
 │   │   ├── text_processor.py    # 文字處理
 │   │   ├── pdf_quality.py       # PDF 品質偵測
 │   │   ├── batch_processor.py   # 批次處理
+│   │   ├── pdf_processor.py     # 🆕 PDF 處理器（Stage 3）
+│   │   ├── structure_processor.py # 🆕 結構化處理器（Stage 3）
+│   │   ├── translation_processor.py # 🆕 翻譯處理器（Stage 3）
 │   │   ├── image_preprocessor.py# 影像前處理
 │   │   ├── glossary_manager.py  # 術語管理
 │   │   ├── ocr_workaround.py    # OCR 替代方案
 │   │   └── stats_collector.py   # 統計收集
-│   └── outputs/                 # 輸出格式處理
+│   └── outputs/                 # 🆕 輸出格式處理（Stage 3）
+│       └── output_manager.py    # 輸出管理器
 ├── tests/                       # 🆕 測試套件
 │   ├── test_cli_*.py            # CLI 模組測試（71 個測試）
 │   ├── test_core_*.py           # 核心模組測試
-│   └── test_processors_*.py     # 處理器測試
+│   ├── test_processors_*.py     # 處理器測試
+│   └── test_performance_*.py    # 性能測試
+├── artifacts/plans/             # 📚 工作計畫與總結
 ├── requirements.txt             # Python 依賴
 ├── glossary.csv                 # 翻譯術語表
 └── README.md                    # 說明文件
@@ -350,6 +360,88 @@ paddleocr-toolkit/
 - 提取 CLI 邏輯到獨立模組（`paddleocr_toolkit/cli/`）
 - 創建 71 個 CLI 測試，達到 96% 覆蓋率
 - 所有代碼遵循 Google Style Python 規範
+
+---
+
+## 🧩 新模組 API (Stage 3)
+
+### OCR 引擎管理器
+
+```python
+from paddleocr_toolkit.core import OCREngineManager
+
+# 使用 context manager
+with OCREngineManager(mode='basic', device='gpu') as manager:
+    result = manager.predict('image.jpg')
+
+# 或手動管理
+manager = OCREngineManager(mode='hybrid', device='cpu')
+manager.init_engine()
+result = manager.predict('document.pdf')
+manager.close()
+```
+
+### OCR 結果解析器
+
+```python
+from paddleocr_toolkit.core import OCRResultParser
+
+parser = OCRResultParser()
+
+# 解析基本結果
+results = parser.parse_basic_result(predict_output)
+
+# 解析結構化結果
+results = parser.parse_structure_result(structure_output)
+
+# 過濾和排序
+filtered = parser.filter_by_confidence(results, min_confidence=0.8)
+sorted_results = parser.sort_by_position(filtered, reading_order='top-to-bottom')
+```
+
+### PDF 處理器
+
+```python
+from paddleocr_toolkit.processors import PDFProcessor
+
+processor = PDFProcessor(
+    ocr_func=engine.predict,
+    result_parser=parser.parse_basic_result
+)
+
+# 處理 PDF
+results, output_path = processor.process_pdf(
+    pdf_path='document.pdf',
+    searchable=True,
+    dpi=200
+)
+
+# 提取文字
+text = processor.extract_all_text(results)
+```
+
+### 輸出管理器
+
+```python
+from paddleocr_toolkit.outputs import OutputManager
+
+# 創建管理器
+manager = OutputManager(
+    base_path='output/result',
+    formats=['md', 'json', 'txt', 'html']
+)
+
+# 批次輸出
+paths = manager.write_all({
+    'text': '純文字內容',
+    'markdown': '# Markdown\n內容',
+    'json_data': {'key': 'value'}
+})
+
+# 單獨輸出
+manager.write_markdown('# 標題\n內容')
+manager.write_json({'data': [1, 2, 3]})
+```
 
 ---
 
