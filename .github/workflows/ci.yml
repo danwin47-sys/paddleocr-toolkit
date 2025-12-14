@@ -39,6 +39,10 @@ jobs:
           python -m py_compile paddleocr_toolkit/processors/stats_collector.py
           python -m py_compile paddleocr_toolkit/processors/batch_processor.py
           python -m py_compile paddleocr_toolkit/processors/ocr_workaround.py
+          python -m py_compile paddleocr_toolkit/cli/argument_parser.py
+          python -m py_compile paddleocr_toolkit/cli/output_manager.py
+          python -m py_compile paddleocr_toolkit/cli/config_handler.py
+          python -m py_compile paddleocr_toolkit/cli/mode_processor.py
       
       - name: 型別檢查 - paddleocr_toolkit
         run: |
