@@ -1,0 +1,16 @@
+logging:
+  file: ./logs/paddleocr.log
+  level: INFO
+ocr:
+  device: gpu
+  dpi: 200
+  lang: ch
+  mode: hybrid
+  use_angle_cls: true
+output:
+  directory: ./output
+  format: md
+performance:
+  batch_size: 8
+  enable_cache: true
+  max_workers: 4

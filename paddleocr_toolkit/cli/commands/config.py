@@ -4,6 +4,17 @@
 paddleocr config - 配置向导命令
 """
 
+import sys
+import io
+
+# Windows UTF-8修复
+if sys.platform == 'win32':
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+    except:
+        pass
+
 import os
 from pathlib import Path
 import yaml
