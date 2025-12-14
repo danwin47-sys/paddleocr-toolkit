@@ -250,9 +250,59 @@ class PaddleOCRTool:
         self.compress_images = compress_images
         self.jpeg_quality = jpeg_quality
         
+        # === Stage 3 模組化初始化（新） ===
+        if HAS_STAGE3_MODULES:
+            try:
+                # 初始化 OCR 引擎管理器
+                self.engine_manager = OCREngineManager(
+                    mode=mode,
+                    device=device,
+                    use_orientation_classify=use_orientation_classify,
+                    use_doc_unwarping=use_doc_unwarping,
+                    use_textline_orientation=use_textline_orientation
+                )
+                self.engine_manager.init_engine()
+                
+                # 初始化結果解析器
+                self.result_parser = OCRResultParser()
+                
+                # 初始化 PDF 處理器
+                self.pdf_processor = PDFProcessor(
+                    ocr_func=self.engine_manager.predict,
+                    result_parser=self.result_parser.parse_basic_result,
+                    debug_mode=debug_mode
+                )
+                
+                # 為了向後兼容，設置 self.ocr
+                self.ocr = self.engine_manager.get_engine()
+                
+                # 標記使用新架構
+                self._using_stage3 = True
+                logging.info("[Stage 3] 使用模組化架構初始化")
+                
+            except Exception as e:
+                logging.warning(f"[Stage 3] 模組化初始化失敗: {e}，回退到傳統實現")
+                self._using_stage3 = False
+                self._legacy_init(mode, use_orientation_classify, use_doc_unwarping, 
+                                use_textline_orientation, device)
+        else:
+            # 使用傳統初始化
+            self._using_stage3 = False
+            self._legacy_init(mode, use_orientation_classify, use_doc_unwarping, 
+                            use_textline_orientation, device)
+    
+    def _legacy_init(
+        self,
+        mode: str,
+        use_orientation_classify: bool,
+        use_doc_unwarping: bool,
+        use_textline_orientation: bool,
+        device: str
+    ):
+        """傳統初始化方法（向後兼容）"""
         # 初始化對應的 OCR 引擎
         print(f"正在初始化 PaddleOCR 3.x (模式: {mode})...")
-        if debug_mode:
+        if self.debug_mode:
             print("[DEBUG] 已啟用 DEBUG 模式：可搜尋 PDF 的隱形文字將顯示為粉紅色")
         
         try:
