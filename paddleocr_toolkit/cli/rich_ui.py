@@ -1,10 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - CLI 美化模組
+PaddleOCR Toolkit - CLI 美化模組 v1.2.0
 使用 rich 庫提供超炫的命令列介面
+支持跨平台（修复Windows编码问题）
 """
 
+import sys
+import io
+
+# ═══════════════════════════════════════════════════════════
+# Windows 編碼修復 (v1.2.0新增)
+# ═══════════════════════════════════════════════════════════
+if sys.platform == 'win32':
+    try:
+        # 強制 UTF-8 輸出
+        sys.stdout = io.TextIOWrapper(
+            sys.stdout.buffer,
+            encoding='utf-8',
+            errors='replace',
+            line_buffering=True
+        )
+        sys.stderr = io.TextIOWrapper(
+            sys.stderr.buffer,
+            encoding='utf-8',
+            errors='replace',
+            line_buffering=True
+        )
+    except Exception:
+        pass  # 如果失敗，繼續使用默認編碼
+
+# ═══════════════════════════════════════════════════════════
+# Rich庫導入
+# ═══════════════════════════════════════════════════════════
 try:
     from rich.console import Console
     from rich.progress import (
@@ -24,8 +52,54 @@ try:
 except ImportError:
     HAS_RICH = False
 
-console = Console() if HAS_RICH else None
+# ═══════════════════════════════════════════════════════════
+# 跨平台圖標定義 (v1.2.0新增)
+# ═══════════════════════════════════════════════════════════
+if sys.platform == 'win32':
+    # Windows ASCII 替代方案
+    ICONS = {
+        'logo': 'OCR',
+        'success': '[OK]',
+        'error': '[X]',
+        'warning': '[!]',
+        'info': '[i]',
+        'processing': '[>]',
+        'page': '#',
+        'text': 'T',
+        'confidence': '%',
+        'time': 't',
+        'excellent': '+++',
+        'good': '++',
+        'fair': '+',
+        'poor': '-',
+    }
+else:
+    # Unix/Mac EM用oji
+    ICONS = {
+        'logo': '🔍',
+        'success': '✅',
+        'error': '❌',
+        'warning': '⚠️',
+        'info': 'ℹ️',
+        'processing': '⚙️',
+        'page': '📄',
+        'text': '📝',
+        'confidence': '🎯',
+        'time': '⏱️',
+        'excellent': '🟢',
+        'good': '🟡',
+        'fair': '🟠',
+        'poor': '🔴',
+    }
 
+if HAS_RICH:
+    console = Console()
+else:
+    console = None
+
+# ═══════════════════════════════════════════════════════════
+# 公共函數
+# ═══════════════════════════════════════════════════════════
 
 def print_banner():
     """顯示啟動橫幅"""
@@ -33,13 +107,13 @@ def print_banner():
         print("=== PaddleOCR Toolkit ===")
         return
     
-    banner = """
+    banner = f"""
     ╔═══════════════════════════════════════════════════════╗
     ║                                                       ║
-    ║     🔍  PaddleOCR Toolkit  🔍                         ║
+    ║     {ICONS['logo']}  PaddleOCR Toolkit  {ICONS['logo']}                         ║
     ║                                                       ║
     ║     專業級 OCR 文件辨識與處理工具                      ║
-    ║     v1.0.0 | 測試覆蓋率: 84% | 388個測試通過          ║
+    ║     v1.2.0 | 測試覆蓋率: 84% | 391個測試通過          ║
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
     """
@@ -49,41 +123,45 @@ def print_banner():
 
 def print_success(message: str):
     """顯示成功訊息"""
+    icon = ICONS['success']
     if not HAS_RICH:
-        print(f"✓ {message}")
+        print(f"{icon} {message}")
         return
     
-    console.print(f"✅ {message}", style="bold green")
+    console.print(f"{icon} {message}", style="bold green")
 
 
 def print_error(message: str):
     """顯示錯誤訊息"""
+    icon = ICONS['error']
     if not HAS_RICH:
-        print(f"✗ {message}")
+        print(f"{icon} {message}")
         return
     
-    console.print(f"❌ {message}", style="bold red")
+    console.print(f"{icon} {message}", style="bold red")
 
 
 def print_warning(message: str):
     """顯示警告訊息"""
+    icon = ICONS['warning']
     if not HAS_RICH:
-        print(f"⚠ {message}")
+        print(f"{icon} {message}")
         return
     
-    console.print(f"⚠️  {message}", style="bold yellow")
+    console.print(f"{icon} {message}", style="bold yellow")
 
 
 def print_info(message: str):
     """顯示資訊訊息"""
+    icon = ICONS['info']
     if not HAS_RICH:
-        print(f"ℹ {message}")
+        print(f"{icon} {message}")
         return
     
-    console.print(f"ℹ️  {message}", style="bold blue")
+    console.print(f"{icon} {message}", style="bold blue")
 
 
-def create_results_table(results_data: list) -> Table:
+def create_results_table(results_data: list):
     """
     創建OCR結果表格
     
@@ -94,7 +172,7 @@ def create_results_table(results_data: list) -> Table:
         return None
     
     table = Table(
-        title="📊 OCR 處理結果統計",
+        title=f"{ICONS['page']} OCR 處理結果統計",
         box=box.ROUNDED,
         show_header=True,
         header_style="bold magenta"
@@ -108,11 +186,11 @@ def create_results_table(results_data: list) -> Table:
     for page_num, text_count, avg_conf in results_data:
         # 根據信心度選擇狀態
         if avg_conf >= 0.9:
-            status = "🟢 優秀"
+            status = f"{ICONS['excellent']} 優秀"
         elif avg_conf >= 0.7:
-            status = "🟡 良好"
+            status = f"{ICONS['good']} 良好"
         else:
-            status = "🔴 需檢查"
+            status = f"{ICONS['poor']} 需檢查"
         
         table.add_row(
             str(page_num),
@@ -168,16 +246,16 @@ def print_performance_summary(stats: dict):
         return
     
     panel_content = f"""
-    📄 總頁數: [bold cyan]{stats.get('total_pages', 0)}[/bold cyan]
-    ⏱️  總時間: [bold yellow]{stats.get('total_time', 0):.2f}s[/bold yellow]
-    ⚡ 平均速度: [bold green]{stats.get('avg_time_per_page', 0):.2f}s/頁[/bold green]
-    💾 峰值記憶體: [bold magenta]{stats.get('peak_memory_mb', 0):.1f}MB[/bold magenta]
-    📝 識別文字: [bold blue]{stats.get('total_texts', 0)}個[/bold blue]
+    {ICONS['page']} 總頁數: [bold cyan]{stats.get('total_pages', 0)}[/bold cyan]
+    {ICONS['time']} 總時間: [bold yellow]{stats.get('total_time', 0):.2f}s[/bold yellow]
+    {ICONS['processing']} 平均速度: [bold green]{stats.get('avg_time_per_page', 0):.2f}s/頁[/bold green]
+    峰值記憶體: [bold magenta]{stats.get('peak_memory_mb', 0):.1f}MB[/bold magenta]
+    {ICONS['text']} 識別文字: [bold blue]{stats.get('total_texts', 0)}個[/bold blue]
     """
     
     panel = Panel(
         panel_content,
-        title="🎯 性能摘要",
+        title=f"{ICONS['confidence']} 性能摘要",
         border_style="bold green",
         box=box.DOUBLE
     )
@@ -203,7 +281,9 @@ def print_logo():
     console.print(logo, style="bold cyan")
 
 
+# ═══════════════════════════════════════════════════════════
 # 示例使用
+# ═══════════════════════════════════════════════════════════
 if __name__ == "__main__":
     if HAS_RICH:
         print_logo()
