@@ -1,13 +1,13 @@
 # PaddleOCR Toolkit
 
 [![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-308%20passed-success)]()
-[![Coverage](https://img.shields.io/badge/coverage-79%25-yellow)]()
+[![Tests](https://img.shields.io/badge/tests-346%20passed-success)]()
+[![Coverage](https://img.shields.io/badge/coverage-83%25-green)]()
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)]()
 
-🔍 **专业级 OCR 文档识别与处理工具**
+🔍 **專業級 OCR 文件辨識與處理工具**
 
-基于 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 开发的命令行工具与 Python 套件，经过完整重构和性能优化，提供生产级代码质量。
+基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能優化，提供生產級代碼質量。
 
 ---
 
@@ -47,13 +47,14 @@
 - `TranslationProcessor` - 翻译流程
 - `OutputManager` - 多格式输出
 
-### 📊 代码质量
+### 📊 代碼質量
 
-- ✅ **308 个单元测试**（100% 通过率）
-- ✅ **79% 测试覆盖率**
-- ✅ **100% 类型提示**
+- ✅ **346 個單元測試**（100% 通過率）
+- ✅ **83% 測試覆蓋率**
+- ✅ **100% 類型提示**
 - ✅ **100% Docstrings**
-- ✅ **模块化设计**（19 个专业化模块）
+- ✅ **模組化設計**（19 個專業化模組）
+- ✅ **代碼格式化**（Black + isort）
 
 ---
 

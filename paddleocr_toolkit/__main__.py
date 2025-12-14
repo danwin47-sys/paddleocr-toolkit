@@ -7,8 +7,8 @@ PaddleOCR Toolkit - 命令列入口點
     python -m paddleocr_toolkit input.pdf --mode hybrid
 """
 
-import sys
 import os
+import sys
 
 # 添加父目錄到路徑以支援 paddle_ocr_tool
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
