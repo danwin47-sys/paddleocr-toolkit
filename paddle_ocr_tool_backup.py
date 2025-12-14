@@ -65,17 +65,6 @@ try:
         page_to_numpy,
         get_dpi_matrix,
     )
-    
-    # Stage 3 新模組（可選導入，確保向後兼容）
-    try:
-        from paddleocr_toolkit.core import OCREngineManager, OCRResultParser
-        from paddleocr_toolkit.processors import PDFProcessor
-        from paddleocr_toolkit.outputs import OutputManager
-        HAS_STAGE3_MODULES = True
-    except ImportError:
-        HAS_STAGE3_MODULES = False
-        logging.warning("Stage 3 模組未安裝，使用傳統實現")
-    
     HAS_TOOLKIT = True
 except ImportError:
     HAS_TOOLKIT = False
