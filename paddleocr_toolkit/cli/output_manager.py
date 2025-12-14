@@ -55,31 +55,66 @@ class OutputPathManager:
         return custom_output
     
     def get_markdown_output_path(self, custom_output: Optional[str] = None) -> Optional[str]:
-        """取得 Markdown 輸出路徑"""
+        """取得 Markdown 輸出路徑
+        
+        Args:
+            custom_output: 自訂輸出路徑（'AUTO' 或實際路徑）
+        
+        Returns:
+            Optional[str]: 輸出檔案路徑，'AUTO' 時返回預設路徑
+        """
         if custom_output == 'AUTO':
             return str(self.parent_dir / f"{self.base_name}_{self.mode}.md")
         return custom_output
     
     def get_json_output_path(self, custom_output: Optional[str] = None) -> Optional[str]:
-        """取得 JSON 輸出路徑"""
+        """取得 JSON 輸出路徑
+        
+        Args:
+            custom_output: 自訂輸出路徑（'AUTO' 或實際路徑）
+        
+        Returns:
+            Optional[str]: 輸出檔案路徑，'AUTO' 時返回預設路徑
+        """
         if custom_output == 'AUTO':
             return str(self.parent_dir / f"{self.base_name}_{self.mode}.json")
         return custom_output
     
     def get_html_output_path(self, custom_output: Optional[str] = None) -> Optional[str]:
-        """取得 HTML 輸出路徑"""
+        """取得 HTML 輸出路徑
+        
+        Args:
+            custom_output: 自訂輸出路徑（'AUTO' 或實際路徑）
+        
+        Returns:
+            Optional[str]: 輸出檔案路徑，'AUTO' 時返回預設路徑
+        """
         if custom_output == 'AUTO':
             return str(self.parent_dir / f"{self.base_name}_{self.mode}.html")
         return custom_output
     
     def get_excel_output_path(self, custom_output: Optional[str] = None) -> Optional[str]:
-        """取得 Excel 輸出路徑"""
+        """取得 Excel 輸出路徑
+        
+        Args:
+            custom_output: 自訂輸出路徑（'AUTO' 或實際路徑）
+        
+        Returns:
+            Optional[str]: 輸出檔案路徑，'AUTO' 時返回預設路徑
+        """
         if custom_output == 'AUTO':
             return str(self.parent_dir / f"{self.base_name}_tables.xlsx")
         return custom_output
     
     def get_latex_output_path(self, custom_output: Optional[str] = None) -> Optional[str]:
-        """取得 LaTeX 輸出路徑"""
+        """取得 LaTeX 輸出路徑
+        
+        Args:
+            custom_output: 自訂輸出路徑（'AUTO' 或實際路徑）
+        
+        Returns:
+            Optional[str]: 輸出檔案路徑，'AUTO' 時返回預設路徑
+        """
         if custom_output == 'AUTO':
             return str(self.parent_dir / f"{self.base_name}_formula.tex")
         return custom_output
