@@ -22,6 +22,24 @@ from .config_loader import (
     DEFAULT_CONFIG,
 )
 
+# 性能優化工具（可選）
+try:
+    from .streaming_utils import (
+        open_pdf_context,
+        pdf_pages_generator,
+        batch_pages_generator,
+        StreamingPDFProcessor,
+    )
+    from .buffered_writer import (
+        BufferedWriter,
+        BufferedJSONWriter,
+        write_text_efficient,
+        write_json_efficient,
+    )
+    HAS_PERF_TOOLS = True
+except ImportError:
+    HAS_PERF_TOOLS = False
+
 __all__ = [
     # 資料模型
     'OCRResult',
@@ -46,3 +64,18 @@ __all__ = [
     'get_config_value',
     'DEFAULT_CONFIG',
 ]
+
+# 添加性能優化工具（如果可用）
+if HAS_PERF_TOOLS:
+    __all__.extend([
+        # 串流處理
+        'open_pdf_context',
+        'pdf_pages_generator',
+        'batch_pages_generator',
+        'StreamingPDFProcessor',
+        # 緩衝寫入
+        'BufferedWriter',
+        'BufferedJSONWriter',
+        'write_text_efficient',
+        'write_json_efficient',
+    ])

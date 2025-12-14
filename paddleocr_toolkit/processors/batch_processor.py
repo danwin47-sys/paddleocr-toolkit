@@ -3,10 +3,11 @@
 PaddleOCR Toolkit - 批次處理優化
 
 提供多執行緒和批次處理功能以提升效能。
+支援串流處理模式以優化記憶體使用。
 """
 
 import logging
-from typing import List, Tuple, Optional, Callable, Any
+from typing import List, Tuple, Optional, Callable, Any, Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -21,6 +22,17 @@ try:
     HAS_FITZ = True
 except ImportError:
     HAS_FITZ = False
+
+# 串流處理工具
+try:
+    from ..core.streaming_utils import (
+        pdf_pages_generator,
+        batch_pages_generator,
+        open_pdf_context
+    )
+    HAS_STREAMING = True
+except ImportError:
+    HAS_STREAMING = False
 
 
 def pdf_to_images_parallel(
@@ -215,6 +227,74 @@ class BatchProcessor:
             max_workers=self.max_workers,
             progress_callback=progress
         )
+    
+    def pdf_pages_stream(
+        self,
+        pdf_path: str,
+        dpi: int = 150,
+        pages: Optional[List[int]] = None
+    ) -> Generator[Tuple[int, np.ndarray], None, None]:
+        """
+        串流處理 PDF 頁面（記憶體優化）
+        
+        使用生成器逐頁返回，記憶體使用恆定。
+        適合處理大文件（1000+ 頁）。
+        
+        Args:
+            pdf_path: PDF 檔案路徑
+            dpi: 解析度
+            pages: 指定頁碼列表
+        
+        Yields:
+            Tuple[int, np.ndarray]: (頁碼, 圖像)
+        
+        Example:
+            processor = BatchProcessor()
+            for page_num, image in processor.pdf_pages_stream('large.pdf'):
+                result = process(image)
+                save(result)
+        """
+        if not HAS_STREAMING:
+            # 降級到舊方法
+            logging.warning("串流工具未安裝，使用傳統方法")
+            results = self.pdf_to_images(pdf_path, dpi, pages)
+            for page_num, image in results:
+                yield (page_num, image)
+        else:
+            yield from pdf_pages_generator(pdf_path, dpi, pages)
+    
+    def pdf_batch_stream(
+        self,
+        pdf_path: str,
+        dpi: int = 150,
+        batch_size: Optional[int] = None,
+        pages: Optional[List[int]] = None
+    ) -> Generator[List[Tuple[int, np.ndarray]], None, None]:
+        """
+        批次串流處理 PDF（GPU 優化）
+        
+        分批返回頁面，適合 GPU 批次處理。
+        
+        Args:
+            pdf_path: PDF 檔案路徑
+            dpi: 解析度
+            batch_size: 批次大小（None 使用預設）
+            pages: 指定頁碼列表
+        
+        Yields:
+            List[Tuple[int, np.ndarray]]: 批次頁面列表
+        """
+        if batch_size is None:
+            batch_size = self.batch_size
+        
+        if not HAS_STREAMING:
+            # 降級到舊方法
+            logging.warning("串流工具未安裝，使用傳統方法")
+            results = self.pdf_to_images(pdf_path, dpi, pages)
+            for i in range(0, len(results), batch_size):
+                yield results[i:i+batch_size]
+        else:
+            yield from batch_pages_generator(pdf_path, dpi, batch_size, pages)
 
 
 def get_optimal_workers() -> int:
