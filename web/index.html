@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaddleOCR Toolkit - Web界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-area.dragging {
+            background: #e8ebff;
+            border-color: #764ba2;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .options {
+            margin: 30px 0;
+        }
+        
+        .option-group {
+            margin-bottom: 20px;
+        }
+        
+        .option-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .option-group select,
+        .option-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .option-group select:focus,
+        .option-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .results h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .result-text {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 PaddleOCR Toolkit</h1>
+            <p>专业级OCR文件识别与处理</p>
+        </div>
+        
+        <div class="card">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <h3>拖放文件到这里或点击上传</h3>
+                <p style="color: #666; margin-top: 10px;">支持 PDF, JPG, PNG 格式</p>
+                <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            
+            <div class="options">
+                <div class="option-group">
+                    <label>OCR模式</label>
+                    <select id="modeSelect">
+                        <option value="basic">Basic - 基础OCR</option>
+                        <option value="hybrid" selected>Hybrid - 混合模式</option>
+                        <option value="structure">Structure - 版面分析</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label>DPI设置</label>
+                    <select id="dpiSelect">
+                        <option value="150">150 - 快速</option>
+                        <option value="200" selected>200 - 平衡</option>
+                        <option value="300">300 - 高质量</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn" id="processBtn" disabled>开始处理</button>
+            
+            <div class="progress" id="progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">处理中...</div>
+            </div>
+            
+            <div class="results" id="results">
+                <h3>识别结果</h3>
+                <div class="result-text" id="resultText"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+        const resultText = document.getElementById('resultText');
+        
+        let selectedFile = null;
+        
+        // 点击上传
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+        
+        // 拖放
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        function handleFile(file) {
+            if (!file) return;
+            
+            selectedFile = file;
+            uploadArea.querySelector('h3').textContent = `已选择: ${file.name}`;
+            processBtn.disabled = false;
+        }
+        
+        // 处理按钮
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            processBtn.disabled = true;
+            progress.style.display = 'block';
+            results.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            const mode = document.getElementById('modeSelect').value;
+            
+            try {
+                // 上传文件
+                const response = await fetch(`http://localhost:8000/api/ocr?mode=${mode}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                const taskId = data.task_id;
+                
+                // 轮询任务状态
+                pollTaskStatus(taskId);
+                
+            } catch (error) {
+                alert('错误: ' + error.message);
+                processBtn.disabled = false;
+                progress.style.display = 'none';
+            }
+        });
+        
+        async function pollTaskStatus(taskId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`http://localhost:8000/api/tasks/${taskId}`);
+                    const data = await response.json();
+                    
+                    // 更新进度
+                    progressFill.style.width = data.progress + '%';
+                    progressText.textContent = `处理中... ${data.progress}%`;
+                    
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        showResults(data.results);
+                    } else if (data.status === 'failed') {
+                        clearInterval(interval);
+                        alert('处理失败: ' + data.error);
+                        processBtn.disabled = false;
+                        progress.style.display = 'none';
+                    }
+                } catch (error) {
+                    clearInterval(interval);
+                    alert('错误: ' + error.message);
+                }
+            }, 1000);
+        }
+        
+        function showResults(data) {
+            progress.style.display = 'none';
+            results.style.display = 'block';
+            resultText.textContent = JSON.stringify(data, null, 2);
+            processBtn.disabled = false;
+            
+            uploadArea.querySelector('h3').textContent = '拖放文件到这里或点击上传';
+        }
+    </script>
+</body>
+</html>
