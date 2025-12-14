@@ -44,7 +44,7 @@ class TestPDFProcessor:
         ]
         
         text = processor.get_text(results, separator=" ")
-       assert text == "Line1 Line2"
+        assert text == "Line1 Line2"
     
     def test_extract_all_text(self):
         """測試提取所有頁面文字"""
