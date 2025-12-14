@@ -1,0 +1,34 @@
+{
+  "app_name": "PaddleOCR Toolkit",
+  "version": "1.1.0",
+  
+  "messages": {
+    "processing_pdf": "Processing PDF...",
+    "ocr_complete": "OCR processing complete",
+    "error_file_not_found": "File not found",
+    "saving_results": "Saving results...",
+    "batch_processing": "Batch processing...",
+    "initializing": "Initializing OCR engine...",
+    "ready": "Ready!",
+    "page_progress": "Page {current}/{total}",
+    "total_time": "Total time: {time}s",
+    "average_confidence": "Average confidence: {conf}%",
+    
+    "errors": {
+      "import_error": "Missing required module: {module}",
+      "memory_error": "Out of memory", 
+      "invalid_format": "Invalid file format",
+      "processing_failed": "Processing failed: {error}"
+    },
+    
+    "cli": {
+      "help_title": "PaddleOCR Toolkit - Professional OCR Tool",
+      "help_usage": "Usage: python paddle_ocr_tool.py [options] <input>",
+      "help_options": "Options:",
+      "help_mode": "OCR mode (basic, structure, hybrid)",
+      "help_dpi": "DPI for PDF resolution",
+      "help_format": "Output format (md, json, html)",
+      "help_device": "Device (gpu, cpu)"
+    }
+  }
+}
