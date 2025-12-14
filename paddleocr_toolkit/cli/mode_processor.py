@@ -8,7 +8,10 @@ PaddleOCR Toolkit - 模式处理器
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from paddle_ocr_tool import PaddleOCRTool
 
 # 需要从 paddle_ocr_tool.py 导入的常量
 SUPPORTED_PDF_FORMAT = '.pdf'
@@ -21,7 +24,7 @@ class ModeProcessor:
     封装了 formula、structure、vl、hybrid、basic 五种模式的处理逻辑。
     """
     
-    def __init__(self, tool, args: argparse.Namespace, input_path: Path, script_dir: Path):
+    def __init__(self, tool: "PaddleOCRTool", args: argparse.Namespace, input_path: Path, script_dir: Path):
         """初始化模式处理器
         
         Args:

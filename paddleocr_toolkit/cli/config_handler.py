@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def load_and_merge_config(
-    cli_args,
+    cli_args: argparse.Namespace,
     config_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """載入設定檔並與 CLI 參數合併
