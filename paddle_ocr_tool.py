@@ -419,6 +419,7 @@ class PaddleOCRTool:
         
         return results
     
+    
     def process_image(self, image_path: str) -> List[OCRResult]:
         """
         處理單張圖片進行 OCR
@@ -432,9 +433,15 @@ class PaddleOCRTool:
         results = []
         
         try:
-            # PaddleOCR 3.x 使用 predict() 方法
-            predict_result = self.ocr.predict(input=image_path)
-            results = self._parse_predict_result(predict_result)
+            # === Stage 3: 使用引擎管理器和解析器 ===
+            if self._using_stage3 and hasattr(self, 'engine_manager'):
+                predict_result = self.engine_manager.predict(input=image_path)
+                results = self.result_parser.parse_basic_result(predict_result)
+            else:
+                # === 传统实现 ===
+                # PaddleOCR 3.x 使用 predict() 方法
+                predict_result = self.ocr.predict(input=image_path)
+                results = self._parse_predict_result(predict_result)
             
             if not results:
                 print(f"警告：未在圖片中偵測到文字: {image_path}")
@@ -865,6 +872,7 @@ class PaddleOCRTool:
         
         return all_results
     
+    
     def get_text(self, results: List[OCRResult], separator: str = "\n") -> str:
         """
         從 OCR 結果中提取純文字
@@ -876,6 +884,11 @@ class PaddleOCRTool:
         Returns:
             str: 合併的純文字
         """
+        # === Stage 3: 使用 PDFProcessor ===
+        if self._using_stage3 and hasattr(self, 'pdf_processor'):
+            return self.pdf_processor.get_text(results, separator)
+        
+        # === 传统实现 ===
         return separator.join(r.text for r in results if r.text.strip())
     
     def process_formula(
