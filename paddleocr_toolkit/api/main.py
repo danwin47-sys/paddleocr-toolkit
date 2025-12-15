@@ -62,6 +62,54 @@ PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 plugin_loader = PluginLoader(str(PLUGIN_DIR))
 plugin_loader.load_all_plugins()
 
+# 圖片大小限制 (避免 OCR 記憶體不足)
+MAX_IMAGE_SIDE = 2500  # 像素
+
+
+def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
+    """
+    檢測並縮小大圖片以避免 OCR 記憶體問題
+    
+    Args:
+        file_path: 圖片路徑
+        max_side: 最大邊長（預設 2500px）
+    
+    Returns:
+        處理後的圖片路徑（縮小後的新檔案或原檔案）
+    """
+    try:
+        from PIL import Image
+        
+        with Image.open(file_path) as img:
+            width, height = img.size
+            max_dim = max(width, height)
+            
+            if max_dim <= max_side:
+                print(f"圖片大小 {width}x{height} 在限制內，不需要縮小")
+                return file_path
+            
+            # 計算縮放比例
+            scale = max_side / max_dim
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+            
+            print(f"圖片太大 ({width}x{height})，縮小為 {new_width}x{new_height}")
+            
+            # 縮小圖片
+            resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # 儲存到新檔案
+            path = Path(file_path)
+            new_path = path.parent / f"{path.stem}_resized{path.suffix}"
+            resized_img.save(str(new_path), quality=95)
+            
+            print(f"縮小後圖片已儲存: {new_path}")
+            return str(new_path)
+            
+    except Exception as e:
+        print(f"縮小圖片時發生錯誤: {e}，使用原始圖片")
+        return file_path
+
 
 class OCRRequest(BaseModel):
     """OCR请求模型"""
@@ -102,6 +150,12 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         tasks[task_id] = {"status": "processing", "progress": 0}
         await manager.send_progress_update(task_id, 0, "processing", "任务开始")
 
+        # 0. 檢測並縮小大圖片
+        processed_path = file_path
+        if file_path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp')):
+            await manager.send_progress_update(task_id, 5, "processing", "檢查圖片大小...")
+            processed_path = await asyncio.to_thread(resize_image_if_needed, file_path)
+
         # 1. 初始化引擎
         await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
 
@@ -122,7 +176,7 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         def predict(engine, path):
             return engine.predict(path)
 
-        ocr_result = await asyncio.to_thread(predict, ocr_manager, file_path)
+        ocr_result = await asyncio.to_thread(predict, ocr_manager, processed_path)
 
         # 3. 處理結果
         await manager.send_progress_update(task_id, 90, "processing", "處理結果...")
