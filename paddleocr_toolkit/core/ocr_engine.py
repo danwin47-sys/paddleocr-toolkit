@@ -11,7 +11,10 @@ OCR 引擎管理器 - 管理 PaddleOCR 引擎生命週期
 
 import logging
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from paddleocr_toolkit.plugins.loader import PluginLoader
 
 try:
     from paddleocr import PaddleOCR, PPStructureV3
@@ -76,6 +79,7 @@ class OCREngineManager:
         use_orientation_classify: bool = False,
         use_doc_unwarping: bool = False,
         use_textline_orientation: bool = False,
+        plugin_loader: Optional["PluginLoader"] = None,
         **kwargs,
     ):
         """
@@ -101,6 +105,7 @@ class OCREngineManager:
 
         self.engine: Optional[Any] = None
         self.structure_engine: Optional[Any] = None
+        self.plugin_loader = plugin_loader
         self._is_initialized = False
 
     def init_engine(self) -> None:
@@ -218,7 +223,22 @@ class OCREngineManager:
         if not self._is_initialized or self.engine is None:
             raise RuntimeError("引擎未初始化，請先調用 init_engine()")
 
-        return self.engine.predict(input_data, **kwargs)
+        # 1. 插件前處理
+        if self.plugin_loader:
+            # 注意：這裡假設 input_data 是可以被插件處理的格式（如 numpy array 或路徑）
+            # 實際實作可能需要更複雜的類型檢查
+            for plugin in self.plugin_loader.get_all_plugins().values():
+                input_data = plugin.process_before_ocr(input_data)
+
+        # 2. 執行預測
+        results = self.engine.predict(input_data, **kwargs)
+
+        # 3. 插件後處理
+        if self.plugin_loader:
+            for plugin in self.plugin_loader.get_all_plugins().values():
+                results = plugin.process_after_ocr(results)
+
+        return results
 
     def is_initialized(self) -> bool:
         """

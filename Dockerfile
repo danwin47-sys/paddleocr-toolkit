@@ -1,61 +1,37 @@
-# Multi-stage build for production
-FROM python:3.11-slim as builder
+# 使用 Python 3.10 作為基礎映像
+FROM python:3.10-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
+# 設定工作目錄
+WORKDIR /app
+
+# 設定環境變數
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# 安裝系統依賴
+# libgl1-mesa-glx 和 libglib2.0-0 是 OpenCV 所需
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
-
-# Copy requirements
+# 複製依賴文件
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --user -r requirements.txt
+# 安裝 Python 依賴
+# 使用清華鏡像加速下載 (可選)
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Production stage
-FROM python:3.11-slim
+# 複製專案代碼
+COPY . .
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+# 建立上傳目錄
+RUN mkdir -p uploads
 
-# Create non-root user
-RUN useradd -m -u 1000 ocr && \
-    mkdir -p /app /data && \
-    chown -R ocr:ocr /app /data
-
-# Set working directory
-WORKDIR /app
-
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /home/ocr/.local
-
-# Make sure scripts are in PATH
-ENV PATH=/home/ocr/.local/bin:$PATH
-
-# Copy application
-COPY --chown=ocr:ocr . .
-
-# Switch to non-root user
-USER ocr
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    DISABLE_MODEL_SOURCE_CHECK=True
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "from paddle_ocr_tool import PaddleOCRTool; print('OK')" || exit 1
-
-# Expose port (if running as API)
+# 暴露端口
 EXPOSE 8000
 
-# Default command
-CMD ["python", "paddle_ocr_tool.py", "--help"]
+# 啟動命令
+CMD ["uvicorn", "paddleocr_toolkit.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

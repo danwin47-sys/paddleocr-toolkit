@@ -22,7 +22,7 @@ PaddleOCR Toolkit - 多�??��?件辨識�??��?套件
     python -m paddleocr_toolkit input.pdf --mode hybrid
 """
 
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __author__ = "PaddleOCR Toolkit Team"
 
 # ?��?模�?

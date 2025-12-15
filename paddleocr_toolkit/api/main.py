@@ -20,15 +20,22 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
     except:
         pass
 
+import asyncio
 import time
 import uuid
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from paddleocr_toolkit.core.ocr_engine import OCREngineManager, OCRMode
+from paddleocr_toolkit.plugins.loader import PluginLoader
+
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
+import os
+
+from paddleocr_toolkit.api.websocket_manager import manager
 
 app = FastAPI(
     title="PaddleOCR Toolkit API", description="专业级OCR文件处理API", version="1.2.0"
@@ -50,6 +57,12 @@ results = {}
 # 配置
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
+
+# 初始化插件載入器
+plugin_loader = PluginLoader(str(PLUGIN_DIR))
+plugin_loader.load_all_plugins()
+
 
 
 class OCRRequest(BaseModel):
@@ -78,9 +91,9 @@ class OCRResult(BaseModel):
     error: Optional[str] = None
 
 
-def process_ocr_task(task_id: str, file_path: str, mode: str):
+async def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
-    后台OCR处理任务
+    后台OCR处理任务 (Async)
 
     Args:
         task_id: 任务ID
@@ -89,25 +102,65 @@ def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
     try:
         tasks[task_id] = {"status": "processing", "progress": 0}
+        await manager.send_progress_update(task_id, 0, "processing", "任务开始")
 
-        # 模拟OCR处理
-        time.sleep(2)  # 实际应该调用OCR引擎
+        # 1. 初始化引擎
+        await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
+        
+        def run_ocr():
+            # 在线程中运行阻塞的OCR操作
+            ocr_manager = OCREngineManager(
+                mode=mode, 
+                device="cpu",
+                plugin_loader=plugin_loader
+            ) # 默认使用CPU以确保兼容性
+            ocr_manager.init_engine()
+            return ocr_manager
 
-        # 更新进度
-        tasks[task_id] = {"status": "processing", "progress": 50}
-        time.sleep(1)
+        # 使用 asyncio.to_thread 運行阻塞代碼
+        ocr_manager = await asyncio.to_thread(run_ocr)
+        
+        # 2. 執行預測
+        await manager.send_progress_update(task_id, 30, "processing", "正在進行OCR識別...")
+        
+        def predict(engine, path):
+            return engine.predict(path)
+
+        ocr_result = await asyncio.to_thread(predict, ocr_manager, file_path)
+
+        # 3. 處理結果
+        await manager.send_progress_update(task_id, 90, "processing", "處理結果...")
+        
+        # 簡單序列化結果 (根據實際返回結構可能需要調整)
+        # 假設 result 是 list 或 dict，可以直接序列化
+        # 如果包含 numpy array，需要轉換
+        
+        # 模擬結果處理 (實際應解析 ocr_result)
+        final_result = {
+            "raw_result": str(ocr_result)[:1000] + "..." if len(str(ocr_result)) > 1000 else str(ocr_result),
+            "pages": 1, # 暫時 hardcode
+            "confidence": 0.95
+        }
 
         # 完成
         results[task_id] = {
             "status": "completed",
             "progress": 100,
-            "results": {"text": "这是OCR识别的文字", "pages": 1, "confidence": 0.95},
+            "results": final_result,
         }
         tasks[task_id] = {"status": "completed", "progress": 100}
+        
+        await manager.send_completion(task_id, final_result)
+        
+        # 清理
+        ocr_manager.close()
 
     except Exception as e:
-        results[task_id] = {"status": "failed", "progress": 0, "error": str(e)}
+        error_msg = str(e)
+        print(f"Task {task_id} failed: {error_msg}")
+        results[task_id] = {"status": "failed", "progress": 0, "error": error_msg}
         tasks[task_id] = {"status": "failed", "progress": 0}
+        await manager.send_error(task_id, error_msg)
 
 
 @app.get("/")
@@ -216,6 +269,73 @@ async def get_stats():
             1 for t in tasks.values() if t["status"] == "processing"
         ),
     }
+
+@app.get("/api/files")
+async def list_files():
+    """列出所有上傳的檔案"""
+    files = []
+    if UPLOAD_DIR.exists():
+        for f in UPLOAD_DIR.iterdir():
+            if f.is_file():
+                stat = f.stat()
+                files.append({
+                    "name": f.name,
+                    "size": stat.st_size,
+                    "created_at": stat.st_ctime,
+                    "modified_at": stat.st_mtime
+                })
+    return files
+
+
+@app.delete("/api/files/{filename}")
+async def delete_file(filename: str):
+    """刪除檔案"""
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="檔案不存在")
+    
+    try:
+        os.remove(file_path)
+        return {"message": f"檔案 {filename} 已刪除"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"刪除失敗: {str(e)}")
+
+
+@app.get("/api/files/{filename}/download")
+async def download_file(filename: str):
+    """下載檔案"""
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="檔案不存在")
+        
+    return FileResponse(path=file_path, filename=filename, media_type='application/octet-stream')
+
+
+@app.get("/api/plugins")
+async def list_plugins():
+    """列出所有插件"""
+    return plugin_loader.list_plugins()
+
+
+@app.websocket("/ws/{task_id}")
+async def websocket_endpoint(websocket: WebSocket, task_id: str):
+    """
+    WebSocket endpoint for real-time task updates
+    """
+    await manager.connect(websocket, task_id)
+    try:
+        while True:
+            # Keep connection alive and listen for client messages if needed
+            # For now, we just push updates from server
+            data = await websocket.receive_text()
+            # Optional: handle client commands
+            if data == "ping":
+                await manager.send_personal_message({"type": "pong"}, websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, task_id)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        manager.disconnect(websocket, task_id)
 
 
 if __name__ == "__main__":

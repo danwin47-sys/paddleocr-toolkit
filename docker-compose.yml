@@ -1,81 +1,14 @@
 version: '3.8'
 
 services:
-  # PaddleOCR Toolkit API 服務
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: paddleocr-api
+  paddleocr-api:
+    build: .
+    container_name: paddleocr-toolkit
     ports:
       - "8000:8000"
     volumes:
       - ./uploads:/app/uploads
-      - ./output:/app/output
-      - ./logs:/app/logs
+      - ./paddleocr_toolkit:/app/paddleocr_toolkit
     environment:
-      - PYTHONUNBUFFERED=1
-      - UPLOAD_DIR=/app/uploads
-      - OUTPUT_DIR=/app/output
+      - LOG_LEVEL=info
     restart: unless-stopped
-    networks:
-      - paddleocr-network
-    # GPU支援（如果需要）
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
-    # Web前端服務（可選）
-  web:
-    image: nginx:alpine
-    container_name: paddleocr-web
-    ports:
-      - "80:80"
-    volumes:
-      - ./web:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - api
-    restart: unless-stopped
-    networks:
-      - paddleocr-network
-  # Redis快取（可選，用於生產環境）
-  # redis:
-  #   image: redis:alpine
-  #   container_name: paddleocr-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-  #   restart: unless-stopped
-  #   networks:
-  #     - paddleocr-network
-
-networks:
-  paddleocr-network:
-    driver: bridge
-
-volumes:
-  redis-data:
-    driver: local
-
-# 使用說明：
-#
-# 啟動所有服務：
-#   docker-compose up -d
-#
-# 查看日誌：
-#   docker-compose logs -f
-#
-# 停止服務：
-#   docker-compose down
-#
-# 重新建構：
-#   docker-compose up -d --build
-#
-# 僅啟動API：
-#   docker-compose up -d api
