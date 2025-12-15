@@ -1,0 +1,92 @@
+#compdef paddleocr
+
+# PaddleOCR Toolkit Zsh 自動補全腳本
+
+_paddleocr() {
+    local -a commands
+    commands=(
+        'init:初始化專案'
+        'config:設定向導'
+        'process:處理檔案'
+        'benchmark:效能測試'
+        'validate:驗證OCR結果'
+    )
+    
+    local -a process_opts
+    process_opts=(
+        '--mode:OCR模式'
+        '--output:輸出目錄'
+        '--format:輸出格式'
+    )
+    
+    local -a modes
+    modes=(
+        'basic:基礎OCR'
+        'hybrid:混合模式'
+        'structure:版面分析'
+    )
+    
+    local -a formats
+    formats=(
+        'md:Markdown'
+        'json:JSON'
+        'html:HTML'
+        'txt:純文字'
+        'xlsx:Excel'
+    )
+    
+    _arguments -C \
+        '1: :->command' \
+        '*::arg:->args'
+    
+    case $state in
+        command)
+            _describe 'paddleocr commands' commands
+            _arguments '--version[顯示版本]' '--help[顯示說明]'
+            ;;
+        args)
+            case $line[1] in
+                init)
+                    _files -/
+                    ;;
+                config)
+                    _arguments '--show[顯示設定檔]:config file:_files'
+                    ;;
+                process)
+                    _arguments \
+                        '--mode[OCR模式]:mode:->mode' \
+                        '--output[輸出目錄]:output dir:_files -/' \
+                        '--format[輸出格式]:format:->format' \
+                        '*:input files:_files'
+                    
+                    case $state in
+                        mode)
+                            _describe 'OCR modes' modes
+                            ;;
+                        format)
+                            _describe 'output formats' formats
+                            ;;
+                    esac
+                    ;;
+                benchmark)
+                    _arguments \
+                        '--output[報告輸出]:report file:_files' \
+                        '*:PDF files:_files -g "*.pdf"'
+                    ;;
+                validate)
+                    _arguments \
+                        '1:OCR results:_files -g "*.json"' \
+                        '2:ground truth:_files -g "*.txt"'
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_paddleocr "$@"
+
+# 使用說明：
+# 將此檔案複製到 Zsh 補全目錄（例如 /usr/share/zsh/site-functions/）或
+# 在 ~/.zshrc 中加入：
+# fpath=(~/path/to/completion $fpath)
+# autoload -U compinit && compinit
