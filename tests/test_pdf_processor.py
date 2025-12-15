@@ -151,7 +151,9 @@ class TestSetupPDFGenerator:
         mock_ocr = Mock()
         processor = PDFProcessor(ocr_func=mock_ocr)
 
-        output, generator = processor._setup_pdf_generator("test.pdf", None, searchable=False)
+        output, generator = processor._setup_pdf_generator(
+            "test.pdf", None, searchable=False
+        )
 
         assert generator is None
 
@@ -161,7 +163,9 @@ class TestSetupPDFGenerator:
         mock_ocr = Mock()
         processor = PDFProcessor(ocr_func=mock_ocr)
 
-        output, generator = processor._setup_pdf_generator("test.pdf", None, searchable=True)
+        output, generator = processor._setup_pdf_generator(
+            "test.pdf", None, searchable=True
+        )
 
         assert "test_searchable.pdf" in output
         mock_generator_class.assert_called_once()
@@ -198,7 +202,9 @@ class TestProcessSinglePage:
         mock_pixmap_to_numpy.return_value = mock_img_array
 
         # OCR返回結果
-        mock_ocr_result = [OCRResult("Test", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])]
+        mock_ocr_result = [
+            OCRResult("Test", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])
+        ]
 
         mock_ocr = Mock(return_value=mock_ocr_result)
         processor = PDFProcessor(ocr_func=mock_ocr)
@@ -222,7 +228,9 @@ class TestProcessSinglePage:
         mock_pixmap_to_numpy.return_value = mock_img_array
 
         # 解析器返回解析後的結果
-        parsed_results = [OCRResult("Parsed", 0.90, [[0, 0], [100, 0], [100, 50], [0, 50]])]
+        parsed_results = [
+            OCRResult("Parsed", 0.90, [[0, 0], [100, 0], [100, 50], [0, 50]])
+        ]
 
         mock_parser = Mock(return_value=parsed_results)
         mock_ocr = Mock(return_value={"raw": "data"})
@@ -244,7 +252,9 @@ class TestProcessSinglePage:
         mock_pixmap_to_numpy.return_value = Mock()
 
         # 原始坐標（DPI空間）
-        mock_ocr_result = [OCRResult("Test", 0.95, [[0, 0], [200, 0], [200, 100], [0, 100]])]
+        mock_ocr_result = [
+            OCRResult("Test", 0.95, [[0, 0], [200, 0], [200, 100], [0, 100]])
+        ]
 
         mock_ocr = Mock(return_value=mock_ocr_result)
         processor = PDFProcessor(ocr_func=mock_ocr)
@@ -304,7 +314,9 @@ class TestProcessPDF:
     @patch("paddleocr_toolkit.processors.pdf_processor.fitz")
     @patch.object(PDFProcessor, "_setup_pdf_generator")
     @patch.object(PDFProcessor, "_process_single_page")
-    def test_process_pdf_with_progress_callback(self, mock_process_page, mock_setup, mock_fitz):
+    def test_process_pdf_with_progress_callback(
+        self, mock_process_page, mock_setup, mock_fitz
+    ):
         """測試進度回調"""
         mock_doc = MagicMock()
         mock_doc.__len__ = Mock(return_value=3)
@@ -319,7 +331,9 @@ class TestProcessPDF:
         mock_ocr = Mock()
         processor = PDFProcessor(ocr_func=mock_ocr)
 
-        processor.process_pdf("test.pdf", progress_callback=callback, show_progress=False)
+        processor.process_pdf(
+            "test.pdf", progress_callback=callback, show_progress=False
+        )
 
         # 驗證回調被調用3次
         assert callback.call_count == 3
@@ -328,7 +342,9 @@ class TestProcessPDF:
     @patch("paddleocr_toolkit.processors.pdf_processor.fitz")
     @patch.object(PDFProcessor, "_setup_pdf_generator")
     @patch.object(PDFProcessor, "_process_single_page")
-    def test_process_pdf_page_error_handling(self, mock_process_page, mock_setup, mock_fitz):
+    def test_process_pdf_page_error_handling(
+        self, mock_process_page, mock_setup, mock_fitz
+    ):
         """測試頁面錯誤處理"""
         mock_doc = MagicMock()
         mock_doc.__len__ = Mock(return_value=3)

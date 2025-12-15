@@ -27,7 +27,9 @@ class TestStructureProcessor:
         mock_engine = Mock()
         mock_parser = Mock()
 
-        processor = StructureProcessor(structure_engine=mock_engine, result_parser=mock_parser)
+        processor = StructureProcessor(
+            structure_engine=mock_engine, result_parser=mock_parser
+        )
 
         assert processor.result_parser == mock_parser
 
@@ -53,7 +55,9 @@ class TestStructureProcessor:
             OCRResult("World", 0.92, [[0, 60], [100, 60], [100, 110], [0, 110]]),
         ]
 
-        processor = StructureProcessor(structure_engine=mock_engine, result_parser=mock_parser)
+        processor = StructureProcessor(
+            structure_engine=mock_engine, result_parser=mock_parser
+        )
 
         result = processor.process(input_path="test.pdf", extract_text=True)
 

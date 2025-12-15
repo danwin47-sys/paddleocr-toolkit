@@ -11,11 +11,9 @@ import pytest
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from paddleocr_toolkit.processors.text_processor import (
-    MERGE_TERMS,
-    PROTECTED_TERMS,
-    fix_english_spacing,
-)
+from paddleocr_toolkit.processors.text_processor import (MERGE_TERMS,
+                                                         PROTECTED_TERMS,
+                                                         fix_english_spacing)
 
 
 class TestMergeTerms:

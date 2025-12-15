@@ -24,7 +24,10 @@ class TestOCREngineManager:
     def test_init_with_options(self):
         """測試帶選項的初始化"""
         manager = OCREngineManager(
-            mode="hybrid", device="gpu", use_orientation_classify=True, use_doc_unwarping=True
+            mode="hybrid",
+            device="gpu",
+            use_orientation_classify=True,
+            use_doc_unwarping=True,
         )
 
         assert manager.mode == OCRMode.HYBRID

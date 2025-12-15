@@ -58,7 +58,10 @@ class PDFProcessor:
     """
 
     def __init__(
-        self, ocr_func: Callable, result_parser: Optional[Callable] = None, debug_mode: bool = False
+        self,
+        ocr_func: Callable,
+        result_parser: Optional[Callable] = None,
+        debug_mode: bool = False,
     ):
         """
         初始化 PDF 處理器
@@ -163,7 +166,9 @@ class PDFProcessor:
             output_path = str(pdf_file.parent / f"{pdf_file.stem}_searchable.pdf")
 
         # 創建 PDF 生成器
-        pdf_generator = PDFGenerator(output_path=output_path, debug_mode=self.debug_mode)
+        pdf_generator = PDFGenerator(
+            output_path=output_path, debug_mode=self.debug_mode
+        )
 
         return output_path, pdf_generator
 
@@ -197,7 +202,9 @@ class PDFProcessor:
         # 縮放座標（從 DPI 空間回到 PDF 空間）
         scale_factor = 72.0 / dpi
         for result in page_results:
-            result.bbox = [[p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox]
+            result.bbox = [
+                [p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox
+            ]
 
         # 添加到可搜索 PDF
         if pdf_generator:

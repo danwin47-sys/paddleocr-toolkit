@@ -104,7 +104,10 @@ def numpy_to_pdf_bytes(
 
 
 def add_image_page(
-    doc: "fitz.Document", image: np.ndarray, compress: bool = False, jpeg_quality: int = 85
+    doc: "fitz.Document",
+    image: np.ndarray,
+    compress: bool = False,
+    jpeg_quality: int = 85,
 ) -> "fitz.Page":
     """
     將 numpy 陣列添加為 PDF 的新頁面
@@ -197,7 +200,9 @@ def get_page_size(page: "fitz.Page") -> Tuple[float, float]:
     return (rect.width, rect.height)
 
 
-def copy_page(src_doc: "fitz.Document", dst_doc: "fitz.Document", page_num: int) -> "fitz.Page":
+def copy_page(
+    src_doc: "fitz.Document", dst_doc: "fitz.Document", page_num: int
+) -> "fitz.Page":
     """
     複製頁面到另一個文件
 

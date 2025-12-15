@@ -20,7 +20,10 @@ class BufferedWriter:
     """
 
     def __init__(
-        self, filepath: str, buffer_size: int = 1000, file_buffer_size: int = 1024 * 1024  # 1MB
+        self,
+        filepath: str,
+        buffer_size: int = 1000,
+        file_buffer_size: int = 1024 * 1024,  # 1MB
     ):
         """
         初始化寫入器
@@ -38,7 +41,9 @@ class BufferedWriter:
 
     def __enter__(self):
         """進入 context manager"""
-        self.file = open(self.filepath, "w", encoding="utf-8", buffering=self.file_buffer_size)
+        self.file = open(
+            self.filepath, "w", encoding="utf-8", buffering=self.file_buffer_size
+        )
         return self
 
     def write(self, text: str):
@@ -84,7 +89,9 @@ class BufferedJSONWriter:
     適合寫入大型 JSON 陣列。
     """
 
-    def __init__(self, filepath: str, buffer_size: int = 100, indent: Optional[int] = 2):
+    def __init__(
+        self, filepath: str, buffer_size: int = 100, indent: Optional[int] = 2
+    ):
         """
         初始化 JSON 寫入器
 
@@ -102,7 +109,9 @@ class BufferedJSONWriter:
 
     def __enter__(self):
         """進入 context manager"""
-        self.file = open(self.filepath, "w", encoding="utf-8", buffering=1024 * 1024)  # 1MB
+        self.file = open(
+            self.filepath, "w", encoding="utf-8", buffering=1024 * 1024
+        )  # 1MB
         self.file.write("[\n")
         return self
 

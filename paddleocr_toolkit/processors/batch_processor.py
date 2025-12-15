@@ -27,11 +27,8 @@ except ImportError:
 
 # 串流處理工具
 try:
-    from ..core.streaming_utils import (
-        batch_pages_generator,
-        open_pdf_context,
-        pdf_pages_generator,
-    )
+    from ..core.streaming_utils import (batch_pages_generator,
+                                        open_pdf_context, pdf_pages_generator)
 
     HAS_STREAMING = True
 except ImportError:
@@ -163,7 +160,9 @@ class BatchProcessor:
     批次處理器 - 統一管理批次處理邏輯
     """
 
-    def __init__(self, max_workers: int = 4, batch_size: int = 8, show_progress: bool = True):
+    def __init__(
+        self, max_workers: int = 4, batch_size: int = 8, show_progress: bool = True
+    ):
         """
         初始化批次處理器
 

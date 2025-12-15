@@ -8,13 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from paddleocr_toolkit.cli.config_handler import (
-    _process_all_flag,
-    _process_no_flags,
-    load_and_merge_config,
-    load_config_file,
-    process_args_overrides,
-)
+from paddleocr_toolkit.cli.config_handler import (_process_all_flag,
+                                                  _process_no_flags,
+                                                  load_and_merge_config,
+                                                  load_config_file,
+                                                  process_args_overrides)
 
 
 class TestLoadAndMergeConfig:
@@ -196,7 +194,11 @@ class TestProcessAllFlag:
     def test_all_flag_enabled_structure(self):
         """測試 --all 在 structure 模式啟用"""
         args = argparse.Namespace(
-            mode="structure", all=True, markdown_output=None, json_output=None, html_output=None
+            mode="structure",
+            all=True,
+            markdown_output=None,
+            json_output=None,
+            html_output=None,
         )
 
         result = _process_all_flag(args)
@@ -208,7 +210,11 @@ class TestProcessAllFlag:
     def test_all_flag_enabled_vl(self):
         """測試 --all 在 vl 模式啟用"""
         args = argparse.Namespace(
-            mode="vl", all=True, markdown_output=None, json_output=None, html_output=None
+            mode="vl",
+            all=True,
+            markdown_output=None,
+            json_output=None,
+            html_output=None,
         )
 
         result = _process_all_flag(args)
@@ -220,7 +226,11 @@ class TestProcessAllFlag:
     def test_all_flag_enabled_hybrid(self):
         """測試 --all 在 hybrid 模式啟用"""
         args = argparse.Namespace(
-            mode="hybrid", all=True, markdown_output=None, json_output=None, html_output=None
+            mode="hybrid",
+            all=True,
+            markdown_output=None,
+            json_output=None,
+            html_output=None,
         )
 
         result = _process_all_flag(args)
@@ -232,7 +242,11 @@ class TestProcessAllFlag:
     def test_all_flag_disabled(self):
         """測試 --all 未啟用"""
         args = argparse.Namespace(
-            mode="structure", all=False, markdown_output=None, json_output=None, html_output=None
+            mode="structure",
+            all=False,
+            markdown_output=None,
+            json_output=None,
+            html_output=None,
         )
 
         result = _process_all_flag(args)

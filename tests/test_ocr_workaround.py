@@ -20,11 +20,8 @@ except ImportError:
     HAS_FITZ = False
 
 from paddleocr_toolkit.processors.ocr_workaround import (
-    OCRWorkaround,
-    TextBlock,
-    detect_scanned_document,
-    should_use_ocr_workaround,
-)
+    OCRWorkaround, TextBlock, detect_scanned_document,
+    should_use_ocr_workaround)
 
 
 class TestTextBlock:
@@ -74,7 +71,9 @@ class TestOCRWorkaround:
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_custom_settings(self):
         """測試自訂設定"""
-        workaround = OCRWorkaround(margin=5.0, force_black=False, mask_color=(0.9, 0.9, 0.9))
+        workaround = OCRWorkaround(
+            margin=5.0, force_black=False, mask_color=(0.9, 0.9, 0.9)
+        )
 
         assert workaround.margin == 5.0
         assert workaround.force_black is False

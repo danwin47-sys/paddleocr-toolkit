@@ -15,10 +15,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from paddleocr_toolkit.core.buffered_writer import (
-        BufferedJSONWriter,
-        BufferedWriter,
-    )
+    from paddleocr_toolkit.core.buffered_writer import (BufferedJSONWriter,
+                                                        BufferedWriter)
     from paddleocr_toolkit.core.models import OCRResult
 
     HAS_BUFFERED = True
@@ -43,7 +41,10 @@ class OutputManager:
     """
 
     def __init__(
-        self, base_path: str, formats: Optional[List[str]] = None, use_buffered: bool = True
+        self,
+        base_path: str,
+        formats: Optional[List[str]] = None,
+        use_buffered: bool = True,
     ):
         """
         初始化輸出管理器
@@ -88,7 +89,9 @@ class OutputManager:
         logging.info(f"Markdown 已儲存: {output_path}")
         return output_path
 
-    def write_json(self, data: Any, output_path: Optional[str] = None, indent: int = 2) -> str:
+    def write_json(
+        self, data: Any, output_path: Optional[str] = None, indent: int = 2
+    ) -> str:
         """
         寫入 JSON 格式
 
@@ -213,7 +216,9 @@ class OutputManager:
                     output_paths["text"] = path
 
                 elif format_name == "html":
-                    html_content = content_dict.get("html") or content_dict.get("text", "")
+                    html_content = content_dict.get("html") or content_dict.get(
+                        "text", ""
+                    )
                     path = self.write_html(html_content)
                     output_paths["html"] = path
 

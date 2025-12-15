@@ -24,7 +24,9 @@ class TestOutputManager:
 
     def test_init_with_formats(self):
         """测试带格式的初始化"""
-        manager = OutputManager(base_path="output/result", formats=["md", "json", "txt"])
+        manager = OutputManager(
+            base_path="output/result", formats=["md", "json", "txt"]
+        )
 
         assert "md" in manager.formats
         assert "json" in manager.formats
@@ -92,9 +94,15 @@ class TestOutputManager:
     @patch("builtins.open", new_callable=mock_open)
     def test_write_all(self, mock_file):
         """测试批量写入"""
-        manager = OutputManager(base_path="output/result", formats=["md", "json", "txt"])
+        manager = OutputManager(
+            base_path="output/result", formats=["md", "json", "txt"]
+        )
 
-        content_dict = {"text": "Plain text", "markdown": "# Title", "json_data": {"key": "value"}}
+        content_dict = {
+            "text": "Plain text",
+            "markdown": "# Title",
+            "json_data": {"key": "value"},
+        }
 
         paths = manager.write_all(content_dict)
 
@@ -107,7 +115,9 @@ class TestOutputManager:
         manager = OutputManager(base_path="output/result")
 
         assert str(Path(manager.get_output_path("md"))) == str(Path("output/result.md"))
-        assert str(Path(manager.get_output_path("json"))) == str(Path("output/result.json"))
+        assert str(Path(manager.get_output_path("json"))) == str(
+            Path("output/result.json")
+        )
 
     def test_context_manager(self):
         """测试Context Manager"""

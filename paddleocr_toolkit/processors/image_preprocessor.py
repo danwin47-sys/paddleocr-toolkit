@@ -23,7 +23,9 @@ except ImportError:
     HAS_CV2 = False
 
 
-def enhance_contrast(image: np.ndarray, clip_limit: float = 2.0, tile_size: int = 8) -> np.ndarray:
+def enhance_contrast(
+    image: np.ndarray, clip_limit: float = 2.0, tile_size: int = 8
+) -> np.ndarray:
     """
     使用 CLAHE 增強對比度
 
@@ -45,7 +47,9 @@ def enhance_contrast(image: np.ndarray, clip_limit: float = 2.0, tile_size: int 
         l, a, b = cv2.split(lab)
 
         # 對 L 通道應用 CLAHE
-        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(tile_size, tile_size))
+        clahe = cv2.createCLAHE(
+            clipLimit=clip_limit, tileGridSize=(tile_size, tile_size)
+        )
         l = clahe.apply(l)
 
         # 合併通道
@@ -53,7 +57,9 @@ def enhance_contrast(image: np.ndarray, clip_limit: float = 2.0, tile_size: int 
         return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
     else:
         # 灰階圖片
-        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(tile_size, tile_size))
+        clahe = cv2.createCLAHE(
+            clipLimit=clip_limit, tileGridSize=(tile_size, tile_size)
+        )
         return clahe.apply(image)
 
 

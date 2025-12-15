@@ -86,7 +86,9 @@ class ProcessingStats:
 
         # 更新平均信賴度
         if stats.avg_confidence > 0:
-            total_conf = self.avg_confidence * (self.processed_pages - 1) + stats.avg_confidence
+            total_conf = (
+                self.avg_confidence * (self.processed_pages - 1) + stats.avg_confidence
+            )
             self.avg_confidence = total_conf / self.processed_pages
 
     def add_error(self, error: str):
@@ -176,7 +178,9 @@ class StatsCollector:
 
     def __init__(self, input_file: str, mode: str = "unknown", total_pages: int = 0):
         """初始化統計收集器"""
-        self.stats = ProcessingStats(input_file=input_file, mode=mode, total_pages=total_pages)
+        self.stats = ProcessingStats(
+            input_file=input_file, mode=mode, total_pages=total_pages
+        )
         self._current_page_start: Optional[float] = None
 
     def start_page(self, page_num: int):

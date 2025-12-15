@@ -93,7 +93,9 @@ class TestPDFGeneratorAddPage:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
-    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    @pytest.mark.skipif(
+        not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
+    )
     def test_add_page_from_image_file(self):
         """測試從圖片檔案添加頁面"""
         # 建立測試圖片
@@ -119,7 +121,9 @@ class TestPDFGeneratorAddPage:
                 if os.path.exists(path):
                     os.remove(path)
 
-    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    @pytest.mark.skipif(
+        not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
+    )
     def test_add_page_with_compression(self):
         """測試壓縮模式添加頁面"""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
@@ -176,7 +180,9 @@ class TestPDFGeneratorWithOCR:
                     bbox=[[10, 10], [100, 10], [100, 30], [10, 30]],
                 ),
                 OCRResult(
-                    text="Test", confidence=0.90, bbox=[[10, 50], [50, 50], [50, 70], [10, 70]]
+                    text="Test",
+                    confidence=0.90,
+                    bbox=[[10, 50], [50, 50], [50, 70], [10, 70]],
                 ),
             ]
 
@@ -307,7 +313,9 @@ class TestOCRResultProperties:
 
     def test_center_calculation(self):
         """測試中心點計算"""
-        result = OCRResult(text="test", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 50], [0, 50]])
+        result = OCRResult(
+            text="test", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 50], [0, 50]]
+        )
 
         assert result.x == 0
         assert result.y == 0
@@ -353,7 +361,9 @@ class TestMissingDependencies:
 class TestImageFormats:
     """測試不同圖片格式"""
 
-    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    @pytest.mark.skipif(
+        not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
+    )
     def test_add_page_rgba_image(self):
         """測試 RGBA 圖片（有 alpha 通道）"""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
@@ -378,7 +388,9 @@ class TestImageFormats:
                 if os.path.exists(path):
                     os.remove(path)
 
-    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    @pytest.mark.skipif(
+        not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
+    )
     def test_add_page_grayscale_image(self):
         """測試灰階圖片"""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
@@ -407,7 +419,9 @@ class TestImageFormats:
 class TestPixmapCompression:
     """測試 Pixmap 壓縮"""
 
-    @pytest.mark.skipif(not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed")
+    @pytest.mark.skipif(
+        not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
+    )
     def test_add_page_from_pixmap_with_compression(self):
         """測試從 pixmap 新增頁面並壓縮"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
@@ -509,7 +523,9 @@ class TestTextInsertionEdgeCases:
 
             ocr_results = [
                 OCRResult(
-                    text="DEBUG", confidence=0.9, bbox=[[10, 10], [50, 10], [50, 30], [10, 30]]
+                    text="DEBUG",
+                    confidence=0.9,
+                    bbox=[[10, 10], [50, 10], [50, 30], [10, 30]],
                 )
             ]
 

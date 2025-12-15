@@ -168,9 +168,13 @@ def apply_config_to_args(config: Dict[str, Any], args) -> None:
     if hasattr(args, "target_lang"):
         args.target_lang = args.target_lang or translation.get("target_lang", "en")
     if hasattr(args, "ollama_model"):
-        args.ollama_model = args.ollama_model or translation.get("ollama_model", "qwen2.5:7b")
+        args.ollama_model = args.ollama_model or translation.get(
+            "ollama_model", "qwen2.5:7b"
+        )
     if hasattr(args, "ollama_url"):
-        args.ollama_url = args.ollama_url or translation.get("ollama_url", "http://localhost:11434")
+        args.ollama_url = args.ollama_url or translation.get(
+            "ollama_url", "http://localhost:11434"
+        )
 
 
 def get_config_value(config: Dict[str, Any], path: str, default: Any = None) -> Any:
@@ -221,7 +225,9 @@ def save_config(config: Dict[str, Any], config_path: str) -> bool:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(path, "w", encoding="utf-8") as f:
-            yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml.dump(
+                config, f, allow_unicode=True, default_flow_style=False, sort_keys=False
+            )
 
         logging.info(f"設定檔已儲存: {path}")
         return True

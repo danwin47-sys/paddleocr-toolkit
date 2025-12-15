@@ -64,7 +64,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     # 文件校正選項
-    parser.add_argument("--orientation-classify", action="store_true", help="啟用文件方向自動校正")
+    parser.add_argument(
+        "--orientation-classify", action="store_true", help="啟用文件方向自動校正"
+    )
 
     parser.add_argument("--unwarping", action="store_true", help="啟用文件彎曲校正")
 
@@ -72,13 +74,21 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     # 輸出選項
     parser.add_argument(
-        "--searchable", "-s", action="store_true", default=True, help="生成可搜尋 PDF（僅 basic 模式，預設：啟用）"
+        "--searchable",
+        "-s",
+        action="store_true",
+        default=True,
+        help="生成可搜尋 PDF（僅 basic 模式，預設：啟用）",
     )
 
     parser.add_argument("--no-searchable", action="store_true", help="停用可搜尋 PDF 生成")
 
     parser.add_argument(
-        "--output", "-o", type=str, default=None, help="輸出檔案路徑（預設：[原始檔名]_searchable.pdf）"
+        "--output",
+        "-o",
+        type=str,
+        default=None,
+        help="輸出檔案路徑（預設：[原始檔名]_searchable.pdf）",
     )
 
     parser.add_argument(
@@ -102,7 +112,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="輸出 Markdown 格式（structure/vl 模式，預設：[原始檔名]_ocr.md）",
     )
 
-    parser.add_argument("--no-markdown-output", action="store_true", help="停用 Markdown 輸出")
+    parser.add_argument(
+        "--no-markdown-output", action="store_true", help="停用 Markdown 輸出"
+    )
 
     parser.add_argument(
         "--json-output",
@@ -137,7 +149,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     # 輸出全部格式
     parser.add_argument(
-        "--all", action="store_true", help="一次輸出所有格式（Markdown + JSON + HTML，structure/hybrid 模式）"
+        "--all",
+        action="store_true",
+        help="一次輸出所有格式（Markdown + JSON + HTML，structure/hybrid 模式）",
     )
 
     # LaTeX 輸出（公式識別）
@@ -154,7 +168,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-progress", action="store_true", help="停用進度條顯示")
 
     # 其他選項
-    parser.add_argument("--dpi", type=int, default=150, help="PDF 轉圖片的解析度（預設：150，降低以減少記憶體使用）")
+    parser.add_argument(
+        "--dpi", type=int, default=150, help="PDF 轉圖片的解析度（預設：150，降低以減少記憶體使用）"
+    )
 
     parser.add_argument(
         "--device",
@@ -164,12 +180,16 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="運算設備（預設：cpu，如有 CUDA 可用 --device gpu）",
     )
 
-    parser.add_argument("--recursive", "-r", action="store_true", help="遞迴處理子目錄（僅適用於目錄輸入）")
+    parser.add_argument(
+        "--recursive", "-r", action="store_true", help="遞迴處理子目錄（僅適用於目錄輸入）"
+    )
 
     parser.add_argument("--verbose", "-v", action="store_true", help="顯示詳細日誌")
 
     parser.add_argument(
-        "--debug-text", action="store_true", help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便調試文字位置）"
+        "--debug-text",
+        action="store_true",
+        help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便調試文字位置）",
     )
 
     parser.add_argument(
@@ -177,7 +197,10 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--jpeg-quality", type=int, default=85, help="JPEG 壓縮品質（0-100，預設 85）。較低值 = 較小檔案但品質較差"
+        "--jpeg-quality",
+        type=int,
+        default=85,
+        help="JPEG 壓縮品質（0-100，預設 85）。較低值 = 較小檔案但品質較差",
     )
 
     # ========== 翻譯選項 ==========
@@ -202,7 +225,10 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     translate_group.add_argument(
-        "--ollama-model", type=str, default="qwen2.5:7b", help="Ollama 模型名稱（預設：qwen2.5:7b）"
+        "--ollama-model",
+        type=str,
+        default="qwen2.5:7b",
+        help="Ollama 模型名稱（預設：qwen2.5:7b）",
     )
 
     translate_group.add_argument(
@@ -212,9 +238,13 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Ollama API 地址（預設：http://localhost:11434）",
     )
 
-    translate_group.add_argument("--no-mono", action="store_true", help="不輸出純翻譯 PDF（僅輸出雙語對照）")
+    translate_group.add_argument(
+        "--no-mono", action="store_true", help="不輸出純翻譯 PDF（僅輸出雙語對照）"
+    )
 
-    translate_group.add_argument("--no-dual", action="store_true", help="不輸出雙語對照 PDF（僅輸出純翻譯）")
+    translate_group.add_argument(
+        "--no-dual", action="store_true", help="不輸出雙語對照 PDF（僅輸出純翻譯）"
+    )
 
     translate_group.add_argument(
         "--dual-mode",
@@ -228,10 +258,14 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--dual-translate-first", action="store_true", help="雙語模式中譯文在前（預設：原文在前）"
     )
 
-    translate_group.add_argument("--font-path", type=str, default=None, help="自訂字體路徑（用於繪製翻譯文字）")
+    translate_group.add_argument(
+        "--font-path", type=str, default=None, help="自訂字體路徑（用於繪製翻譯文字）"
+    )
 
     translate_group.add_argument(
-        "--ocr-workaround", action="store_true", help="使用 OCR 補救模式繪製翻譯文字（適用於掃描件，直接在 PDF 上操作）"
+        "--ocr-workaround",
+        action="store_true",
+        help="使用 OCR 補救模式繪製翻譯文字（適用於掃描件，直接在 PDF 上操作）",
     )
 
     return parser

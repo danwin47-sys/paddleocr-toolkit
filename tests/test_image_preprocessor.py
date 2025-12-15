@@ -20,14 +20,8 @@ except ImportError:
     HAS_CV2 = False
 
 from paddleocr_toolkit.processors.image_preprocessor import (
-    auto_preprocess,
-    binarize,
-    denoise,
-    deskew,
-    enhance_contrast,
-    preprocess_for_ocr,
-    sharpen,
-)
+    auto_preprocess, binarize, denoise, deskew, enhance_contrast,
+    preprocess_for_ocr, sharpen)
 
 
 class TestEnhanceContrast:
@@ -196,7 +190,9 @@ class TestDeskew:
         # 驗證結果
         assert result.shape == gray_image.shape
         # 灰階輸入應返回與輸入相同維度的圖片
-        assert len(result.shape) == 2 or (len(result.shape) == 3 and result.shape[2] == 3)
+        assert len(result.shape) == 2 or (
+            len(result.shape) == 3 and result.shape[2] == 3
+        )
 
     @pytest.mark.skipif(not HAS_CV2, reason="OpenCV not installed")
     def test_deskew_small_angle(self):

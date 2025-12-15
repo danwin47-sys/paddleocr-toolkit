@@ -62,7 +62,10 @@ class TestProcessMethod:
     def test_process_structure_mode(self, tmp_path):
         """Test routing to structure mode"""
         tool = Mock()
-        tool.process_structured.return_value = {"pages_processed": 1, "markdown_files": []}
+        tool.process_structured.return_value = {
+            "pages_processed": 1,
+            "markdown_files": [],
+        }
 
         args = argparse.Namespace(
             mode="structure",
@@ -161,7 +164,9 @@ class TestProcessFormula:
             "latex_file": "/output/formula.tex",
         }
 
-        args = argparse.Namespace(mode="formula", latex_output="AUTO", no_progress=False)
+        args = argparse.Namespace(
+            mode="formula", latex_output="AUTO", no_progress=False
+        )
         input_path = tmp_path / "math.png"
 
         processor = ModeProcessor(tool, args, input_path, tmp_path)
@@ -356,7 +361,10 @@ class TestProcessBasic:
     def test_basic_with_directory(self, tmp_path):
         """Test basic mode with directory input"""
         tool = Mock()
-        tool.process_directory.return_value = {"file1.pdf": [[Mock()]], "file2.pdf": [[Mock()]]}
+        tool.process_directory.return_value = {
+            "file1.pdf": [[Mock()]],
+            "file2.pdf": [[Mock()]],
+        }
         tool.get_text.return_value = "File text"
 
         args = argparse.Namespace(

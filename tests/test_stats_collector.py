@@ -12,11 +12,9 @@ import pytest
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from paddleocr_toolkit.processors.stats_collector import (
-    PageStats,
-    ProcessingStats,
-    StatsCollector,
-)
+from paddleocr_toolkit.processors.stats_collector import (PageStats,
+                                                          ProcessingStats,
+                                                          StatsCollector)
 
 
 class TestPageStats:

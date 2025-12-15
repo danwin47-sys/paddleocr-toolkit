@@ -26,15 +26,10 @@ __version__ = "1.0.0"
 __author__ = "PaddleOCR Toolkit Team"
 
 # 核心模組
-from .core.models import (
-    SUPPORTED_IMAGE_FORMATS,
-    SUPPORTED_PDF_FORMAT,
-    OCRMode,
-    OCRResult,
-)
+from .core.models import (SUPPORTED_IMAGE_FORMATS, SUPPORTED_PDF_FORMAT,
+                          OCRMode, OCRResult)
 from .core.pdf_generator import PDFGenerator
 from .processors.pdf_quality import detect_pdf_quality
-
 # 處理器
 from .processors.text_processor import fix_english_spacing
 

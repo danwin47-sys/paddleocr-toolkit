@@ -91,7 +91,9 @@ class GlossaryManager:
                     if not source:
                         continue
 
-                    entry = GlossaryEntry(source=source, target=target, target_lang=tgt_lng)
+                    entry = GlossaryEntry(
+                        source=source, target=target, target_lang=tgt_lng
+                    )
 
                     # 只載入匹配目標語言的術語
                     if entry.matches_lang(self.target_lang):
@@ -202,7 +204,9 @@ class GlossaryManager:
         return {
             "total_terms": len(self.all_terms),
             "glossaries": list(self.glossaries.keys()),
-            "glossary_counts": {name: len(entries) for name, entries in self.glossaries.items()},
+            "glossary_counts": {
+                name: len(entries) for name, entries in self.glossaries.items()
+            },
         }
 
 

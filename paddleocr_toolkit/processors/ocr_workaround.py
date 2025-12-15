@@ -131,7 +131,9 @@ class OCRWorkaround:
             logging.warning(f"OCR 補救模式失敗: {e}")
             return False
 
-    def process_page(self, page: "fitz.Page", text_blocks: List[Tuple[TextBlock, str]]) -> int:
+    def process_page(
+        self, page: "fitz.Page", text_blocks: List[Tuple[TextBlock, str]]
+    ) -> int:
         """
         處理整頁的 OCR 補救
 

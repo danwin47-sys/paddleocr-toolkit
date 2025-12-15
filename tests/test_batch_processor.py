@@ -22,11 +22,8 @@ except ImportError:
     HAS_FITZ = False
 
 from paddleocr_toolkit.processors.batch_processor import (
-    BatchProcessor,
-    batch_process_images,
-    get_optimal_workers,
-    pdf_to_images_parallel,
-)
+    BatchProcessor, batch_process_images, get_optimal_workers,
+    pdf_to_images_parallel)
 
 
 class TestGetOptimalWorkers:
@@ -57,7 +54,9 @@ class TestBatchProcessImages:
         def process_func(img):
             return img.sum()
 
-        results = batch_process_images(images=images, process_func=process_func, batch_size=2)
+        results = batch_process_images(
+            images=images, process_func=process_func, batch_size=2
+        )
 
         assert len(results) == 5
         assert all(r == 0 for r in results)
@@ -239,7 +238,9 @@ class TestBatchProcessorPerformance:
         """測試處理完成"""
         processor = BatchProcessor(max_workers=2)
 
-        images = [np.random.randint(0, 255, (20, 20), dtype=np.uint8) for _ in range(10)]
+        images = [
+            np.random.randint(0, 255, (20, 20), dtype=np.uint8) for _ in range(10)
+        ]
 
         def slow_process(img):
             return img.mean()

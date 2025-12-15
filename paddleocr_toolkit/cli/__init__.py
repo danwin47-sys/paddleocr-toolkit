@@ -10,11 +10,8 @@ PaddleOCR Toolkit - CLI 命令列介面模組
 """
 
 from .argument_parser import create_argument_parser
-from .config_handler import (
-    load_and_merge_config,
-    load_config_file,
-    process_args_overrides,
-)
+from .config_handler import (load_and_merge_config, load_config_file,
+                             process_args_overrides)
 from .mode_processor import ModeProcessor
 from .output_manager import OutputPathManager
 

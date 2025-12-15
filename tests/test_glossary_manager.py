@@ -14,10 +14,7 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.processors.glossary_manager import (
-    GlossaryEntry,
-    GlossaryManager,
-    create_sample_glossary,
-)
+    GlossaryEntry, GlossaryManager, create_sample_glossary)
 
 
 class TestGlossaryEntry:
@@ -95,8 +92,12 @@ class TestGlossaryManager:
         ) as f:
             writer = csv.DictWriter(f, fieldnames=["source", "target", "tgt_lng"])
             writer.writeheader()
-            writer.writerow({"source": "AI", "target": "Artificial Intelligence", "tgt_lng": "en"})
-            writer.writerow({"source": "ML", "target": "Machine Learning", "tgt_lng": "en"})
+            writer.writerow(
+                {"source": "AI", "target": "Artificial Intelligence", "tgt_lng": "en"}
+            )
+            writer.writerow(
+                {"source": "ML", "target": "Machine Learning", "tgt_lng": "en"}
+            )
             temp_path = f.name
 
         try:
@@ -126,7 +127,11 @@ class TestGlossaryManager:
             writer = csv.DictWriter(f, fieldnames=["source", "target", "tgt_lng"])
             writer.writeheader()
             writer.writerow(
-                {"source": "OCR", "target": "Optical Character Recognition", "tgt_lng": "en"}
+                {
+                    "source": "OCR",
+                    "target": "Optical Character Recognition",
+                    "tgt_lng": "en",
+                }
             )
             temp_path = f.name
 
@@ -150,7 +155,9 @@ class TestGlossaryManager:
         ) as f:
             writer = csv.DictWriter(f, fieldnames=["source", "target", "tgt_lng"])
             writer.writeheader()
-            writer.writerow({"source": "PaddleOCR", "target": "PaddleOCR", "tgt_lng": "en"})
+            writer.writerow(
+                {"source": "PaddleOCR", "target": "PaddleOCR", "tgt_lng": "en"}
+            )
             temp_path = f.name
 
         try:

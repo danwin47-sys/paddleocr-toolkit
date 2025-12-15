@@ -18,18 +18,14 @@ try:
 except ImportError:
     HAS_FITZ = False
 
-from paddleocr_toolkit.core.buffered_writer import (
-    BufferedJSONWriter,
-    BufferedWriter,
-    write_json_efficient,
-    write_text_efficient,
-)
-from paddleocr_toolkit.core.streaming_utils import (
-    StreamingPDFProcessor,
-    batch_pages_generator,
-    open_pdf_context,
-    pdf_pages_generator,
-)
+from paddleocr_toolkit.core.buffered_writer import (BufferedJSONWriter,
+                                                    BufferedWriter,
+                                                    write_json_efficient,
+                                                    write_text_efficient)
+from paddleocr_toolkit.core.streaming_utils import (StreamingPDFProcessor,
+                                                    batch_pages_generator,
+                                                    open_pdf_context,
+                                                    pdf_pages_generator)
 
 
 class TestStreamingUtils:

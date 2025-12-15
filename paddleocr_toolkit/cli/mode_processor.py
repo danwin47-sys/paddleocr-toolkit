@@ -25,7 +25,11 @@ class ModeProcessor:
     """
 
     def __init__(
-        self, tool: "PaddleOCRTool", args: argparse.Namespace, input_path: Path, script_dir: Path
+        self,
+        tool: "PaddleOCRTool",
+        args: argparse.Namespace,
+        input_path: Path,
+        script_dir: Path,
     ):
         """初始化模式处理器
 
@@ -135,7 +139,9 @@ class ModeProcessor:
         print(f"   目标语言：{self.args.target_lang}")
         print(f"   Ollama 模型：{self.args.ollama_model}")
         print(f"   纯翻译 PDF：{'停用' if self.args.no_mono else '启用'}")
-        print(f"   双语对照 PDF：{'停用' if self.args.no_dual else f'启用 ({self.args.dual_mode})'}")
+        print(
+            f"   双语对照 PDF：{'停用' if self.args.no_dual else f'启用 ({self.args.dual_mode})'}"
+        )
 
         result = self.tool.process_translate(
             input_path=str(self.input_path),
@@ -247,8 +253,12 @@ class ModeProcessor:
             results = self.tool.process_image(str(self.input_path))
 
             if self.args.searchable:
-                output_path = self.args.output or str(self.input_path.with_suffix(".pdf"))
-                pdf_generator = PDFGenerator(output_path, debug_mode=self.args.debug_text)
+                output_path = self.args.output or str(
+                    self.input_path.with_suffix(".pdf")
+                )
+                pdf_generator = PDFGenerator(
+                    output_path, debug_mode=self.args.debug_text
+                )
                 pdf_generator.add_page(str(self.input_path), results)
                 pdf_generator.save()
 

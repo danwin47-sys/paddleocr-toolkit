@@ -1,28 +1,14 @@
 # -*- coding: utf-8 -*-
 """PaddleOCR Toolkit - Processors 模組"""
 
-from .batch_processor import (
-    BatchProcessor,
-    batch_process_images,
-    get_optimal_workers,
-    pdf_to_images_parallel,
-)
-from .glossary_manager import GlossaryEntry, GlossaryManager, create_sample_glossary
-from .image_preprocessor import (
-    auto_preprocess,
-    binarize,
-    denoise,
-    deskew,
-    enhance_contrast,
-    preprocess_for_ocr,
-    sharpen,
-)
-from .ocr_workaround import (
-    OCRWorkaround,
-    TextBlock,
-    detect_scanned_document,
-    should_use_ocr_workaround,
-)
+from .batch_processor import (BatchProcessor, batch_process_images,
+                              get_optimal_workers, pdf_to_images_parallel)
+from .glossary_manager import (GlossaryEntry, GlossaryManager,
+                               create_sample_glossary)
+from .image_preprocessor import (auto_preprocess, binarize, denoise, deskew,
+                                 enhance_contrast, preprocess_for_ocr, sharpen)
+from .ocr_workaround import (OCRWorkaround, TextBlock, detect_scanned_document,
+                             should_use_ocr_workaround)
 from .pdf_quality import detect_pdf_quality
 from .stats_collector import PageStats, ProcessingStats, StatsCollector
 from .text_processor import MERGE_TERMS, PROTECTED_TERMS, fix_english_spacing

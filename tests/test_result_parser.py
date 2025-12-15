@@ -128,7 +128,9 @@ class TestOCRResultParser:
             text="", confidence=0.95, bbox=[[0, 0], [100, 0], [100, 50], [0, 50]]
         )
 
-        invalid_bbox = OCRResult(text="Invalid", confidence=0.95, bbox=[[0, 0]])  # bbox 太短
+        invalid_bbox = OCRResult(
+            text="Invalid", confidence=0.95, bbox=[[0, 0]]
+        )  # bbox 太短
 
         results = parser.validate_results([valid_result, invalid_text, invalid_bbox])
 

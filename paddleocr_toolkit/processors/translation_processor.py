@@ -32,7 +32,9 @@ class TranslationProcessor:
         )
     """
 
-    def __init__(self, translator: Optional[Any] = None, renderer: Optional[Any] = None):
+    def __init__(
+        self, translator: Optional[Any] = None, renderer: Optional[Any] = None
+    ):
         """
         初始化翻譯處理器
 

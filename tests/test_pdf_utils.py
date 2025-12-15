@@ -12,13 +12,10 @@ import pytest
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from paddleocr_toolkit.core.pdf_utils import (
-    add_image_page,
-    create_pdf,
-    get_dpi_matrix,
-    numpy_to_pdf_bytes,
-    pixmap_to_numpy,
-)
+from paddleocr_toolkit.core.pdf_utils import (add_image_page, create_pdf,
+                                              get_dpi_matrix,
+                                              numpy_to_pdf_bytes,
+                                              pixmap_to_numpy)
 
 
 class TestPixmapToNumpy:

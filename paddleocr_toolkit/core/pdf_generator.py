@@ -94,7 +94,9 @@ class PDFGenerator:
                     img = img.convert("RGB")
                 # 儲存為 JPEG 到記憶體緩衝區
                 jpeg_buffer = io.BytesIO()
-                img.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                img.save(
+                    jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True
+                )
                 jpeg_data = jpeg_buffer.getvalue()
                 # 插入 JPEG 資料
                 page.insert_image(rect, stream=jpeg_data)
@@ -140,11 +142,15 @@ class PDFGenerator:
 
                 # 將 pixmap 轉換為 PIL Image
                 # 注意：這裡假設 pixmap 已經是 RGB 模式 (alpha=False)
-                pil_image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
+                pil_image = Image.frombytes(
+                    "RGB", [pixmap.width, pixmap.height], pixmap.samples
+                )
 
                 # 儲存為 JPEG 到記憶體緩衝區
                 jpeg_buffer = io.BytesIO()
-                pil_image.save(jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True)
+                pil_image.save(
+                    jpeg_buffer, format="JPEG", quality=self.jpeg_quality, optimize=True
+                )
                 jpeg_data = jpeg_buffer.getvalue()
                 # 插入 JPEG 資料
                 page.insert_image(rect, stream=jpeg_data)

@@ -130,7 +130,9 @@ class OCRResultParser:
 
         return results
 
-    def _create_ocr_result(self, text: Any, score: Any, poly: Any) -> Optional[OCRResult]:
+    def _create_ocr_result(
+        self, text: Any, score: Any, poly: Any
+    ) -> Optional[OCRResult]:
         """
         創建 OCRResult 對象
 
@@ -279,7 +281,10 @@ class OCRResultParser:
         try:
             for res in formula_output:
                 if hasattr(res, "latex"):
-                    formula_dict = {"latex": res.latex, "confidence": getattr(res, "score", 1.0)}
+                    formula_dict = {
+                        "latex": res.latex,
+                        "confidence": getattr(res, "score", 1.0),
+                    }
 
                     if hasattr(res, "bbox"):
                         formula_dict["bbox"] = res.bbox

@@ -20,7 +20,9 @@ class TestOCRResult:
     def test_basic_creation(self):
         """測試基本建立"""
         result = OCRResult(
-            text="Hello World", confidence=0.95, bbox=[[0, 0], [100, 0], [100, 20], [0, 20]]
+            text="Hello World",
+            confidence=0.95,
+            bbox=[[0, 0], [100, 0], [100, 20], [0, 20]],
         )
         assert result.text == "Hello World"
         assert result.confidence == 0.95

@@ -117,7 +117,10 @@ def pdf_pages_generator(
 
 
 def batch_pages_generator(
-    pdf_path: str, dpi: int = 150, batch_size: int = 8, pages: Optional[List[int]] = None
+    pdf_path: str,
+    dpi: int = 150,
+    batch_size: int = 8,
+    pages: Optional[List[int]] = None,
 ) -> Generator[List[Tuple[int, np.ndarray]], None, None]:
     """
     批次生成器（用於 GPU 批次處理）
@@ -174,7 +177,10 @@ class StreamingPDFProcessor:
         self.dpi = dpi
 
     def process_pages(
-        self, process_func, pages: Optional[List[int]] = None, show_progress: bool = True
+        self,
+        process_func,
+        pages: Optional[List[int]] = None,
+        show_progress: bool = True,
     ):
         """
         逐頁處理（串流模式）

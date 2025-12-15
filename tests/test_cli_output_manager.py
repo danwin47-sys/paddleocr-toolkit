@@ -181,7 +181,10 @@ class TestProcessModeOutputs:
         manager = OutputPathManager(str(input_file), mode="structure")
 
         args = argparse.Namespace(
-            markdown_output="AUTO", json_output="AUTO", excel_output=None, html_output=None
+            markdown_output="AUTO",
+            json_output="AUTO",
+            excel_output=None,
+            html_output=None,
         )
 
         result = manager.process_mode_outputs(args, tmp_path)
