@@ -1,19 +1,26 @@
 version: '3.8'
 
 services:
-  paddleocr-toolkit:
+  # PaddleOCR Toolkit API 服務
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: paddleocr-toolkit:latest
-    container_name: paddleocr-toolkit
+    container_name: paddleocr-api
+    ports:
+      - "8000:8000"
     volumes:
-      - ./input:/data/input:ro
-      - ./output:/data/output
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+      - ./logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
-      - DISABLE_MODEL_SOURCE_CHECK=True
-    # GPU support (uncomment if using GPU)
+      - UPLOAD_DIR=/app/uploads
+      - OUTPUT_DIR=/app/output
+    restart: unless-stopped
+    networks:
+      - paddleocr-network
+    # GPU支援（如果需要）
     # deploy:
     #   resources:
     #     reservations:
@@ -21,20 +28,54 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
-    command: python paddle_ocr_tool.py /data/input/document.pdf --output /data/output
-  # API service (if implementing FastAPI)
-  # paddleocr-api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
+
+    # Web前端服務（可選）
+  web:
+    image: nginx:alpine
+    container_name: paddleocr-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - paddleocr-network
+  # Redis快取（可選，用於生產環境）
+  # redis:
+  #   image: redis:alpine
+  #   container_name: paddleocr-redis
   #   ports:
-  #     - "8000:8000"
+  #     - "6379:6379"
   #   volumes:
-  #     - ./data:/data
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #   command: uvicorn api:app --host 0.0.0.0 --port 8000
+  #     - redis-data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - paddleocr-network
+
+networks:
+  paddleocr-network:
+    driver: bridge
 
 volumes:
-  input:
-  output:
+  redis-data:
+    driver: local
+
+# 使用說明：
+#
+# 啟動所有服務：
+#   docker-compose up -d
+#
+# 查看日誌：
+#   docker-compose logs -f
+#
+# 停止服務：
+#   docker-compose down
+#
+# 重新建構：
+#   docker-compose up -d --build
+#
+# 僅啟動API：
+#   docker-compose up -d api
