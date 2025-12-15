@@ -216,6 +216,51 @@ except ImportError:
 SUPPORTED_IMAGE_FORMATS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
 SUPPORTED_PDF_FORMAT = ".pdf"
 
+# 圖片大小限制 (避免 OCR 記憶體不足)
+MAX_IMAGE_SIDE = 2500  # 像素
+
+
+def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> Tuple[str, bool]:
+    """
+    檢測並縮小大圖片以避免 OCR 記憶體問題
+    
+    Args:
+        file_path: 圖片路徑
+        max_side: 最大邊長（預設 2500px）
+    
+    Returns:
+        Tuple[str, bool]: (處理後的圖片路徑, 是否有縮小)
+    """
+    try:
+        with Image.open(file_path) as img:
+            width, height = img.size
+            max_dim = max(width, height)
+            
+            if max_dim <= max_side:
+                return file_path, False
+            
+            # 計算縮放比例
+            scale = max_side / max_dim
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+            
+            print(f"圖片太大 ({width}x{height})，自動縮小為 {new_width}x{new_height}")
+            logging.info(f"圖片太大 ({width}x{height})，自動縮小為 {new_width}x{new_height}")
+            
+            # 縮小圖片
+            resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # 儲存到新檔案
+            path = Path(file_path)
+            new_path = path.parent / f"{path.stem}_resized{path.suffix}"
+            resized_img.save(str(new_path), quality=95)
+            
+            return str(new_path), True
+            
+    except Exception as e:
+        logging.warning(f"縮小圖片時發生錯誤: {e}，使用原始圖片")
+        return file_path, False
+
 
 class PaddleOCRTool:
     """
@@ -451,16 +496,22 @@ class PaddleOCRTool:
             List[OCRResult]: OCR 辨識結果列表
         """
         results = []
+        resized_path = None  # 追蹤是否有產生縮小的圖片
 
         try:
+            # 0. 自動縮小大圖片
+            processed_path, was_resized = resize_image_if_needed(image_path)
+            if was_resized:
+                resized_path = processed_path  # 記住以便稍後清理
+
             # === Stage 3: 使用引擎管理器和解析器 ===
             if self._using_stage3 and hasattr(self, "engine_manager"):
-                predict_result = self.engine_manager.predict(input=image_path)
+                predict_result = self.engine_manager.predict(input=processed_path)
                 results = self.result_parser.parse_basic_result(predict_result)
             else:
                 # === 传统实现 ===
                 # PaddleOCR 3.x 使用 predict() 方法
-                predict_result = self.ocr.predict(input=image_path)
+                predict_result = self.ocr.predict(input=processed_path)
                 results = self._parse_predict_result(predict_result)
 
             if not results:
