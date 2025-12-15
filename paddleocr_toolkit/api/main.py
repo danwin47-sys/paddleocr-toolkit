@@ -21,15 +21,23 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
+# 找到 web 目錄
+WEB_DIR = Path(__file__).parent.parent.parent / "web"
+
 app = FastAPI(
-    title="PaddleOCR Toolkit API", description="专业级OCR文件处理API", version="1.2.0"
+    title="PaddleOCR Toolkit API", 
+    description="专业级OCR文件处理API", 
+    version="1.2.0",
+    docs_url="/docs",  # API 文件放在 /docs
+    redoc_url="/redoc"
 )
 
 # CORS设置
@@ -152,11 +160,17 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         tasks[task_id] = {"status": "failed", "progress": 0}
         await manager.send_error(task_id, error_msg)
 
-
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """根路径"""
-    return {"name": "PaddleOCR Toolkit API", "version": "1.2.0", "status": "running"}
+    """提供用戶友好的 Web 介面"""
+    index_file = WEB_DIR / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
+    return HTMLResponse(content="""
+        <h1>PaddleOCR Toolkit API</h1>
+        <p>Version: 1.2.0</p>
+        <p><a href="/docs">API 文件</a></p>
+    """)
 
 
 @app.post("/api/ocr", response_model=TaskResponse)
