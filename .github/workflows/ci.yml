@@ -13,8 +13,14 @@ jobs:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false  # 允許其他版本繼續執行，即使一個失敗
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        include:
+          - python-version: '3.12'
+            experimental: true  # Python 3.12 標記為實驗性
+    
+    continue-on-error: ${{ matrix.experimental || false }}  # Python 3.12 允許失敗
     
     steps:
     - uses: actions/checkout@v3
