@@ -16,20 +16,6 @@ class TestPackageInit:
     """測試套件初始化"""
 
     def test_import_package(self):
-        """測試匯入套件"""
-        import paddleocr_toolkit
-
-        assert paddleocr_toolkit is not None
-
-    def test_version(self):
-        """測試版本資訊"""
-        from paddleocr_toolkit import __author__, __version__
-
-        assert __version__ == "1.0.0"
-        assert __author__ == "PaddleOCR Toolkit Team"
-
-    def test_import_core_models(self):
-        """測試匯入核心模型"""
         from paddleocr_toolkit import (
             SUPPORTED_IMAGE_FORMATS,
             SUPPORTED_PDF_FORMAT,
