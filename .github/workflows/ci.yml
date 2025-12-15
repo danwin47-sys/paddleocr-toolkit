@@ -40,8 +40,8 @@ jobs:
     
     - name: Code formatting check
       run: |
-        black --check paddleocr_toolkit/ tests/
-        isort --check-only paddleocr_toolkit/ tests/
+        black --check paddleocr_toolkit/ tests/ plugins/ examples/ scripts/ setup.py paddle_ocr_tool.py pdf_translator.py
+        isort --profile black --check-only paddleocr_toolkit/ tests/ plugins/ examples/ scripts/ setup.py paddle_ocr_tool.py pdf_translator.py
     
     - name: Type checking
       run: |
@@ -75,10 +75,10 @@ jobs:
         pip install black isort flake8 mypy
     
     - name: Run black
-      run: black --check .
+      run: black --check paddleocr_toolkit/ tests/ plugins/ examples/ scripts/ setup.py paddle_ocr_tool.py pdf_translator.py
     
     - name: Run isort
-      run: isort --check .
+      run: isort --profile black --check-only paddleocr_toolkit/ tests/ plugins/ examples/ scripts/ setup.py paddle_ocr_tool.py pdf_translator.py
     
     - name: Run flake8
       run: flake8 paddleocr_toolkit/ --max-line-length=100 --ignore=E203,W503
