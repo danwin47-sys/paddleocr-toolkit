@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
+ï»¿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FastAPI¦Zºİ - Web¬É­±
-v1.2.0·s¼W - REST APIªA?
+FastAPIåç«¯ - Webç•Œé¢
+v1.2.0æ–°å¢ - REST APIæœåŠ¡
 """
 
 import io
 import sys
 
-# Windows UTF-8­×Î`
+# Windows UTF-8ä¿®å¤
 if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         sys.stdout = io.TextIOWrapper(
@@ -31,10 +31,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 app = FastAPI(
-    title="PaddleOCR Toolkit API", description="???OCR¤å¥ó?²zAPI", version="1.2.0"
+    title="PaddleOCR Toolkit API", description="ä¸“ä¸šçº§OCRæ–‡ä»¶å¤„ç†API", version="1.2.0"
 )
 
-# CORS?¸m
+# CORSè®¾ç½®
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,17 +43,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ¥ô?¦s?¡]¥Í??¹Ò?¨Ï¥ÎRedisµ¥¡^
+# ä»»åŠ¡å­˜å‚¨ï¼ˆç”Ÿäº§ç¯å¢ƒåº”ä½¿ç”¨Redisç­‰ï¼‰
 tasks = {}
 results = {}
 
-# °t¸m
+# é…ç½®
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 
 class OCRRequest(BaseModel):
-    """OCR?¨D¼Ò«¬"""
+    """OCRè¯·æ±‚æ¨¡å‹"""
 
     mode: str = "hybrid"
     dpi: int = 200
@@ -61,7 +61,7 @@ class OCRRequest(BaseModel):
 
 
 class TaskResponse(BaseModel):
-    """¥ô???¼Ò«¬"""
+    """ä»»åŠ¡å“åº”æ¨¡å‹"""
 
     task_id: str
     status: str
@@ -69,7 +69,7 @@ class TaskResponse(BaseModel):
 
 
 class OCRResult(BaseModel):
-    """OCR?ªG¼Ò«¬"""
+    """OCRç»“æœæ¨¡å‹"""
 
     task_id: str
     status: str
@@ -80,28 +80,28 @@ class OCRResult(BaseModel):
 
 def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
-    ¦Z¥xOCR?²z¥ô?
+    åå°OCRå¤„ç†ä»»åŠ¡
 
     Args:
-        task_id: ¥ô?ID
-        file_path: ¤å¥ó¸ô?
-        mode: OCR¼Ò¦¡
+        task_id: ä»»åŠ¡ID
+        file_path: æ–‡ä»¶è·¯å¾„
+        mode: OCRæ¨¡å¼
     """
     try:
         tasks[task_id] = {"status": "processing", "progress": 0}
 
-        # ¼Ò?OCR?²z
-        time.sleep(2)  # ?????¥ÎOCR¤ŞÀº
+        # æ¨¡æ‹ŸOCRå¤„ç†
+        time.sleep(2)  # å®é™…åº”è¯¥è°ƒç”¨OCRå¼•æ“
 
-        # §ó·s?«×
+        # æ›´æ–°è¿›åº¦
         tasks[task_id] = {"status": "processing", "progress": 50}
         time.sleep(1)
 
-        # §¹¦¨
+        # å®Œæˆ
         results[task_id] = {
             "status": "completed",
             "progress": 100,
-            "results": {"text": "?¬OOCR??ªº¤å¦r", "pages": 1, "confidence": 0.95},
+            "results": {"text": "è¿™æ˜¯OCRè¯†åˆ«çš„æ–‡å­—", "pages": 1, "confidence": 0.95},
         }
         tasks[task_id] = {"status": "completed", "progress": 100}
 
@@ -112,7 +112,7 @@ def process_ocr_task(task_id: str, file_path: str, mode: str):
 
 @app.get("/")
 async def root():
-    """®Ú¸ô?"""
+    """æ ¹è·¯å¾„"""
     return {"name": "PaddleOCR Toolkit API", "version": "1.2.0", "status": "running"}
 
 
@@ -123,55 +123,55 @@ async def upload_and_ocr(
     mode: str = "hybrid",
 ):
     """
-    ¤W?¤å¥ó¦}?¦æOCR?²z
+    ä¸Šä¼ æ–‡ä»¶å¹¶è¿›è¡ŒOCRå¤„ç†
 
     Args:
-        file: ¤W?ªº¤å¥ó
-        background_tasks: ¦Z¥x¥ô?
-        mode: OCR¼Ò¦¡
+        file: ä¸Šä¼ çš„æ–‡ä»¶
+        background_tasks: åå°ä»»åŠ¡
+        mode: OCRæ¨¡å¼
 
     Returns:
-        ¥ô?ID©M??
+        ä»»åŠ¡IDå’ŒçŠ¶æ€
     """
-    # ¥Í¦¨¥ô?ID
+    # ç”Ÿæˆä»»åŠ¡ID
     task_id = str(uuid.uuid4())
 
-    # «O¦s¤å¥ó
+    # ä¿å­˜æ–‡ä»¶
     file_path = UPLOAD_DIR / f"{task_id}_{file.filename}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
 
-    # ?«Ø¦Z¥x¥ô?
+    # åˆ›å»ºåå°ä»»åŠ¡
     background_tasks.add_task(process_ocr_task, task_id, str(file_path), mode)
 
-    # ªì©l¤Æ¥ô???
+    # åˆå§‹åŒ–ä»»åŠ¡çŠ¶æ€
     tasks[task_id] = {"status": "queued", "progress": 0}
 
-    return TaskResponse(task_id=task_id, status="queued", message="¥ô?¤w?«Ø¡A¥¿¦b?²z...")
+    return TaskResponse(task_id=task_id, status="queued", message="ä»»åŠ¡å·²åˆ›å»ºï¼Œæ­£åœ¨å¤„ç†...")
 
 
 @app.get("/api/tasks/{task_id}", response_model=OCRResult)
 async def get_task_status(task_id: str):
     """
-    ?¨ú¥ô???
+    è·å–ä»»åŠ¡çŠ¶æ€
 
     Args:
-        task_id: ¥ô?ID
+        task_id: ä»»åŠ¡ID
 
     Returns:
-        ¥ô???©M?ªG
+        ä»»åŠ¡çŠ¶æ€å’Œç»“æœ
     """
     if task_id not in tasks:
-        raise HTTPException(status_code=404, detail="¥ô?¤£¦s¦b")
+        raise HTTPException(status_code=404, detail="ä»»åŠ¡ä¸å­˜åœ¨")
 
     task_info = tasks[task_id]
 
-    # ¦pªG¥ô?§¹¦¨¡Aªğ¦^?ªG
+    # å¦‚æœä»»åŠ¡å®Œæˆï¼Œè¿”å›ç»“æœ
     if task_id in results:
         return OCRResult(**results[task_id], task_id=task_id)
 
-    # §_?ªğ¦^?«e??
+    # å¦åˆ™è¿”å›å½“å‰çŠ¶æ€
     return OCRResult(
         task_id=task_id, status=task_info["status"], progress=task_info["progress"]
     )
@@ -180,34 +180,34 @@ async def get_task_status(task_id: str):
 @app.get("/api/results/{task_id}")
 async def get_results(task_id: str):
     """
-    ?¨úOCR?ªG
+    è·å–OCRç»“æœ
 
     Args:
-        task_id: ¥ô?ID
+        task_id: ä»»åŠ¡ID
 
     Returns:
-        OCR?ªG
+        OCRç»“æœ
     """
     if task_id not in results:
-        raise HTTPException(status_code=404, detail="?ªG¤£¦s¦b")
+        raise HTTPException(status_code=404, detail="ç»“æœä¸å­˜åœ¨")
 
     return results[task_id]
 
 
 @app.delete("/api/tasks/{task_id}")
 async def delete_task(task_id: str):
-    """?°£¥ô?"""
+    """åˆ é™¤ä»»åŠ¡"""
     if task_id in tasks:
         del tasks[task_id]
     if task_id in results:
         del results[task_id]
 
-    return {"message": "¥ô?¤w?°£"}
+    return {"message": "ä»»åŠ¡å·²åˆ é™¤"}
 
 
 @app.get("/api/stats")
 async def get_stats():
-    """?¨ú¨t???"""
+    """è·å–ç³»ç»Ÿç»Ÿè®¡"""
     return {
         "total_tasks": len(tasks),
         "completed_tasks": sum(1 for t in tasks.values() if t["status"] == "completed"),
@@ -223,15 +223,15 @@ if __name__ == "__main__":
 
     print(
         """
-    ùİùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùß
-    ùø                                                       ùø
-    ùø     PaddleOCR Toolkit API Server                     ùø
-    ùø     v1.2.0                                           ùø
-    ùø                                                       ùø
-    ùãùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùå
+    â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+    â•‘                                                       â•‘
+    â•‘     PaddleOCR Toolkit API Server                     â•‘
+    â•‘     v1.2.0                                           â•‘
+    â•‘                                                       â•‘
+    â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     
-    ??ªA?¾¹...
-    API¤å?: http://localhost:8000/docs
+    å¯åŠ¨æœåŠ¡å™¨...
+    APIæ–‡æ¡£: http://localhost:8000/docs
     """
     )
 
