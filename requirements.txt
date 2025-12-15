@@ -1,9 +1,10 @@
 # PaddleOCR Toolkit - Python Dependencies
 
 # ============ Core OCR ============
-# 如果無 GPU，將 paddlepaddle-gpu 改為 paddlepaddle
-paddlepaddle-gpu>=3.0.0
-paddleocr>=3.0.0
+# CI/CD 使用 CPU 版本（GitHub Actions 無 GPU）
+# 本地開發可手動安裝 paddlepaddle-gpu==2.6.2
+paddlepaddle==2.6.2
+paddleocr==2.8.1
 
 # ============ PDF Processing ============
 pymupdf>=1.24.0
