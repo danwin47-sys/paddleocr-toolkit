@@ -8,7 +8,7 @@ PaddleOCR Toolkit - 模式处理器
 import argparse
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from paddle_ocr_tool import PaddleOCRTool

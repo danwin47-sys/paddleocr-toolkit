@@ -22,7 +22,7 @@ except ImportError:
     HAS_FITZ = False
 
 try:
-    import numpy as np
+    pass
 
     HAS_NUMPY = True
 except ImportError:

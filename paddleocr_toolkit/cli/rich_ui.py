@@ -39,9 +39,7 @@ try:
         TextColumn,
         TimeRemainingColumn,
     )
-    from rich.style import Style
     from rich.table import Table
-    from rich.text import Text
 
     HAS_RICH = True
 except ImportError:

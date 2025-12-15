@@ -6,7 +6,7 @@ v1.2.0新增 - 提升GPU利用率和处理速度
 """
 
 import time
-from typing import Any, List, Optional
+from typing import Any, List
 
 import numpy as np
 

@@ -17,14 +17,12 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
         sys.stderr = io.TextIOWrapper(
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
-    except:
+    except Exception:
         pass
 
-import os
 import time
 from multiprocessing import Pool, cpu_count
-from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 
 class ParallelPDFProcessor:
@@ -33,7 +31,7 @@ class ParallelPDFProcessor:
     使用多进程加速PDF处理，预期1.5-2x提升
     """
 
-    def __init__(self, workers: int = None):
+    def __init__(self, workers: Optional[int] = None):
         """
         初始化并行处理器
 

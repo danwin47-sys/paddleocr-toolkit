@@ -16,13 +16,13 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
         sys.stderr = io.TextIOWrapper(
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
-    except:
+    except Exception:
         pass
 
 import difflib
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 
 def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:

@@ -9,8 +9,7 @@ PDF 工具函數 - 共用的 PDF 處理邏輯
 """
 
 import io
-import logging
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 

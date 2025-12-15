@@ -5,10 +5,8 @@ WebSocket連線管理器
 處理實時進度更新
 """
 
-import asyncio
-import json
 import time
-from typing import Dict, Set
+from typing import Any, Dict, Optional, Set
 
 from fastapi import WebSocket
 
@@ -111,7 +109,7 @@ class ConnectionManager:
 
         await self.broadcast_to_task(task_id, update)
 
-    async def send_completion(self, task_id: str, results: any):
+    async def send_completion(self, task_id: str, results: Any):
         """
         發送完成訊息
 
@@ -148,7 +146,7 @@ class ConnectionManager:
 
         await self.broadcast_to_task(task_id, error_msg)
 
-    def get_connection_count(self, task_id: str = None) -> int:
+    def get_connection_count(self, task_id: Optional[str] = None) -> int:
         """
         取得連線數量
 

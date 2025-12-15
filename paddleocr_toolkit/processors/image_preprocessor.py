@@ -6,7 +6,6 @@ PaddleOCR Toolkit - 圖片預處理
 """
 
 import logging
-from typing import Optional, Tuple
 
 try:
     import numpy as np

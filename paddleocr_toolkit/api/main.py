@@ -17,25 +17,31 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
         sys.stderr = io.TextIOWrapper(
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
-    except:
+    except Exception:
         pass
 
 import asyncio
-import time
+import os
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from paddleocr_toolkit.core.ocr_engine import OCREngineManager, OCRMode
-from paddleocr_toolkit.plugins.loader import PluginLoader
-
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import os
 
 from paddleocr_toolkit.api.websocket_manager import manager
+from paddleocr_toolkit.core.ocr_engine import OCREngineManager
+from paddleocr_toolkit.plugins.loader import PluginLoader
 
 app = FastAPI(
     title="PaddleOCR Toolkit API", description="专业级OCR文件处理API", version="1.2.0"
@@ -62,7 +68,6 @@ PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 # 初始化插件載入器
 plugin_loader = PluginLoader(str(PLUGIN_DIR))
 plugin_loader.load_all_plugins()
-
 
 
 class OCRRequest(BaseModel):
@@ -106,23 +111,21 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
 
         # 1. 初始化引擎
         await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
-        
+
         def run_ocr():
             # 在线程中运行阻塞的OCR操作
             ocr_manager = OCREngineManager(
-                mode=mode, 
-                device="cpu",
-                plugin_loader=plugin_loader
-            ) # 默认使用CPU以确保兼容性
+                mode=mode, device="cpu", plugin_loader=plugin_loader
+            )  # 默认使用CPU以确保兼容性
             ocr_manager.init_engine()
             return ocr_manager
 
         # 使用 asyncio.to_thread 運行阻塞代碼
         ocr_manager = await asyncio.to_thread(run_ocr)
-        
+
         # 2. 執行預測
         await manager.send_progress_update(task_id, 30, "processing", "正在進行OCR識別...")
-        
+
         def predict(engine, path):
             return engine.predict(path)
 
@@ -130,16 +133,18 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
 
         # 3. 處理結果
         await manager.send_progress_update(task_id, 90, "processing", "處理結果...")
-        
+
         # 簡單序列化結果 (根據實際返回結構可能需要調整)
         # 假設 result 是 list 或 dict，可以直接序列化
         # 如果包含 numpy array，需要轉換
-        
+
         # 模擬結果處理 (實際應解析 ocr_result)
         final_result = {
-            "raw_result": str(ocr_result)[:1000] + "..." if len(str(ocr_result)) > 1000 else str(ocr_result),
-            "pages": 1, # 暫時 hardcode
-            "confidence": 0.95
+            "raw_result": str(ocr_result)[:1000] + "..."
+            if len(str(ocr_result)) > 1000
+            else str(ocr_result),
+            "pages": 1,  # 暫時 hardcode
+            "confidence": 0.95,
         }
 
         # 完成
@@ -149,9 +154,9 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
             "results": final_result,
         }
         tasks[task_id] = {"status": "completed", "progress": 100}
-        
+
         await manager.send_completion(task_id, final_result)
-        
+
         # 清理
         ocr_manager.close()
 
@@ -172,7 +177,7 @@ async def root():
 @app.post("/api/ocr", response_model=TaskResponse)
 async def upload_and_ocr(
     file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None,
+    background_tasks: BackgroundTasks = None,  # type: ignore[assignment]
     mode: str = "hybrid",
 ):
     """
@@ -270,6 +275,7 @@ async def get_stats():
         ),
     }
 
+
 @app.get("/api/files")
 async def list_files():
     """列出所有上傳的檔案"""
@@ -278,12 +284,14 @@ async def list_files():
         for f in UPLOAD_DIR.iterdir():
             if f.is_file():
                 stat = f.stat()
-                files.append({
-                    "name": f.name,
-                    "size": stat.st_size,
-                    "created_at": stat.st_ctime,
-                    "modified_at": stat.st_mtime
-                })
+                files.append(
+                    {
+                        "name": f.name,
+                        "size": stat.st_size,
+                        "created_at": stat.st_ctime,
+                        "modified_at": stat.st_mtime,
+                    }
+                )
     return files
 
 
@@ -293,7 +301,7 @@ async def delete_file(filename: str):
     file_path = UPLOAD_DIR / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
-    
+
     try:
         os.remove(file_path)
         return {"message": f"檔案 {filename} 已刪除"}
@@ -307,8 +315,10 @@ async def download_file(filename: str):
     file_path = UPLOAD_DIR / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
-        
-    return FileResponse(path=file_path, filename=filename, media_type='application/octet-stream')
+
+    return FileResponse(
+        path=file_path, filename=filename, media_type="application/octet-stream"
+    )
 
 
 @app.get("/api/plugins")

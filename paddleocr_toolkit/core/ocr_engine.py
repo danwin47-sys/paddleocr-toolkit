@@ -11,7 +11,7 @@ OCR 引擎管理器 - 管理 PaddleOCR 引擎生命週期
 
 import logging
 from enum import Enum
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from paddleocr_toolkit.plugins.loader import PluginLoader

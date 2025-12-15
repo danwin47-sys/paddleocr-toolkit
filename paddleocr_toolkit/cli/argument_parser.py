@@ -6,7 +6,6 @@ PaddleOCR Toolkit - CLI 參數解析器
 """
 
 import argparse
-from typing import Optional
 
 
 def create_argument_parser() -> argparse.ArgumentParser:

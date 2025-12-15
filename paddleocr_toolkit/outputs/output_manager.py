@@ -12,14 +12,10 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 try:
-    from paddleocr_toolkit.core.buffered_writer import (
-        BufferedJSONWriter,
-        BufferedWriter,
-    )
-    from paddleocr_toolkit.core.models import OCRResult
+    from paddleocr_toolkit.core.buffered_writer import BufferedJSONWriter
 
     HAS_BUFFERED = True
 except ImportError:

@@ -7,7 +7,6 @@ PaddleOCR Toolkit - 設定檔處理器
 
 import argparse
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 

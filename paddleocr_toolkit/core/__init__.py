@@ -24,18 +24,7 @@ from .pdf_utils import (
 
 # 性能優化工具（可選）
 try:
-    from .buffered_writer import (
-        BufferedJSONWriter,
-        BufferedWriter,
-        write_json_efficient,
-        write_text_efficient,
-    )
-    from .streaming_utils import (
-        StreamingPDFProcessor,
-        batch_pages_generator,
-        open_pdf_context,
-        pdf_pages_generator,
-    )
+    pass
 
     HAS_PERF_TOOLS = True
 except ImportError:

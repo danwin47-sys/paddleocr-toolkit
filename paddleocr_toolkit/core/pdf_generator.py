@@ -277,7 +277,7 @@ class PDFGenerator:
                                 color=text_color,
                             )
                             return
-                        except:
+                        except Exception:
                             continue
                 logging.warning(f"無法插入文字 '{text[:30]}...': {e}")
 

@@ -7,8 +7,7 @@ PaddleOCR Toolkit - 智能術語表管理器
 
 import csv
 import logging
-import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 

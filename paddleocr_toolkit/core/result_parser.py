@@ -9,7 +9,6 @@ OCR 結果解析器 - 統一解析不同引擎的結果
 """
 
 import logging
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 try:

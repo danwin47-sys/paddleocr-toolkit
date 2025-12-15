@@ -17,11 +17,10 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
         sys.stderr = io.TextIOWrapper(
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
-    except:
+    except Exception:
         pass
 
 
-import os
 import time
 from pathlib import Path
 from typing import List

@@ -45,7 +45,6 @@ class OCRPlugin(ABC):
         Returns:
             是否初始化成功
         """
-        pass
 
     @abstractmethod
     def on_before_ocr(self, image: Any) -> Any:
@@ -60,7 +59,6 @@ class OCRPlugin(ABC):
         Returns:
             處理後的圖片
         """
-        pass
 
     @abstractmethod
     def on_after_ocr(self, results: Any) -> Any:
@@ -75,7 +73,6 @@ class OCRPlugin(ABC):
         Returns:
             處理後的結果
         """
-        pass
 
     def on_error(self, error: Exception) -> None:
         """

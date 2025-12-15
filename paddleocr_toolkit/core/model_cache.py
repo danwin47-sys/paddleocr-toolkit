@@ -8,7 +8,6 @@ v1.2.0新增 - 提升重复文件处理速度10x+
 import hashlib
 import pickle
 import time
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional
 
