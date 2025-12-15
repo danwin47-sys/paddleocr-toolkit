@@ -5,7 +5,7 @@
 提供帶緩衝的文件寫入，減少 I/O 操作次數。
 """
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class BufferedWriter:
@@ -100,7 +100,7 @@ class BufferedJSONWriter:
             indent: JSON 縮排（None 為壓縮）
         """
         self.filepath = filepath
-        self.buffer = []
+        self.buffer: List[Dict[str, Any]] = []
         self.buffer_size = buffer_size
         self.indent = indent
         self.file = None

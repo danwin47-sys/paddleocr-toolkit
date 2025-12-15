@@ -192,8 +192,8 @@ class StatsCollector:
         self,
         page_num: int,
         text: str = "",
-        ocr_results: List = None,
-        confidence_values: List[float] = None,
+        ocr_results: Optional[List[Any]] = None,
+        confidence_values: Optional[List[float]] = None,
     ):
         """
         完成頁面處理

@@ -23,11 +23,12 @@ import json
 import os
 import time
 from pathlib import Path
+from typing import Optional
 
 import psutil
 
 
-def run_benchmark(pdf_path: str, output: str = None):
+def run_benchmark(pdf_path: str, output: Optional[str] = None):
     """
     运行性能基准测试
 

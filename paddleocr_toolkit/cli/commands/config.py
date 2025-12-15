@@ -20,11 +20,12 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
         pass
 
 from pathlib import Path
+from typing import Any, List, Optional
 
 import yaml
 
 
-def prompt(question: str, default: str = None, options: list = None) -> str:
+def prompt(question: str, default: Optional[str] = None, options: Optional[List[Any]] = None) -> str:
     """
     交互式提示
 

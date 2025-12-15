@@ -18,8 +18,8 @@ class ModelCache:
     避免重复加载模型
     """
 
-    _instance = None
-    _cache = {}
+    _instance: Optional["ModelCache"] = None
+    _cache: Dict[str, Any] = {}
 
     def __new__(cls):
         """单例模式"""
@@ -96,7 +96,7 @@ class ResultCache:
         self.max_size = max_size
 
         # 内存缓存（使用LRU）
-        self.memory_cache = {}
+        self.memory_cache: Dict[str, Any] = {}
         self.cache_hits = 0
         self.cache_misses = 0
 
