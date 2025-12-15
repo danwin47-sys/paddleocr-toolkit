@@ -30,9 +30,12 @@ class TestPackageInit:
 
     def test_import_core_models(self):
         """測試匯入核心模型"""
-        from paddleocr_toolkit import (SUPPORTED_IMAGE_FORMATS,
-                                       SUPPORTED_PDF_FORMAT, OCRMode,
-                                       OCRResult)
+        from paddleocr_toolkit import (
+            SUPPORTED_IMAGE_FORMATS,
+            SUPPORTED_PDF_FORMAT,
+            OCRMode,
+            OCRResult,
+        )
 
         assert OCRResult is not None
         assert OCRMode is not None
@@ -82,8 +85,13 @@ class TestCoreImports:
 
     def test_import_from_core(self):
         """測試從 core 匯入"""
-        from paddleocr_toolkit.core import (OCRMode, OCRResult, PDFGenerator,
-                                            load_config, pixmap_to_numpy)
+        from paddleocr_toolkit.core import (
+            OCRMode,
+            OCRResult,
+            PDFGenerator,
+            load_config,
+            pixmap_to_numpy,
+        )
 
         assert OCRResult is not None
         assert load_config is not None
@@ -94,9 +102,12 @@ class TestProcessorImports:
 
     def test_import_from_processors(self):
         """測試從 processors 匯入"""
-        from paddleocr_toolkit.processors import (StatsCollector, TextBlock,
-                                                  detect_pdf_quality,
-                                                  fix_english_spacing)
+        from paddleocr_toolkit.processors import (
+            StatsCollector,
+            TextBlock,
+            detect_pdf_quality,
+            fix_english_spacing,
+        )
 
         assert fix_english_spacing is not None
         assert StatsCollector is not None

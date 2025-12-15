@@ -31,9 +31,14 @@ try:
     from rich import box
     from rich.console import Console
     from rich.panel import Panel
-    from rich.progress import (BarColumn, Progress, SpinnerColumn,
-                               TaskProgressColumn, TextColumn,
-                               TimeRemainingColumn)
+    from rich.progress import (
+        BarColumn,
+        Progress,
+        SpinnerColumn,
+        TaskProgressColumn,
+        TextColumn,
+        TimeRemainingColumn,
+    )
     from rich.style import Style
     from rich.table import Table
     from rich.text import Text

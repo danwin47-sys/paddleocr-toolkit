@@ -20,8 +20,14 @@ except ImportError:
     HAS_CV2 = False
 
 from paddleocr_toolkit.processors.image_preprocessor import (
-    auto_preprocess, binarize, denoise, deskew, enhance_contrast,
-    preprocess_for_ocr, sharpen)
+    auto_preprocess,
+    binarize,
+    denoise,
+    deskew,
+    enhance_contrast,
+    preprocess_for_ocr,
+    sharpen,
+)
 
 
 class TestEnhanceContrast:

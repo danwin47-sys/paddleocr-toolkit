@@ -8,8 +8,7 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 from paddleocr_toolkit.core.models import OCRResult
-from paddleocr_toolkit.processors.translation_processor import \
-    TranslationProcessor
+from paddleocr_toolkit.processors.translation_processor import TranslationProcessor
 
 
 class TestTranslationProcessor:

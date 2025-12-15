@@ -20,8 +20,11 @@ except ImportError:
     HAS_FITZ = False
 
 from paddleocr_toolkit.processors.ocr_workaround import (
-    OCRWorkaround, TextBlock, detect_scanned_document,
-    should_use_ocr_workaround)
+    OCRWorkaround,
+    TextBlock,
+    detect_scanned_document,
+    should_use_ocr_workaround,
+)
 
 
 class TestTextBlock:

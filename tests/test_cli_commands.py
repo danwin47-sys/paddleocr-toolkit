@@ -13,8 +13,10 @@ import pytest
 
 def test_init_command():
     """测试init命令"""
-    from paddleocr_toolkit.cli.commands.init import (create_config_file,
-                                                     create_project_structure)
+    from paddleocr_toolkit.cli.commands.init import (
+        create_config_file,
+        create_project_structure,
+    )
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmppath = Path(tmpdir)
@@ -51,8 +53,7 @@ def test_validate_edit_distance():
 
 def test_validate_accuracy():
     """测试准确率计算"""
-    from paddleocr_toolkit.cli.commands.validate import \
-        calculate_character_accuracy
+    from paddleocr_toolkit.cli.commands.validate import calculate_character_accuracy
 
     # 完全匹配
     acc = calculate_character_accuracy("hello world", "hello world")

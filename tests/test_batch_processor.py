@@ -22,8 +22,11 @@ except ImportError:
     HAS_FITZ = False
 
 from paddleocr_toolkit.processors.batch_processor import (
-    BatchProcessor, batch_process_images, get_optimal_workers,
-    pdf_to_images_parallel)
+    BatchProcessor,
+    batch_process_images,
+    get_optimal_workers,
+    pdf_to_images_parallel,
+)
 
 
 class TestGetOptimalWorkers:

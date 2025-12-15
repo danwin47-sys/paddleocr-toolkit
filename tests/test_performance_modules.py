@@ -46,8 +46,7 @@ def test_result_cache():
 
 def test_parallel_processor_init():
     """測試並行處理器初始化"""
-    from paddleocr_toolkit.processors.parallel_pdf_processor import \
-        ParallelPDFProcessor
+    from paddleocr_toolkit.processors.parallel_pdf_processor import ParallelPDFProcessor
 
     processor = ParallelPDFProcessor(workers=4)
     assert processor.workers == 4

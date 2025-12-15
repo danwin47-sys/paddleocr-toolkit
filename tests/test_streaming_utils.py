@@ -17,9 +17,11 @@ try:
 except ImportError:
     HAS_FITZ = False
 
-from paddleocr_toolkit.core.streaming_utils import (batch_pages_generator,
-                                                    open_pdf_context,
-                                                    pdf_pages_generator)
+from paddleocr_toolkit.core.streaming_utils import (
+    batch_pages_generator,
+    open_pdf_context,
+    pdf_pages_generator,
+)
 
 
 class TestOpenPdfContext:

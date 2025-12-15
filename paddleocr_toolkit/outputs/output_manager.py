@@ -15,8 +15,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from paddleocr_toolkit.core.buffered_writer import (BufferedJSONWriter,
-                                                        BufferedWriter)
+    from paddleocr_toolkit.core.buffered_writer import (
+        BufferedJSONWriter,
+        BufferedWriter,
+    )
     from paddleocr_toolkit.core.models import OCRResult
 
     HAS_BUFFERED = True

@@ -8,11 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from paddleocr_toolkit.cli.config_handler import (_process_all_flag,
-                                                  _process_no_flags,
-                                                  load_and_merge_config,
-                                                  load_config_file,
-                                                  process_args_overrides)
+from paddleocr_toolkit.cli.config_handler import (
+    _process_all_flag,
+    _process_no_flags,
+    load_and_merge_config,
+    load_config_file,
+    process_args_overrides,
+)
 
 
 class TestLoadAndMergeConfig:

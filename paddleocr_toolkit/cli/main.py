@@ -94,8 +94,7 @@ def main():
             init_command(args.directory)
 
         elif args.command == "config":
-            from paddleocr_toolkit.cli.commands.config import (config_wizard,
-                                                               show_config)
+            from paddleocr_toolkit.cli.commands.config import config_wizard, show_config
 
             if args.show:
                 show_config(args.show)
@@ -113,8 +112,7 @@ def main():
             run_benchmark(args.pdf, args.output)
 
         elif args.command == "validate":
-            from paddleocr_toolkit.cli.commands.validate import \
-                validate_ocr_results
+            from paddleocr_toolkit.cli.commands.validate import validate_ocr_results
 
             validate_ocr_results(args.ocr_results, args.ground_truth)
 

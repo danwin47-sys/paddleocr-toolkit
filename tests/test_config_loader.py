@@ -13,10 +13,14 @@ import pytest
 # 添加專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from paddleocr_toolkit.core.config_loader import (DEFAULT_CONFIG,
-                                                  apply_config_to_args,
-                                                  deep_merge, get_config_value,
-                                                  load_config, save_config)
+from paddleocr_toolkit.core.config_loader import (
+    DEFAULT_CONFIG,
+    apply_config_to_args,
+    deep_merge,
+    get_config_value,
+    load_config,
+    save_config,
+)
 
 
 class TestDeepMerge:

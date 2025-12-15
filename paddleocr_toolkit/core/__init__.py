@@ -1,21 +1,41 @@
 # -*- coding: utf-8 -*-
 """PaddleOCR Toolkit - Core 模組"""
 
-from .config_loader import (DEFAULT_CONFIG, apply_config_to_args,
-                            get_config_value, load_config, save_config)
-from .models import (SUPPORTED_IMAGE_FORMATS, SUPPORTED_PDF_FORMAT, OCRMode,
-                     OCRResult)
+from .config_loader import (
+    DEFAULT_CONFIG,
+    apply_config_to_args,
+    get_config_value,
+    load_config,
+    save_config,
+)
+from .models import SUPPORTED_IMAGE_FORMATS, SUPPORTED_PDF_FORMAT, OCRMode, OCRResult
 from .pdf_generator import PDFGenerator
-from .pdf_utils import (add_image_page, copy_page, create_pdf, get_dpi_matrix,
-                        get_page_size, numpy_to_pdf_bytes, open_pdf,
-                        page_to_numpy, pixmap_to_numpy)
+from .pdf_utils import (
+    add_image_page,
+    copy_page,
+    create_pdf,
+    get_dpi_matrix,
+    get_page_size,
+    numpy_to_pdf_bytes,
+    open_pdf,
+    page_to_numpy,
+    pixmap_to_numpy,
+)
 
 # 性能優化工具（可選）
 try:
-    from .buffered_writer import (BufferedJSONWriter, BufferedWriter,
-                                  write_json_efficient, write_text_efficient)
-    from .streaming_utils import (StreamingPDFProcessor, batch_pages_generator,
-                                  open_pdf_context, pdf_pages_generator)
+    from .buffered_writer import (
+        BufferedJSONWriter,
+        BufferedWriter,
+        write_json_efficient,
+        write_text_efficient,
+    )
+    from .streaming_utils import (
+        StreamingPDFProcessor,
+        batch_pages_generator,
+        open_pdf_context,
+        pdf_pages_generator,
+    )
 
     HAS_PERF_TOOLS = True
 except ImportError:

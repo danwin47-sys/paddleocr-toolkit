@@ -27,8 +27,11 @@ except ImportError:
 
 # 串流處理工具
 try:
-    from ..core.streaming_utils import (batch_pages_generator,
-                                        open_pdf_context, pdf_pages_generator)
+    from ..core.streaming_utils import (
+        batch_pages_generator,
+        open_pdf_context,
+        pdf_pages_generator,
+    )
 
     HAS_STREAMING = True
 except ImportError:

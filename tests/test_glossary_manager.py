@@ -14,7 +14,10 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.processors.glossary_manager import (
-    GlossaryEntry, GlossaryManager, create_sample_glossary)
+    GlossaryEntry,
+    GlossaryManager,
+    create_sample_glossary,
+)
 
 
 class TestGlossaryEntry:
