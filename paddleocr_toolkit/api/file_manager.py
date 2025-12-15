@@ -8,7 +8,6 @@
 import io
 import sys
 
-
 # Windows UTF-8修復（避免在測試環境中執行）
 if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
