@@ -1,15 +1,15 @@
-ï»¿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit CLIä¸»å…¥å£
-v1.2.0 - å®Œæ•´çš„CLIå‘½ä»¤ç³»ç»Ÿ
+PaddleOCR Toolkit CLI¥D¤J¤f
+v1.2.0 - §¹¾ãªºCLI©R¥O¨t?
 """
 
 import io
 import sys
 
-# Windows UTF-8ä¿®å¤
-if sys.platform == "win32":
+# Windows UTF-8­×Î`
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
@@ -25,68 +25,68 @@ from pathlib import Path
 
 
 def main():
-    """ä¸»å…¥å£å‡½æ•°"""
+    """¥D¤J¤f¨ç?"""
     parser = argparse.ArgumentParser(
         prog="paddleocr",
-        description="PaddleOCR Toolkit - ä¸“ä¸šçº§OCRæ–‡ä»¶å¤„ç†å·¥å…·",
+        description="PaddleOCR Toolkit - ???OCR¤å¥ó?²z¤u¨ã",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-ç¤ºä¾‹:
-  paddleocr init myproject          # åˆå§‹åŒ–é¡¹ç›®
-  paddleocr config                  # é…ç½®å‘å¯¼
-  paddleocr process file.pdf        # å¤„ç†æ–‡ä»¶
-  paddleocr benchmark test.pdf      # æ€§èƒ½æµ‹è¯•
-  paddleocr validate ocr.json gt.txt  # éªŒè¯ç»“æœ
+¥Ü¨Ò:
+  paddleocr init myproject          # ªì©l¤Æ?¥Ø
+  paddleocr config                  # °t¸m¦V?
+  paddleocr process file.pdf        # ?²z¤å¥ó
+  paddleocr benchmark test.pdf      # ©Ê¯à??
+  paddleocr validate ocr.json gt.txt  # ???ªG
 
-æ›´å¤šä¿¡æ¯: https://github.com/danwin47-sys/paddleocr-toolkit
+§ó¦h«H®§: https://github.com/danwin47-sys/paddleocr-toolkit
         """,
     )
 
-    # ç‰ˆæœ¬
+    # ª©¥»
     parser.add_argument("--version", action="version", version="%(prog)s 1.2.0")
 
-    # å­å‘½ä»¤
-    subparsers = parser.add_subparsers(dest="command", help="å¯ç”¨å‘½ä»¤")
+    # ¤l©R¥O
+    subparsers = parser.add_subparsers(dest="command", help="¥i¥Î©R¥O")
 
-    # initå‘½ä»¤
-    init_parser = subparsers.add_parser("init", help="åˆå§‹åŒ–é¡¹ç›®")
-    init_parser.add_argument("directory", nargs="?", default=".", help="é¡¹ç›®ç›®å½•")
+    # init©R¥O
+    init_parser = subparsers.add_parser("init", help="ªì©l¤Æ?¥Ø")
+    init_parser.add_argument("directory", nargs="?", default=".", help="?¥Ø¥Ø?")
 
-    # configå‘½ä»¤
-    config_parser = subparsers.add_parser("config", help="é…ç½®å‘å¯¼")
-    config_parser.add_argument("--show", help="æ˜¾ç¤ºé…ç½®æ–‡ä»¶")
+    # config©R¥O
+    config_parser = subparsers.add_parser("config", help="°t¸m¦V?")
+    config_parser.add_argument("--show", help="?¥Ü°t¸m¤å¥ó")
 
-    # processå‘½ä»¤
-    process_parser = subparsers.add_parser("process", help="å¤„ç†æ–‡ä»¶")
-    process_parser.add_argument("input", help="è¾“å…¥æ–‡ä»¶æˆ–ç›®å½•")
+    # process©R¥O
+    process_parser = subparsers.add_parser("process", help="?²z¤å¥ó")
+    process_parser.add_argument("input", help="?¤J¤å¥ó©Î¥Ø?")
     process_parser.add_argument(
         "--mode",
         default="hybrid",
         choices=["basic", "hybrid", "structure"],
-        help="OCRæ¨¡å¼",
+        help="OCR¼Ò¦¡",
     )
-    process_parser.add_argument("--output", help="è¾“å‡ºç›®å½•")
-    process_parser.add_argument("--format", default="md", help="è¾“å‡ºæ ¼å¼")
+    process_parser.add_argument("--output", help="?¥X¥Ø?")
+    process_parser.add_argument("--format", default="md", help="?¥X®æ¦¡")
 
-    # benchmarkå‘½ä»¤
-    benchmark_parser = subparsers.add_parser("benchmark", help="æ€§èƒ½æµ‹è¯•")
-    benchmark_parser.add_argument("pdf", help="PDFæ–‡ä»¶")
-    benchmark_parser.add_argument("--output", help="æŠ¥å‘Šè¾“å‡ºè·¯å¾„")
+    # benchmark©R¥O
+    benchmark_parser = subparsers.add_parser("benchmark", help="©Ê¯à??")
+    benchmark_parser.add_argument("pdf", help="PDF¤å¥ó")
+    benchmark_parser.add_argument("--output", help="?§i?¥X¸ô?")
 
-    # validateå‘½ä»¤
-    validate_parser = subparsers.add_parser("validate", help="éªŒè¯OCRç»“æœ")
-    validate_parser.add_argument("ocr_results", help="OCRç»“æœJSONæ–‡ä»¶")
-    validate_parser.add_argument("ground_truth", help="çœŸå®æ–‡æœ¬æ–‡ä»¶")
+    # validate©R¥O
+    validate_parser = subparsers.add_parser("validate", help="??OCR?ªG")
+    validate_parser.add_argument("ocr_results", help="OCR?ªGJSON¤å¥ó")
+    validate_parser.add_argument("ground_truth", help="¯u?¤å¥»¤å¥ó")
 
-    # è§£æå‚æ•°
+    # ¸ÑªR??
     args = parser.parse_args()
 
-    # å¦‚æœæ²¡æœ‰å‘½ä»¤ï¼Œæ˜¾ç¤ºå¸®åŠ©
+    # ¦pªG?¦³©R¥O¡A?¥Ü?§U
     if not args.command:
         parser.print_help()
         return 0
 
-    # æ‰§è¡Œå‘½ä»¤
+    # ?¦æ©R¥O
     try:
         if args.command == "init":
             from paddleocr_toolkit.cli.commands.init import init_command
@@ -102,9 +102,9 @@ def main():
                 config_wizard()
 
         elif args.command == "process":
-            print(f"å¤„ç†æ–‡ä»¶: {args.input}")
-            print(f"æ¨¡å¼: {args.mode}")
-            # è¿™é‡Œåº”è¯¥è°ƒç”¨å®é™…çš„å¤„ç†é€»è¾‘
+            print(f"?²z¤å¥ó: {args.input}")
+            print(f"¼Ò¦¡: {args.mode}")
+            # ?¨½???¥Î??ªº?²z??
 
         elif args.command == "benchmark":
             from paddleocr_toolkit.cli.commands.benchmark import run_benchmark
@@ -119,10 +119,10 @@ def main():
         return 0
 
     except KeyboardInterrupt:
-        print("\n\næ“ä½œå·²å–æ¶ˆ")
+        print("\n\n¾Ş§@¤w¨ú®ø")
         return 1
     except Exception as e:
-        print(f"\né”™è¯¯: {e}")
+        print(f"\n??: {e}")
         import traceback
 
         traceback.print_exc()

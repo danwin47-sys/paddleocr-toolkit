@@ -1,15 +1,15 @@
-ï»¿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-å¹¶è¡ŒPDFå¤„ç†å™¨
-v1.2.0æ–°å¢ - å¤šè¿›ç¨‹åŠ é€Ÿå¤§æ–‡ä»¶å¤„ç†
+¦}¦æPDF?²z¾¹
+v1.2.0·s¼W - ¦h?µ{¥[³t¤j¤å¥ó?²z
 """
 
 import io
 import sys
 
-# Windows UTF-8ä¿®å¤
-if sys.platform == "win32":
+# Windows UTF-8­×Î`
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
@@ -29,119 +29,119 @@ from typing import Any, List, Tuple
 
 class ParallelPDFProcessor:
     """
-    å¹¶è¡ŒPDFå¤„ç†å™¨
-    ä½¿ç”¨å¤šè¿›ç¨‹åŠ é€ŸPDFå¤„ç†ï¼Œé¢„æœŸ1.5-2xæå‡
+    ¦}¦æPDF?²z¾¹
+    ¨Ï¥Î¦h?µ{¥[³tPDF?²z¡A?´Á1.5-2x´£¤É
     """
 
     def __init__(self, workers: int = None):
         """
-        åˆå§‹åŒ–å¹¶è¡Œå¤„ç†å™¨
+        ªì©l¤Æ¦}¦æ?²z¾¹
 
         Args:
-            workers: å·¥ä½œè¿›ç¨‹æ•°ï¼Œé»˜è®¤ä¸ºCPUæ ¸å¿ƒæ•°
+            workers: ¤u§@?µ{?¡AÀq??CPU®Ö¤ß?
         """
-        self.workers = workers or max(1, cpu_count() - 1)  # ä¿ç•™ä¸€ä¸ªæ ¸å¿ƒ
-        print(f"åˆå§‹åŒ–å¹¶è¡Œå¤„ç†å™¨: {self.workers} ä¸ªå·¥ä½œè¿›ç¨‹")
+        self.workers = workers or max(1, cpu_count() - 1)  # «O¯d¤@?®Ö¤ß
+        print(f"ªì©l¤Æ¦}¦æ?²z¾¹: {self.workers} ?¤u§@?µ{")
 
     def _process_page(self, page_data: Tuple[int, Any]) -> Tuple[int, Any]:
         """
-        å¤„ç†å•ä¸ªé¡µé¢
+        ?²z???­±
 
         Args:
-            page_data: (é¡µç , é¡µé¢å›¾ç‰‡)
+            page_data: (??, ?­±?¤ù)
 
         Returns:
-            (é¡µç , OCRç»“æœ)
+            (??, OCR?ªG)
         """
         page_num, page_image = page_data
 
-        # è¿™é‡Œåº”è¯¥æ˜¯å®é™…çš„OCRå¤„ç†
-        # ä¸ºäº†æ¼”ç¤ºï¼Œä½¿ç”¨å ä½ç¬¦
+        # ?¨½??¬O??ªºOCR?²z
+        # ?¤Fºt¥Ü¡A¨Ï¥Î¥e¦ì²Å
         result = f"Page {page_num} processed"
 
         return (page_num, result)
 
     def process_pdf_parallel(self, pdf_path: str, ocr_engine: Any = None) -> List[Any]:
         """
-        å¹¶è¡Œå¤„ç†PDF
+        ¦}¦æ?²zPDF
 
         Args:
-            pdf_path: PDFæ–‡ä»¶è·¯å¾„
-            ocr_engine: OCRå¼•æ“å®ä¾‹
+            pdf_path: PDF¤å¥ó¸ô?
+            ocr_engine: OCR¤ŞÀº?¨Ò
 
         Returns:
-            æ‰€æœ‰é¡µé¢çš„ç»“æœåˆ—è¡¨
+            ©Ò¦³?­±ªº?ªG¦Cªí
         """
-        print(f"\nå¹¶è¡Œå¤„ç†PDF: {pdf_path}")
-        print(f"ä½¿ç”¨ {self.workers} ä¸ªå·¥ä½œè¿›ç¨‹")
+        print(f"\n¦}¦æ?²zPDF: {pdf_path}")
+        print(f"¨Ï¥Î {self.workers} ?¤u§@?µ{")
 
         start_time = time.time()
 
-        # 1. åˆ†å‰²PDFä¸ºé¡µé¢
+        # 1. ¤À³ÎPDF??­±
         pages = self._split_pdf_pages(pdf_path)
         total_pages = len(pages)
-        print(f"æ€»é¡µæ•°: {total_pages}")
+        print(f"???: {total_pages}")
 
-        # 2. å¹¶è¡Œå¤„ç†
+        # 2. ¦}¦æ?²z
         with Pool(processes=self.workers) as pool:
             results = pool.map(self._process_page, enumerate(pages))
 
-        # 3. æŒ‰é¡µç æ’åº
+        # 3. «ö??±Æ§Ç
         results.sort(key=lambda x: x[0])
 
         elapsed = time.time() - start_time
-        print(f"å¤„ç†å®Œæˆ: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/é¡µ)")
+        print(f"?²z§¹¦¨: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/?)")
 
         return [r[1] for r in results]
 
     def _split_pdf_pages(self, pdf_path: str) -> List[Any]:
         """
-        åˆ†å‰²PDFä¸ºé¡µé¢
+        ¤À³ÎPDF??­±
 
         Args:
-            pdf_path: PDFè·¯å¾„
+            pdf_path: PDF¸ô?
 
         Returns:
-            é¡µé¢åˆ—è¡¨
+            ?­±¦Cªí
         """
-        # å®é™…åº”è¯¥ä½¿ç”¨PyMuPDFç­‰åº“
-        # è¿™é‡Œè¿”å›å ä½ç¬¦
-        return [f"page_{i}" for i in range(10)]  # å‡è®¾10é¡µ
+        # ????¨Ï¥ÎPyMuPDFµ¥?
+        # ?¨½ªğ¦^¥e¦ì²Å
+        return [f"page_{i}" for i in range(10)]  # °²?10?
 
     def benchmark_parallel_vs_serial(self, pdf_path: str):
         """
-        å¯¹æ¯”å¹¶è¡Œvsä¸²è¡Œæ€§èƒ½
+        ?¤ñ¦}¦ævs¦ê¦æ©Ê¯à
 
         Args:
-            pdf_path: PDFè·¯å¾„
+            pdf_path: PDF¸ô?
         """
         print("\n" + "=" * 70)
-        print("å¹¶è¡Œ vs ä¸²è¡Œæ€§èƒ½å¯¹æ¯”")
+        print("¦}¦æ vs ¦ê¦æ©Ê¯à?¤ñ")
         print("=" * 70)
 
-        # ä¸²è¡Œå¤„ç†
-        print("\n[1/2] ä¸²è¡Œå¤„ç†...")
+        # ¦ê¦æ?²z
+        print("\n[1/2] ¦ê¦æ?²z...")
         start = time.time()
         serial_results = self._process_serial(pdf_path)
         serial_time = time.time() - start
-        print(f"ä¸²è¡Œæ—¶é—´: {serial_time:.2f}s")
+        print(f"¦ê¦æ??: {serial_time:.2f}s")
 
-        # å¹¶è¡Œå¤„ç†
-        print("\n[2/2] å¹¶è¡Œå¤„ç†...")
+        # ¦}¦æ?²z
+        print("\n[2/2] ¦}¦æ?²z...")
         start = time.time()
         parallel_results = self.process_pdf_parallel(pdf_path)
         parallel_time = time.time() - start
-        print(f"å¹¶è¡Œæ—¶é—´: {parallel_time:.2f}s")
+        print(f"¦}¦æ??: {parallel_time:.2f}s")
 
-        # å¯¹æ¯”
+        # ?¤ñ
         speedup = serial_time / parallel_time if parallel_time > 0 else 0
         print("\n" + "=" * 70)
-        print(f"åŠ é€Ÿæ¯”: {speedup:.2f}x")
-        print(f"æ•ˆç‡: {speedup/self.workers:.1%}")
+        print(f"¥[³t¤ñ: {speedup:.2f}x")
+        print(f"®Ä²v: {speedup/self.workers:.1%}")
         print("=" * 70)
 
     def _process_serial(self, pdf_path: str) -> List[Any]:
-        """ä¸²è¡Œå¤„ç†ï¼ˆç”¨äºå¯¹æ¯”ï¼‰"""
+        """¦ê¦æ?²z¡]¥Î¤_?¤ñ¡^"""
         pages = self._split_pdf_pages(pdf_path)
         results = []
         for i, page in enumerate(pages):
@@ -150,15 +150,15 @@ class ParallelPDFProcessor:
         return [r[1] for r in results]
 
 
-# ä½¿ç”¨ç¤ºä¾‹
+# ¨Ï¥Î¥Ü¨Ò
 if __name__ == "__main__":
-    print("å¹¶è¡ŒPDFå¤„ç†å™¨")
-    print("é¢„æœŸåŠ é€Ÿ: 1.5-2x")
-    print(f"CPUæ ¸å¿ƒæ•°: {cpu_count()}")
+    print("¦}¦æPDF?²z¾¹")
+    print("?´Á¥[³t: 1.5-2x")
+    print(f"CPU®Ö¤ß?: {cpu_count()}")
 
     processor = ParallelPDFProcessor()
 
-    print("\nä½¿ç”¨æ–¹æ³•:")
+    print("\n¨Ï¥Î¤èªk:")
     print(
         """
 from paddleocr_toolkit.processors.parallel_pdf_processor import ParallelPDFProcessor

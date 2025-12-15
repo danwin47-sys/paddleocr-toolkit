@@ -8,8 +8,9 @@
 import io
 import sys
 
-# Windows UTF-8修復
-if sys.platform == "win32":
+
+# Windows UTF-8修復（避免在測試環境中執行）
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
@@ -19,6 +20,7 @@ if sys.platform == "win32":
         )
     except:
         pass
+
 
 import os
 import time

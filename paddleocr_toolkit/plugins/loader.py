@@ -1,15 +1,15 @@
-ï»¿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-æ’ä»¶è¼‰å…¥å™¨
-å‹•æ…‹è¼‰å…¥å’Œç®¡ç†æ’ä»¶
+´¡¥ó¸ü¤J¾¹
+°ÊºA¸ü¤J©MºŞ²z´¡¥ó
 """
 
 import io
 import sys
 
-# Windows UTF-8ä¿®å¾©
-if sys.platform == "win32":
+# Windows UTF-8­×´_
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
@@ -31,17 +31,17 @@ from .base import OCRPlugin
 
 class PluginLoader:
     """
-    æ’ä»¶è¼‰å…¥å™¨
+    ´¡¥ó¸ü¤J¾¹
 
-    è² è²¬ç™¼ç¾ã€è¼‰å…¥å’Œç®¡ç†æ’ä»¶
+    ­t³dµo²{¡B¸ü¤J©MºŞ²z´¡¥ó
     """
 
     def __init__(self, plugin_dir: str = "plugins"):
         """
-        åˆå§‹åŒ–æ’ä»¶è¼‰å…¥å™¨
+        ªì©l¤Æ´¡¥ó¸ü¤J¾¹
 
         Args:
-            plugin_dir: æ’ä»¶ç›®éŒ„è·¯å¾‘
+            plugin_dir: ´¡¥ó¥Ø¿ı¸ô®|
         """
         self.plugin_dir = Path(plugin_dir)
         self.plugins: Dict[str, OCRPlugin] = {}
@@ -49,84 +49,84 @@ class PluginLoader:
 
     def discover_plugins(self) -> List[str]:
         """
-        ç™¼ç¾æ’ä»¶ç›®éŒ„ä¸­çš„æ‰€æœ‰æ’ä»¶
+        µo²{´¡¥ó¥Ø¿ı¤¤ªº©Ò¦³´¡¥ó
 
         Returns:
-            æ’ä»¶æª”æ¡ˆè·¯å¾‘åˆ—è¡¨
+            ´¡¥óÀÉ®×¸ô®|¦Cªí
         """
         if not self.plugin_dir.exists():
-            self.logger.warning(f"æ’ä»¶ç›®éŒ„ä¸å­˜åœ¨: {self.plugin_dir}")
+            self.logger.warning(f"´¡¥ó¥Ø¿ı¤£¦s¦b: {self.plugin_dir}")
             return []
 
         plugin_files = []
 
-        # æŸ¥æ‰¾æ‰€æœ‰.pyæª”æ¡ˆ
+        # ¬d§ä©Ò¦³.pyÀÉ®×
         for py_file in self.plugin_dir.glob("*.py"):
-            # è·³é__init__.pyå’Œä»¥_é–‹é ­çš„æª”æ¡ˆ
+            # ¸õ¹L__init__.py©M¥H_¶}ÀYªºÀÉ®×
             if py_file.name.startswith("_"):
                 continue
 
             plugin_files.append(str(py_file))
-            self.logger.debug(f"ç™¼ç¾æ’ä»¶æª”æ¡ˆ: {py_file.name}")
+            self.logger.debug(f"µo²{´¡¥óÀÉ®×: {py_file.name}")
 
         return plugin_files
 
     def load_plugin_from_file(self, file_path: str) -> Optional[OCRPlugin]:
         """
-        å¾æª”æ¡ˆè¼‰å…¥æ’ä»¶
+        ±qÀÉ®×¸ü¤J´¡¥ó
 
         Args:
-            file_path: æ’ä»¶æª”æ¡ˆè·¯å¾‘
+            file_path: ´¡¥óÀÉ®×¸ô®|
 
         Returns:
-            æ’ä»¶å¯¦ä¾‹ï¼Œå¦‚æœè¼‰å…¥å¤±æ•—å‰‡è¿”å›None
+            ´¡¥ó¹ê¨Ò¡A¦pªG¸ü¤J¥¢±Ñ«hªğ¦^None
         """
         try:
-            # è¼‰å…¥æ¨¡çµ„
+            # ¸ü¤J¼Ò²Õ
             module_name = Path(file_path).stem
             spec = importlib.util.spec_from_file_location(module_name, file_path)
 
             if spec is None or spec.loader is None:
-                self.logger.error(f"ç„¡æ³•è¼‰å…¥æ’ä»¶: {file_path}")
+                self.logger.error(f"µLªk¸ü¤J´¡¥ó: {file_path}")
                 return None
 
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
-            # æŸ¥æ‰¾OCRPluginçš„å­é¡
+            # ¬d§äOCRPluginªº¤lÃş
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
 
-                # æª¢æŸ¥æ˜¯å¦ç‚ºOCRPluginå­é¡ï¼ˆä¸”ä¸æ˜¯OCRPluginæœ¬èº«ï¼‰
+                # ÀË¬d¬O§_¬°OCRPlugin¤lÃş¡]¥B¤£¬OOCRPlugin¥»¨­¡^
                 if (
                     isinstance(attr, type)
                     and issubclass(attr, OCRPlugin)
                     and attr != OCRPlugin
                 ):
-                    # å¯¦ä¾‹åŒ–æ’ä»¶
+                    # ¹ê¨Ò¤Æ´¡¥ó
                     plugin = attr()
 
-                    # åˆå§‹åŒ–æ’ä»¶
+                    # ªì©l¤Æ´¡¥ó
                     if plugin.initialize():
-                        self.logger.info(f"æˆåŠŸè¼‰å…¥æ’ä»¶: {plugin.name} v{plugin.version}")
+                        self.logger.info(f"¦¨¥\¸ü¤J´¡¥ó: {plugin.name} v{plugin.version}")
                         return plugin
                     else:
-                        self.logger.warning(f"æ’ä»¶åˆå§‹åŒ–å¤±æ•—: {plugin.name}")
+                        self.logger.warning(f"´¡¥óªì©l¤Æ¥¢±Ñ: {plugin.name}")
                         return None
 
-            self.logger.warning(f"åœ¨ {file_path} ä¸­æœªæ‰¾åˆ°æ’ä»¶é¡åˆ¥")
+            self.logger.warning(f"¦b {file_path} ¤¤¥¼§ä¨ì´¡¥óÃş§O")
             return None
 
         except Exception as e:
-            self.logger.error(f"è¼‰å…¥æ’ä»¶æ™‚ç™¼ç”ŸéŒ¯èª¤ {file_path}: {e}")
+            self.logger.error(f"¸ü¤J´¡¥ó®Éµo¥Í¿ù»~ {file_path}: {e}")
             return None
 
     def load_all_plugins(self) -> int:
         """
-        è¼‰å…¥æ‰€æœ‰ç™¼ç¾çš„æ’ä»¶
+        ¸ü¤J©Ò¦³µo²{ªº´¡¥ó
 
         Returns:
-            æˆåŠŸè¼‰å…¥çš„æ’ä»¶æ•¸é‡
+            ¦¨¥\¸ü¤Jªº´¡¥ó¼Æ¶q
         """
         plugin_files = self.discover_plugins()
         loaded_count = 0
@@ -138,34 +138,34 @@ class PluginLoader:
                 self.plugins[plugin.name] = plugin
                 loaded_count += 1
 
-        self.logger.info(f"å·²è¼‰å…¥ {loaded_count}/{len(plugin_files)} å€‹æ’ä»¶")
+        self.logger.info(f"¤w¸ü¤J {loaded_count}/{len(plugin_files)} ­Ó´¡¥ó")
         return loaded_count
 
     def get_plugin(self, name: str) -> Optional[OCRPlugin]:
         """
-        å–å¾—æŒ‡å®šåç¨±çš„æ’ä»¶
+        ¨ú±o«ü©w¦WºÙªº´¡¥ó
 
         Args:
-            name: æ’ä»¶åç¨±
+            name: ´¡¥ó¦WºÙ
 
         Returns:
-            æ’ä»¶å¯¦ä¾‹ï¼Œå¦‚æœä¸å­˜åœ¨å‰‡è¿”å›None
+            ´¡¥ó¹ê¨Ò¡A¦pªG¤£¦s¦b«hªğ¦^None
         """
         return self.plugins.get(name)
 
     def get_all_plugins(self) -> Dict[str, OCRPlugin]:
-        """å–å¾—æ‰€æœ‰å·²è¼‰å…¥çš„æ’ä»¶"""
+        """¨ú±o©Ò¦³¤w¸ü¤Jªº´¡¥ó"""
         return self.plugins.copy()
 
     def enable_plugin(self, name: str) -> bool:
         """
-        å•Ÿç”¨æ’ä»¶
+        ±Ò¥Î´¡¥ó
 
         Args:
-            name: æ’ä»¶åç¨±
+            name: ´¡¥ó¦WºÙ
 
         Returns:
-            æ˜¯å¦æˆåŠŸå•Ÿç”¨
+            ¬O§_¦¨¥\±Ò¥Î
         """
         plugin = self.get_plugin(name)
         if plugin:
@@ -175,13 +175,13 @@ class PluginLoader:
 
     def disable_plugin(self, name: str) -> bool:
         """
-        åœç”¨æ’ä»¶
+        °±¥Î´¡¥ó
 
         Args:
-            name: æ’ä»¶åç¨±
+            name: ´¡¥ó¦WºÙ
 
         Returns:
-            æ˜¯å¦æˆåŠŸåœç”¨
+            ¬O§_¦¨¥\°±¥Î
         """
         plugin = self.get_plugin(name)
         if plugin:
@@ -191,55 +191,55 @@ class PluginLoader:
 
     def unload_plugin(self, name: str) -> bool:
         """
-        å¸è¼‰æ’ä»¶
+        ¨ø¸ü´¡¥ó
 
         Args:
-            name: æ’ä»¶åç¨±
+            name: ´¡¥ó¦WºÙ
 
         Returns:
-            æ˜¯å¦æˆåŠŸå¸è¼‰
+            ¬O§_¦¨¥\¨ø¸ü
         """
         plugin = self.plugins.pop(name, None)
         if plugin:
             plugin.on_shutdown()
-            self.logger.info(f"å·²å¸è¼‰æ’ä»¶: {name}")
+            self.logger.info(f"¤w¨ø¸ü´¡¥ó: {name}")
             return True
         return False
 
     def unload_all_plugins(self) -> None:
-        """å¸è¼‰æ‰€æœ‰æ’ä»¶"""
+        """¨ø¸ü©Ò¦³´¡¥ó"""
         for plugin_name in list(self.plugins.keys()):
             self.unload_plugin(plugin_name)
 
     def get_plugin_info(self, name: str) -> Optional[Dict]:
-        """å–å¾—æ’ä»¶è³‡è¨Š"""
+        """¨ú±o´¡¥ó¸ê°T"""
         plugin = self.get_plugin(name)
         return plugin.get_info() if plugin else None
 
     def list_plugins(self) -> List[Dict]:
-        """åˆ—å‡ºæ‰€æœ‰æ’ä»¶è³‡è¨Š"""
+        """¦C¥X©Ò¦³´¡¥ó¸ê°T"""
         return [plugin.get_info() for plugin in self.plugins.values()]
 
 
-# ä½¿ç”¨ç¯„ä¾‹
+# ¨Ï¥Î½d¨Ò
 if __name__ == "__main__":
-    print("æ’ä»¶è¼‰å…¥å™¨")
-    print("\nä½¿ç”¨æ–¹æ³•:")
+    print("´¡¥ó¸ü¤J¾¹")
+    print("\n¨Ï¥Î¤èªk:")
     print(
         """
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
-# å»ºç«‹è¼‰å…¥å™¨
+# «Ø¥ß¸ü¤J¾¹
 loader = PluginLoader('plugins/')
 
-# è¼‰å…¥æ‰€æœ‰æ’ä»¶
+# ¸ü¤J©Ò¦³´¡¥ó
 loader.load_all_plugins()
 
-# åˆ—å‡ºæ’ä»¶
+# ¦C¥X´¡¥ó
 for info in loader.list_plugins():
     print(f"- {info['name']} v{info['version']}")
 
-# ä½¿ç”¨æ’ä»¶
+# ¨Ï¥Î´¡¥ó
 plugin = loader.get_plugin('MyPlugin')
 if plugin:
     processed = plugin.process_before_ocr(image)

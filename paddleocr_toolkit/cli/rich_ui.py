@@ -10,9 +10,9 @@ import io
 import sys
 
 # ═══════════════════════════════════════════════════════════
-# Windows 編碼修復 (v1.2.0新增)
+# Windows 編碼修復 (v1.2.0新增) - 避免在測試環境中執行
 # ═══════════════════════════════════════════════════════════
-if sys.platform == "win32":
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         # 強制 UTF-8 輸出
         sys.stdout = io.TextIOWrapper(
