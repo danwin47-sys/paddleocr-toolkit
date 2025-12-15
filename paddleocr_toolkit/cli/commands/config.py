@@ -1,23 +1,8 @@
-ï»¿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr config - é…ç½®å‘å¯¼å‘½ä»¤
+paddleocr config - °t¸m¦V?©R¥O
 """
-
-import io
-import sys
-
-# Windows UTF-8ä¿®å¤
-if sys.platform == "win32" and "pytest" not in sys.modules:
-    try:
-        sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-        sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-    except Exception:
-        pass
 
 from pathlib import Path
 from typing import Any, List, Optional
@@ -27,30 +12,30 @@ import yaml
 
 def prompt(question: str, default: Optional[str] = None, options: Optional[List[Any]] = None) -> str:
     """
-    äº¤äº’å¼æç¤º
+    ¥æ¤¬¦¡´£¥Ü
 
     Args:
-        question: é—®é¢˜æ–‡æœ¬
-        default: é»˜è®¤å€¼
-        options: å¯é€‰é¡¹åˆ—è¡¨
+        question: ??¤å¥»
+        default: Àq?­È
+        options: ¥i??¦Cªí
     """
     if options:
         print(f"\n{question}")
         for i, option in enumerate(options, 1):
-            marker = " (é»˜è®¤)" if option == default else ""
+            marker = " (Àq?)" if option == default else ""
             print(f"  {i}. {option}{marker}")
 
         while True:
             try:
-                choice = input(f"è¯·é€‰æ‹© [1-{len(options)}]: ").strip()
+                choice = input(f"??? [1-{len(options)}]: ").strip()
                 if not choice and default:
                     return default
                 idx = int(choice) - 1
                 if 0 <= idx < len(options):
                     return options[idx]
-                print(f"è¯·è¾“å…¥ 1-{len(options)} ä¹‹é—´çš„æ•°å­—")
+                print(f"??¤J 1-{len(options)} ¤§?ªº?¦r")
             except (ValueError, IndexError):
-                print("æ— æ•ˆè¾“å…¥ï¼Œè¯·é‡è¯•")
+                print("?®Ä?¤J¡A?­«?")
     else:
         prompt_text = f"{question}"
         if default:
@@ -62,71 +47,71 @@ def prompt(question: str, default: Optional[str] = None, options: Optional[List[
 
 
 def config_wizard():
-    """äº¤äº’å¼é…ç½®å‘å¯¼"""
+    """¥æ¤¬¦¡°t¸m¦V?"""
     print("\n" + "=" * 60)
-    print(" PaddleOCR Toolkit é…ç½®å‘å¯¼")
+    print(" PaddleOCR Toolkit °t¸m¦V?")
     print("=" * 60)
-    print("\nè¿™å°†å¸®åŠ©æ‚¨åˆ›å»ºè‡ªå®šä¹‰é…ç½®æ–‡ä»¶")
-    print("(ç›´æ¥æŒ‰Enterä½¿ç”¨é»˜è®¤å€¼)\n")
+    print("\n???§U±z?«Ø¦Û©w?°t¸m¤å¥ó")
+    print("(ª½±µ«öEnter¨Ï¥ÎÀq?­È)\n")
 
     config = {}
 
-    # OCRè®¾ç½®
-    print("\nâ”â”â” OCR è®¾ç½® â”â”â”")
+    # OCR?¸m
+    print("\n??? OCR ?¸m ???")
 
     config["ocr"] = {}
     config["ocr"]["mode"] = prompt(
-        "é€‰æ‹©OCRæ¨¡å¼",
+        "??OCR¼Ò¦¡",
         default="hybrid",
         options=["basic", "structure", "hybrid", "vl", "formula"],
     )
 
-    config["ocr"]["device"] = prompt("é€‰æ‹©è®¡ç®—è®¾å¤‡", default="gpu", options=["gpu", "cpu"])
+    config["ocr"]["device"] = prompt("???ºâ??", default="gpu", options=["gpu", "cpu"])
 
-    config["ocr"]["dpi"] = int(prompt("PDFè½¬æ¢DPI (å»ºè®®: 150-300)", default="200"))
+    config["ocr"]["dpi"] = int(prompt("PDF??DPI («Ø?: 150-300)", default="200"))
 
     config["ocr"]["lang"] = prompt(
-        "è¯†åˆ«è¯­è¨€", default="ch", options=["ch", "en", "korean", "japan", "chinese_cht"]
+        "???¨¥", default="ch", options=["ch", "en", "korean", "japan", "chinese_cht"]
     )
 
-    # è¾“å‡ºè®¾ç½®
-    print("\nâ”â”â” è¾“å‡ºè®¾ç½® â”â”â”")
+    # ?¥X?¸m
+    print("\n??? ?¥X?¸m ???")
 
     config["output"] = {}
 
-    # å¯ä»¥å¤šé€‰
-    print("\né€‰æ‹©è¾“å‡ºæ ¼å¼ (ç”¨é€—å·åˆ†éš”ï¼Œå¦‚: md,json)")
-    print("  å¯é€‰: md, json, html, txt")
-    formats = input(f"æ ¼å¼ [md]: ").strip()
+    # ¥i¥H¦h?
+    print("\n???¥X®æ¦¡ (¥Î³r?¤À¹j¡A¦p: md,json)")
+    print("  ¥i?: md, json, html, txt")
+    formats = input(f"®æ¦¡ [md]: ").strip()
     config["output"]["format"] = formats if formats else "md"
 
-    config["output"]["directory"] = prompt("è¾“å‡ºç›®å½•", default="./output")
+    config["output"]["directory"] = prompt("?¥X¥Ø?", default="./output")
 
-    # æ€§èƒ½è®¾ç½®
-    print("\nâ”â”â” æ€§èƒ½è®¾ç½® â”â”â”")
+    # ©Ê¯à?¸m
+    print("\n??? ©Ê¯à?¸m ???")
 
     config["performance"] = {}
-    config["performance"]["batch_size"] = int(prompt("æ‰¹æ¬¡å¤§å° (å»ºè®®: 4-16)", default="8"))
+    config["performance"]["batch_size"] = int(prompt("§å¦¸¤j¤p («Ø?: 4-16)", default="8"))
 
-    config["performance"]["max_workers"] = int(prompt("æœ€å¤§å·¥ä½œçº¿ç¨‹ (å»ºè®®: 2-8)", default="4"))
+    config["performance"]["max_workers"] = int(prompt("³Ì¤j¤u§@?µ{ («Ø?: 2-8)", default="4"))
 
-    enable_cache = prompt("å¯ç”¨ç¼“å­˜?", default="yes", options=["yes", "no"])
+    enable_cache = prompt("?¥Î?¦s?", default="yes", options=["yes", "no"])
     config["performance"]["enable_cache"] = enable_cache == "yes"
 
-    # æ—¥å¿—è®¾ç½®
-    print("\nâ”â”â” æ—¥å¿—è®¾ç½® â”â”â”")
+    # ¤é§Ó?¸m
+    print("\n??? ¤é§Ó?¸m ???")
 
     config["logging"] = {}
     config["logging"]["level"] = prompt(
-        "æ—¥å¿—çº§åˆ«", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
+        "¤é§Ó??", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
     )
 
-    config["logging"]["file"] = prompt("æ—¥å¿—æ–‡ä»¶è·¯å¾„", default="./logs/paddleocr.log")
+    config["logging"]["file"] = prompt("¤é§Ó¤å¥ó¸ô?", default="./logs/paddleocr.log")
 
-    # ä¿å­˜é…ç½®
-    print("\nâ”â”â” ä¿å­˜é…ç½® â”â”â”")
+    # «O¦s°t¸m
+    print("\n??? «O¦s°t¸m ???")
 
-    config_name = prompt("é…ç½®æ–‡ä»¶åç§°", default="custom")
+    config_name = prompt("°t¸m¤å¥ó¦W?", default="custom")
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
@@ -136,24 +121,24 @@ def config_wizard():
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-    print(f"\nâœ“ é…ç½®å·²ä¿å­˜åˆ°: {config_path}")
-    print(f"\nä½¿ç”¨æ–¹æ³•:")
+    print(f"\n? °t¸m¤w«O¦s¨ì: {config_path}")
+    print(f"\n¨Ï¥Î¤èªk:")
     print(f"  python -m paddleocr_toolkit input.pdf --config {config_path}")
     print()
 
 
 def show_config(config_file: str):
-    """æ˜¾ç¤ºé…ç½®æ–‡ä»¶å†…å®¹"""
+    """?¥Ü°t¸m¤å¥ó?®e"""
     config_path = Path(config_file)
 
     if not config_path.exists():
-        print(f"é”™è¯¯: é…ç½®æ–‡ä»¶ä¸å­˜åœ¨: {config_file}")
+        print(f"??: °t¸m¤å¥ó¤£¦s¦b: {config_file}")
         return
 
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    print(f"\né…ç½®æ–‡ä»¶: {config_file}")
+    print(f"\n°t¸m¤å¥ó: {config_file}")
     print("=" * 60)
     print(yaml.dump(config, default_flow_style=False, allow_unicode=True))
 

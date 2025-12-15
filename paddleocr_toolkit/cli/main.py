@@ -5,22 +5,8 @@ PaddleOCR Toolkit CLI主入口
 v1.2.0 - 完整的CLI命令系统
 """
 
-import io
-import sys
-
-# Windows UTF-8修复
-if sys.platform == "win32" and "pytest" not in sys.modules:
-    try:
-        sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-        sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-    except Exception:
-        pass
-
 import argparse
+import sys
 
 
 def main():

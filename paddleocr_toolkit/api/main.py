@@ -5,21 +5,6 @@ FastAPI后端 - Web界面
 v1.2.0新增 - REST API服务
 """
 
-import io
-import sys
-
-# Windows UTF-8修复
-if sys.platform == "win32" and "pytest" not in sys.modules:
-    try:
-        sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-        sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-    except Exception:
-        pass
-
 import asyncio
 import os
 import uuid

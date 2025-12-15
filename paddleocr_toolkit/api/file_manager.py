@@ -5,22 +5,6 @@
 提供檔案列表、刪除、下載功能
 """
 
-import io
-import sys
-
-# Windows UTF-8修復（避免在測試環境中執行）
-if sys.platform == "win32" and "pytest" not in sys.modules:
-    try:
-        sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-        sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
-        )
-    except Exception:
-        pass
-
-
 import time
 from pathlib import Path
 from typing import List
