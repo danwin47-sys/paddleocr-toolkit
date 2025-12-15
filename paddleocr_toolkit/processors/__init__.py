@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """PaddleOCR Toolkit - Processors 模組"""
 
 from .batch_processor import (

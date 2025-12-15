@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """PaddleOCR Toolkit - Core 模組"""
 
 from .config_loader import (

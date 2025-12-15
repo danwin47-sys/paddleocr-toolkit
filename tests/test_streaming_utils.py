@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Streaming Utils 測試 - v1.1.0 Week 1 Day 5-7
 補充測試以達到 85%+ 覆蓋率

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 PaddleOCR Toolkit - CLI 命令列介面模組
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 PDF 工具函數 - 共用的 PDF 處理邏輯
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Result Parser 擴展測試 - v1.1.0
 補充測試以達到 90% 覆蓋率

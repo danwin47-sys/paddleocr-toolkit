@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 OCR 引擎管理器 - 管理 PaddleOCR 引擎生命週期
 

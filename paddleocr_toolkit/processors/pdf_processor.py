@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 PDF 處理器 - 專用於 PDF 文件的 OCR 處理
 
