@@ -67,22 +67,22 @@ if sys.platform == "win32":
         "poor": "-",
     }
 else:
-    # Unix/Mac EM用oji
+    # Unix/Mac Emoji
     ICONS = {
-        "logo": "??",
-        "success": "?",
-        "error": "?",
-        "warning": "??",
-        "info": "??",
-        "processing": "??",
-        "page": "??",
-        "text": "??",
-        "confidence": "??",
-        "time": "??",
-        "excellent": "??",
-        "good": "??",
-        "fair": "??",
-        "poor": "??",
+        "logo": "📄",
+        "success": "✅",
+        "error": "❌",
+        "warning": "⚠️",
+        "info": "ℹ️",
+        "processing": "🔄",
+        "page": "📖",
+        "text": "📝",
+        "confidence": "📊",
+        "time": "⏱️",
+        "excellent": "🌟",
+        "good": "👍",
+        "fair": "👌",
+        "poor": "👎",
     }
 
 if HAS_RICH:
