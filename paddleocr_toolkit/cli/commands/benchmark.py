@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr benchmark - ©Ê¯à??©R¥O
+paddleocr benchmark - æ€§èƒ½??å‘½ä»¤
 """
 
 import json
@@ -15,26 +15,26 @@ import psutil
 
 def run_benchmark(pdf_path: str, output: Optional[str] = None):
     """
-    ?¦æ©Ê¯à°ò­ã??
+    ?è¡Œæ€§èƒ½åŸºå‡†??
 
     Args:
-        pdf_path: PDF¤å¥ó¸ô?
-        output: ?¥X?§i¸ô?
+        pdf_path: PDFæ–‡ä»¶è·¯?
+        output: ?å‡º?å‘Šè·¯?
     """
     from paddle_ocr_tool import PaddleOCRTool
 
     print("\n" + "=" * 70)
-    print(" PaddleOCR Toolkit ©Ê¯à°ò­ã??")
+    print(" PaddleOCR Toolkit æ€§èƒ½åŸºå‡†??")
     print("=" * 70)
-    print(f"\n??¤å¥ó: {pdf_path}")
+    print(f"\n??æ–‡ä»¶: {pdf_path}")
     print()
 
     pdf_file = Path(pdf_path)
     if not pdf_file.exists():
-        print(f"??: ¤å¥ó¤£¦s¦b: {pdf_path}")
+        print(f"??: æ–‡ä»¶ä¸å­˜åœ¨: {pdf_path}")
         return
 
-    # ???´º
+    # ???æ™¯
     scenarios = [
         {"name": "Basic (DPI 150)", "mode": "basic", "dpi": 150},
         {"name": "Basic (DPI 200)", "mode": "basic", "dpi": 200},
@@ -47,21 +47,21 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
 
     for i, scenario in enumerate(scenarios, 1):
         print(f"\n[{i}/{len(scenarios)}] ??: {scenario['name']}")
-        print("¢w" * 70)
+        print("â”€" * 70)
 
-        # ??ªì©l?¦s
+        # ??åˆå§‹?å­˜
         initial_memory = process.memory_info().rss / 1024 / 1024
 
-        # ªì©l¤ÆOCR
-        print("  ªì©l¤ÆOCR¤ŞÀº...")
+        # åˆå§‹åŒ–OCR
+        print("  åˆå§‹åŒ–OCRå¼•æ“...")
         init_start = time.time()
         ocr_tool = PaddleOCRTool(mode=scenario["mode"])
         init_time = time.time() - init_start
 
         post_init_memory = process.memory_info().rss / 1024 / 1024
 
-        # ?²zPDF
-        print("  ?²zPDF...")
+        # ?ç†PDF
+        print("  ?ç†PDF...")
         process_start = time.time()
         all_results, _ = ocr_tool.process_pdf(
             str(pdf_file),
@@ -69,7 +69,7 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         )
         process_time = time.time() - process_start
 
-        # ??®p­È?¦s
+        # ??å³°å€¼?å­˜
         peak_memory = process.memory_info().rss / 1024 / 1024
 
         # ??
@@ -95,20 +95,20 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
 
         results.append(result)
 
-        # ?¥Ü?ªG
-        print(f"  ? §¹¦¨")
+        # ?ç¤º?æœ
+        print(f"  ? å®Œæˆ")
         print(f"    ??: {total_pages}")
-        print(f"    ¤å¦r: {total_texts}")
+        print(f"    æ–‡å­—: {total_texts}")
         print(f"    ??: {result['total_time']}s ({result['time_per_page']}s/?)")
-        print(f"    ?¦s: {result['memory_used']}MB")
+        print(f"    ?å­˜: {result['memory_used']}MB")
 
-    # ?¥Ü??
+    # ?ç¤º??
     print("\n" + "=" * 70)
-    print(" ???ªG??")
+    print(" ???æœ??")
     print("=" * 70)
     print()
-    print(f"{'?´º':<25} {'???':>10} {'³t«×':>12} {'?¦s':>10}")
-    print("¢w" * 70)
+    print(f"{'?æ™¯':<25} {'???':>10} {'é€Ÿåº¦':>12} {'?å­˜':>10}")
+    print("â”€" * 70)
 
     for result in results:
         print(
@@ -120,15 +120,15 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
 
     print("=" * 70)
 
-    # ³Ì§Öªºscene
+    # æœ€å¿«çš„scene
     fastest = min(results, key=lambda x: x["time_per_page"])
-    print(f"\n³Ì§Ö: {fastest['scenario']} ({fastest['time_per_page']}s/?)")
+    print(f"\næœ€å¿«: {fastest['scenario']} ({fastest['time_per_page']}s/?)")
 
-    # ³Ì¬Ù?¦s
+    # æœ€çœ?å­˜
     lightest = min(results, key=lambda x: x["memory_used"])
-    print(f"³Ì¬Ù?¦s: {lightest['scenario']} ({lightest['memory_used']}MB)")
+    print(f"æœ€çœ?å­˜: {lightest['scenario']} ({lightest['memory_used']}MB)")
 
-    # «O¦s?ªG
+    # ä¿å­˜?æœ
     if output:
         output_path = Path(output)
     else:
@@ -137,7 +137,7 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
-    print(f"\n?§i¤w«O¦s: {output_path}")
+    print(f"\n?å‘Šå·²ä¿å­˜: {output_path}")
     print()
 
 
@@ -145,8 +145,8 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("¨Ï¥Î¤èªk: python benchmark.py <pdf¤å¥ó> [?¥X¤å¥ó]")
-        print("­S¨Ò: python benchmark.py test.pdf results.json")
+        print("ä½¿ç”¨æ–¹æ³•: python benchmark.py <pdfæ–‡ä»¶> [?å‡ºæ–‡ä»¶]")
+        print("èŒƒä¾‹: python benchmark.py test.pdf results.json")
     else:
         pdf_path = sys.argv[1]
         output = sys.argv[2] if len(sys.argv) > 2 else None

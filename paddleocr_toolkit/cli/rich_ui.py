@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - CLI ¬ü₪ֶ¼ׂ²ױ v1.2.0
-¨ֿ¥־ rich ®w´£¨ׁ¶W¬¯×÷©R¥O¦C₪¶­±
-₪ה«ש¸ף¥­¥x¡]­׳־`Windows????¡^
+PaddleOCR Toolkit - CLI ח¾ו–ז¨¡חµ„ v1.2.0
+ה½¿ח”¨ rich ו÷«זה¾›ט¶…ח‚«ח„ו‘½ה»₪וˆ—ה»‹י¢
+ז”¯זט·¨ו¹³ו°ן¼ˆה¿®ו₪Windows????ן¼‰
 """
 
 import io
 import sys
 
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
-# Windows ½s½X­׳´_ (v1.2.0·s¼W) - ֱ׳§K¦b´ת¸ױְפ¹ׂ₪₪°ץ¦ז
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+# Windows ח·¨ח¢¼ה¿®ו¾© (v1.2.0ז–°ו¢) - י¿ו…ו¨ז¸¬ט©¦ח’°ו¢ƒה¸­ו·ט¡
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
-        # ±j¨מ UTF-8 ¿י¥X
+        # ו¼·וˆ¶ UTF-8 ט¼¸ו‡÷
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
@@ -22,11 +22,11 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
     except Exception:
-        pass  # ¦p×G¥¢±ׁ¡Aִ~ִע¨ֿ¥־ְq»{½s½X
+        pass  # ו¦‚זו₪±ז•—ן¼ח¹¼ח÷ה½¿ח”¨י»˜ט×ח·¨ח¢¼
 
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
-# Rich®w¾ֹ₪J
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+# Richו÷«ו°ו…¥
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 try:
     from rich import box
     from rich.console import Console
@@ -45,11 +45,11 @@ try:
 except ImportError:
     HAS_RICH = False
 
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
-# ¸ף¥­¥x¹ֿ¼׀©w¸q (v1.2.0·s¼W)
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+# ט·¨ו¹³ו°ו–ז¨™ו®ח¾© (v1.2.0ז–°ו¢)
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 if sys.platform == "win32":
-    # Windows ASCII ´ְ¥N₪ט®׳
+    # Windows ASCII ז›¿ה»£ז–¹ז¡ˆ
     ICONS = {
         "logo": "OCR",
         "success": "[OK]",
@@ -67,7 +67,7 @@ if sys.platform == "win32":
         "poor": "-",
     }
 else:
-    # Unix/Mac EM¥־oji
+    # Unix/Mac EMח”¨oji
     ICONS = {
         "logo": "??",
         "success": "?",
@@ -90,33 +90,33 @@ if HAS_RICH:
 else:
     console = None
 
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
-# ₪½¦@¨ח¼ֶ
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+# ו…¬ו…±ו‡½ז•¸
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 
 
 def print_banner():
-    """ֵד¥Ü±ׂ°Ê¾מ´T"""
+    """י¡¯ח₪÷ו•ו‹•ז©«ו¹…"""
     if not HAS_RICH:
         print("=== PaddleOCR Toolkit ===")
         return
 
     banner = f"""
-    שÝשששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששß
-    שר                                                       שר
-    שר     {ICONS['logo']}  PaddleOCR Toolkit  {ICONS['logo']}                         שר
-    שר                                                       שר
-    שר     ±M·~¯ֵ OCR ₪ו¥ף¿כֳׁ»P³B²z₪u¨ד                      שר
-    שר     v1.2.0 | ´ת¸ױֲ׀»\²v: 84% | 391­׃´ת¸ױ³q¹L          שר
-    שר                                                       שר
-    שדשששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששו
+    ג•”ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•—
+    ג•‘                                                       ג•‘
+    ג•‘     {ICONS['logo']}  PaddleOCR Toolkit  {ICONS['logo']}                         ג•‘
+    ג•‘                                                       ג•‘
+    ג•‘     ו°ˆז¥­ח´ OCR ז–‡ה»¶ט¾¨ט­˜טˆ‡ט™•ח†ו·¥ו…·                      ג•‘
+    ג•‘     v1.2.0 | ז¸¬ט©¦ט¦†ט“‹ח‡: 84% | 391ו€‹ז¸¬ט©¦י€י          ג•‘
+    ג•‘                                                       ג•‘
+    ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
     """
 
     console.print(banner, style="bold cyan")
 
 
 def print_success(message: str):
-    """ֵד¥Ü¦¨¥\°T®§"""
+    """י¡¯ח₪÷זˆוט¨ז¯"""
     icon = ICONS["success"]
     if not HAS_RICH:
         print(f"{icon} {message}")
@@ -126,7 +126,7 @@ def print_success(message: str):
 
 
 def print_error(message: str):
-    """ֵד¥Ü¿ש»~°T®§"""
+    """י¡¯ח₪÷י¯ט×₪ט¨ז¯"""
     icon = ICONS["error"]
     if not HAS_RICH:
         print(f"{icon} {message}")
@@ -136,7 +136,7 @@ def print_error(message: str):
 
 
 def print_warning(message: str):
-    """ֵד¥Üִµ§i°T®§"""
+    """י¡¯ח₪÷ט­¦ו‘ט¨ז¯"""
     icon = ICONS["warning"]
     if not HAS_RICH:
         print(f"{icon} {message}")
@@ -146,7 +146,7 @@ def print_warning(message: str):
 
 
 def print_info(message: str):
-    """ֵד¥Ü¸ך°T°T®§"""
+    """י¡¯ח₪÷ט³‡ט¨ט¨ז¯"""
     icon = ICONS["info"]
     if not HAS_RICH:
         print(f"{icon} {message}")
@@ -157,47 +157,47 @@ def print_info(message: str):
 
 def create_results_table(results_data: list):
     """
-    ³׀«״OCRµ²×G×ם®ז
+    ו‰µו»÷OCRחµזט¡¨ז ¼
 
     Args:
-        results_data: [(­¶¼ֶ, ₪ו¦r¼ֶ, ¥­§¡«H₪ß«׳), ...]
+        results_data: [(י ז•¸, ז–‡ו­—ז•¸, ו¹³ו‡ה¿¡ו¿ƒו÷¦), ...]
     """
     if not HAS_RICH:
         return None
 
     table = Table(
-        title=f"{ICONS['page']} OCR ³B²zµ²×G²־­p",
+        title=f"{ICONS['page']} OCR ט™•ח†חµזחµ±ט¨ˆ",
         box=box.ROUNDED,
         show_header=True,
         header_style="bold magenta",
     )
 
-    table.add_column("­¶¼ֶ", justify="center", style="cyan", no_wrap=True)
-    table.add_column("ֳׁ§O₪ו¦r¼ֶ", justify="right", style="green")
-    table.add_column("¥­§¡«H₪ß«׳", justify="right", style="yellow")
-    table.add_column("×¬÷A", justify="center")
+    table.add_column("י ז•¸", justify="center", style="cyan", no_wrap=True)
+    table.add_column("ט­˜וˆ¥ז–‡ו­—ז•¸", justify="right", style="green")
+    table.add_column("ו¹³ו‡ה¿¡ו¿ƒו÷¦", justify="right", style="yellow")
+    table.add_column("ח‹€ז…‹", justify="center")
 
     for page_num, text_count, avg_conf in results_data:
-        # ®Ú¾Ú«H₪ß«׳¿ן¾Ü×¬÷A
+        # ז ¹ז“ה¿¡ו¿ƒו÷¦י¸ז“‡ח‹€ז…‹
         if avg_conf >= 0.9:
-            status = f"{ICONS['excellent']} ְu¨q"
+            status = f"{ICONS['excellent']} ו„×ח§€"
         elif avg_conf >= 0.7:
-            status = f"{ICONS['good']} ¨}¦n"
+            status = f"{ICONS['good']} ט‰¯ו¥½"
         else:
-            status = f"{ICONS['poor']} »Ýְֻ¬d"
+            status = f"{ICONS['poor']} י€ז×¢ז¥"
 
         table.add_row(str(page_num), str(text_count), f"{avg_conf:.1%}", status)
 
     return table
 
 
-def create_progress_bar(total: int, description: str = "³B²z₪₪"):
+def create_progress_bar(total: int, description: str = "ט™•ח†ה¸­"):
     """
-    ³׀«״¶i«׳±ר
+    ו‰µו»÷י€²ו÷¦ז¢
 
     Args:
-        total: ֱ`¶µ¥״¼ֶ
-        description: ´y­z₪ו¦r
+        total: ח¸½י …ח›®ז•¸
+        description: זט¿°ז–‡ו­—
     """
     if not HAS_RICH:
         return None
@@ -207,7 +207,7 @@ def create_progress_bar(total: int, description: str = "³B²z₪₪"):
         TextColumn("[bold blue]{task.description}"),
         BarColumn(complete_style="green", finished_style="bold green"),
         TaskProgressColumn(),
-        TextColumn("¡E"),
+        TextColumn("ג€§"),
         TimeRemainingColumn(),
         console=console,
     )
@@ -217,7 +217,7 @@ def create_progress_bar(total: int, description: str = "³B²z₪₪"):
 
 def print_performance_summary(stats: dict):
     """
-    ֵד¥Ü©Ê¯א÷K­n
+    י¡¯ח₪÷ז€§טƒ½ז‘˜ט¦
 
     Args:
         stats: {
@@ -229,22 +229,22 @@ def print_performance_summary(stats: dict):
         }
     """
     if not HAS_RICH:
-        print("\n=== ©Ê¯א÷K­n ===")
+        print("\n=== ז€§טƒ½ז‘˜ט¦ ===")
         for key, value in stats.items():
             print(f"{key}: {value}")
         return
 
     panel_content = f"""
-    {ICONS['page']} ֱ`­¶¼ֶ: [bold cyan]{stats.get('total_pages', 0)}[/bold cyan]
-    {ICONS['time']} ֱ`®ֹ¶¡: [bold yellow]{stats.get('total_time', 0):.2f}s[/bold yellow]
-    {ICONS['processing']} ¥­§¡³t«׳: [bold green]{stats.get('avg_time_per_page', 0):.2f}s/­¶[/bold green]
-    ®p­ָ°O¾׀ֵי: [bold magenta]{stats.get('peak_memory_mb', 0):.1f}MB[/bold magenta]
-    {ICONS['text']} ֳׁ§O₪ו¦r: [bold blue]{stats.get('total_texts', 0)}­׃[/bold blue]
+    {ICONS['page']} ח¸½י ז•¸: [bold cyan]{stats.get('total_pages', 0)}[/bold cyan]
+    {ICONS['time']} ח¸½ז™‚י–“: [bold yellow]{stats.get('total_time', 0):.2f}s[/bold yellow]
+    {ICONS['processing']} ו¹³ו‡י€ו÷¦: [bold green]{stats.get('avg_time_per_page', 0):.2f}s/י [/bold green]
+    ו³°ו€¼ט¨˜ז†¶י«”: [bold magenta]{stats.get('peak_memory_mb', 0):.1f}MB[/bold magenta]
+    {ICONS['text']} ט­˜וˆ¥ז–‡ו­—: [bold blue]{stats.get('total_texts', 0)}ו€‹[/bold blue]
     """
 
     panel = Panel(
         panel_content,
-        title=f"{ICONS['confidence']} ©Ê¯א÷K­n",
+        title=f"{ICONS['confidence']} ז€§טƒ½ז‘˜ט¦",
         border_style="bold green",
         box=box.DOUBLE,
     )
@@ -253,36 +253,36 @@ def print_performance_summary(stats: dict):
 
 
 def print_logo():
-    """ֵד¥ÜASCII Logo"""
+    """י¡¯ח₪÷ASCII Logo"""
     if not HAS_RICH:
         print("PaddleOCR Toolkit")
         return
 
     logo = """
-    ¢i¢i¢i¢i¢i¢iשß  ¢i¢i¢i¢i¢i¢iשß ¢i¢i¢i¢i¢i¢iשß     ¢i¢i¢i¢i¢i¢i¢i¢iשß ¢i¢i¢i¢i¢i¢iשß  ¢i¢i¢i¢i¢i¢iשß ¢i¢iשß     
-    ¢i¢iשÝשששש¢i¢iשß¢i¢iשÝשששששש¢i¢iשß¢i¢iשÝשששש¢i¢iשß    שדשששש¢i¢iשÝשששששו¢i¢iשÝשששששש¢i¢iשß¢i¢iשÝשששששש¢i¢iשß¢i¢iשר     
-    ¢i¢i¢i¢i¢i¢iשÝשו¢i¢iשר   ¢i¢iשר¢i¢i¢i¢i¢i¢iשÝשו       ¢i¢iשר   ¢i¢iשר   ¢i¢iשר¢i¢iשר   ¢i¢iשר¢i¢iשר     
-    ¢i¢iשÝשששששששו ¢i¢iשר   ¢i¢iשר¢i¢iשÝשששש¢i¢iשß       ¢i¢iשר   ¢i¢iשר   ¢i¢iשר¢i¢iשר   ¢i¢iשר¢i¢iשר     
-    ¢i¢iשר     שד¢i¢i¢i¢i¢i¢iשÝשו¢i¢iשר  ¢i¢iשר       ¢i¢iשר   שד¢i¢i¢i¢i¢i¢iשÝשושד¢i¢i¢i¢i¢i¢iשÝשו¢i¢i¢i¢i¢i¢i¢iשß
-    שדשששו      שדשששששששששששו שדשששו  שדשששו       שדשששו    שדשששששששששששו  שדשששששששששששו שדשששששששששששששו
+    ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•—  ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•— ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•—     ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•— ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•—  ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•— ג–ˆג–ˆג•—     
+    ג–ˆג–ˆג•”ג•ג•ג–ˆג–ˆג•—ג–ˆג–ˆג•”ג•ג•ג•ג–ˆג–ˆג•—ג–ˆג–ˆג•”ג•ג•ג–ˆג–ˆג•—    ג•ג•ג•ג–ˆג–ˆג•”ג•ג•ג•ג–ˆג–ˆג•”ג•ג•ג•ג–ˆג–ˆג•—ג–ˆג–ˆג•”ג•ג•ג•ג–ˆג–ˆג•—ג–ˆג–ˆג•‘     
+    ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•”ג•ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•”ג•       ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג•‘     
+    ג–ˆג–ˆג•”ג•ג•ג•ג• ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג•”ג•ג•ג–ˆג–ˆג•—       ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג•‘   ג–ˆג–ˆג•‘ג–ˆג–ˆג•‘     
+    ג–ˆג–ˆג•‘     ג•ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•”ג•ג–ˆג–ˆג•‘  ג–ˆג–ˆג•‘       ג–ˆג–ˆג•‘   ג•ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•”ג•ג•ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•”ג•ג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג–ˆג•—
+    ג•ג•ג•      ג•ג•ג•ג•ג•ג•ג• ג•ג•ג•  ג•ג•ג•       ג•ג•ג•    ג•ג•ג•ג•ג•ג•ג•  ג•ג•ג•ג•ג•ג•ג• ג•ג•ג•ג•ג•ג•ג•ג•
     """
 
     console.print(logo, style="bold cyan")
 
 
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
-# ¥Ü¨ׂ¨ֿ¥־
-# שששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששששש
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+# ח₪÷ה¾‹ה½¿ח”¨
+# ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
 if __name__ == "__main__":
     if HAS_RICH:
         print_logo()
         print_banner()
 
-        print_success("¼ׂ²ױ¸ü₪J¦¨¥\¡I")
-        print_info("¶}©l³B²z PDF ₪ו¥ף...")
-        print_warning("DPI ³]©w¸û§C¡A¥i¯א¼vֵTֳׁ§O²v")
+        print_success("ז¨¡חµ„ט¼‰ו…¥זˆון¼")
+        print_info("י–‹ו§‹ט™•ח† PDF ז–‡ה»¶...")
+        print_warning("DPI ט¨­ו®ט¼ƒה½ן¼ו¯טƒ½ו½±י¿ט­˜וˆ¥ח‡")
 
-        # ¥Ü¨ׂµ²×G×ם®ז
+        # ח₪÷ה¾‹חµזט¡¨ז ¼
         results = [
             (1, 145, 0.95),
             (2, 132, 0.88),
@@ -292,7 +292,7 @@ if __name__ == "__main__":
         table = create_results_table(results)
         console.print(table)
 
-        # ¥Ü¨ׂ©Ê¯א÷K­n
+        # ח₪÷ה¾‹ז€§טƒ½ז‘˜ט¦
         stats = {
             "total_pages": 3,
             "total_time": 12.5,
@@ -304,4 +304,4 @@ if __name__ == "__main__":
         print_performance_summary(stats)
 
     else:
-        print("½׀¦w¸ֻ rich: pip install rich")
+        print("ט«‹ו®‰ט£ rich: pip install rich")

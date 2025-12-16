@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr init - ?¥Øªì©l¤Æ©R¥O
+paddleocr init - ?ç›®åˆå§‹åŒ–å‘½ä»¤
 """
 
 from pathlib import Path
@@ -10,7 +10,7 @@ import yaml
 
 
 def create_project_structure(directory: Path):
-    """?«Ø?¥Ø¥Ø??ÌÛ"""
+    """?å»º?ç›®ç›®??æ„"""
     directories = [
         directory / "input",
         directory / "output",
@@ -20,9 +20,9 @@ def create_project_structure(directory: Path):
 
     for dir_path in directories:
         dir_path.mkdir(parents=True, exist_ok=True)
-        print(f"  ?«Ø¥Ø?: {dir_path.name}/")
+        print(f"  ?å»ºç›®?: {dir_path.name}/")
 
-    # ?«Ø.gitignore
+    # ?å»º.gitignore
     gitignore_content = """# PaddleOCR Toolkit
 output/
 logs/
@@ -34,11 +34,11 @@ __pycache__/
 
     gitignore_path = directory / ".gitignore"
     gitignore_path.write_text(gitignore_content, encoding="utf-8")
-    print(f"  ?«Ø¤å¥ó: .gitignore")
+    print(f"  ?å»ºæ–‡ä»¶: .gitignore")
 
 
 def create_config_file(directory: Path):
-    """?«ØÀq?°t¸m¤å¥ó"""
+    """?å»ºé»˜?é…ç½®æ–‡ä»¶"""
     config = {
         "ocr": {
             "mode": "hybrid",
@@ -66,91 +66,91 @@ def create_config_file(directory: Path):
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-    print(f"  ?«Ø°t¸m: config/default.yaml")
+    print(f"  ?å»ºé…ç½®: config/default.yaml")
 
 
 def create_readme(directory: Path):
-    """?«ØREADME¤å¥ó"""
-    readme_content = """# PaddleOCR Toolkit ?¥Ø
+    """?å»ºREADMEæ–‡ä»¶"""
+    readme_content = """# PaddleOCR Toolkit ?ç›®
 
-???¥Ø¨Ï¥Î PaddleOCR Toolkit ?¦æ¤å?OCR?²z¡C
+???ç›®ä½¿ç”¨ PaddleOCR Toolkit ?è¡Œæ–‡?OCR?ç†ã€‚
 
-## ¥Ø??ÌÛ
+## ç›®??æ„
 
 ```
 .
-¢u¢w¢w input/          # ?¤J¤å¥ó
-¢u¢w¢w output/         # ?¥X?ªG
-¢u¢w¢w config/         # °t¸m¤å¥ó
-¢x   ¢|¢w¢w default.yaml
-¢|¢w¢w logs/           # ¤é§Ó¤å¥ó
+â”œâ”€â”€ input/          # ?å…¥æ–‡ä»¶
+â”œâ”€â”€ output/         # ?å‡º?æœ
+â”œâ”€â”€ config/         # é…ç½®æ–‡ä»¶
+â”‚   â””â”€â”€ default.yaml
+â””â”€â”€ logs/           # æ—¥å¿—æ–‡ä»¶
 ```
 
-## ¨Ï¥Î¤èªk
+## ä½¿ç”¨æ–¹æ³•
 
 ```bash
-# ?²z??¤å¥ó
+# ?ç†??æ–‡ä»¶
 python -m paddleocr_toolkit input/document.pdf
 
-# ¨Ï¥Î°t¸m¤å¥ó
+# ä½¿ç”¨é…ç½®æ–‡ä»¶
 python -m paddleocr_toolkit input/document.pdf --config config/default.yaml
 
-# §å¶q?²z
+# æ‰¹é‡?ç†
 python -m paddleocr_toolkit input/
 ```
 
-## °t¸m
+## é…ç½®
 
-?? `config/default.yaml` ?¦Û©w??¸m¡C
+?? `config/default.yaml` ?è‡ªå®š??ç½®ã€‚
 
-## ¤å?
+## æ–‡?
 
-- [§Ö³t?©l](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
-- [API¤å?](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)
+- [å¿«é€Ÿ?å§‹](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
+- [APIæ–‡?](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)
 """
 
     readme_path = directory / "README.md"
     readme_path.write_text(readme_content, encoding="utf-8")
-    print(f"  ?«Ø¤å?: README.md")
+    print(f"  ?å»ºæ–‡?: README.md")
 
 
 def init_command(directory: str = "."):
     """
-    ªì©l¤ÆPaddleOCR Toolkit?¥Ø
+    åˆå§‹åŒ–PaddleOCR Toolkit?ç›®
 
     Args:
-        directory: ?¥Ø¥Ø?¸ô?
+        directory: ?ç›®ç›®?è·¯?
     """
-    print("\n?©lªì©l¤Æ PaddleOCR Toolkit ?¥Ø...")
+    print("\n?å§‹åˆå§‹åŒ– PaddleOCR Toolkit ?ç›®...")
     print("=" * 50)
 
     project_dir = Path(directory).absolute()
 
-    # 1. ?«Ø¥Ø??ÌÛ
-    print("\n[1/4] ?«Ø?¥Ø?ÌÛ...")
+    # 1. ?å»ºç›®??æ„
+    print("\n[1/4] ?å»º?ç›®?æ„...")
     create_project_structure(project_dir)
 
-    # 2. ?«Ø°t¸m¤å¥ó
-    print("\n[2/4] ?«Ø°t¸m¤å¥ó...")
+    # 2. ?å»ºé…ç½®æ–‡ä»¶
+    print("\n[2/4] ?å»ºé…ç½®æ–‡ä»¶...")
     create_config_file(project_dir)
 
-    # 3. ?«ØREADME
-    print("\n[3/4] ?«Ø?¥Ø¤å?...")
+    # 3. ?å»ºREADME
+    print("\n[3/4] ?å»º?ç›®æ–‡?...")
     create_readme(project_dir)
 
-    # 4. ¼Ò«¬´£¥Ü
-    print("\n[4/4] ¼Ò«¬?¬d...")
-    print("  ´£¥Ü: ­º¦¸?¦æ??¦Û?¤U?PaddleOCR¼Ò«¬")
-    print("  ¤j¤p: ?100MB")
-    print("  ¦ì¸m: ~/.paddleocr/")
+    # 4. æ¨¡å‹æç¤º
+    print("\n[4/4] æ¨¡å‹?æŸ¥...")
+    print("  æç¤º: é¦–æ¬¡?è¡Œ??è‡ª?ä¸‹?PaddleOCRæ¨¡å‹")
+    print("  å¤§å°: ?100MB")
+    print("  ä½ç½®: ~/.paddleocr/")
 
     print("\n" + "=" * 50)
-    print("? ?¥Øªì©l¤Æ§¹¦¨¡I")
-    print(f"\n?¥Ø¥Ø?: {project_dir}")
-    print("\n¤U¤@¨B:")
-    print("  1. ?PDF¤å¥ó©ñ¤J input/ ¥Ø?")
-    print("  2. ?¦æ: python -m paddleocr_toolkit input/your.pdf")
-    print("  3. ¬d¬İ?ªG: output/")
+    print("? ?ç›®åˆå§‹åŒ–å®Œæˆï¼")
+    print(f"\n?ç›®ç›®?: {project_dir}")
+    print("\nä¸‹ä¸€æ­¥:")
+    print("  1. ?PDFæ–‡ä»¶æ”¾å…¥ input/ ç›®?")
+    print("  2. ?è¡Œ: python -m paddleocr_toolkit input/your.pdf")
+    print("  3. æŸ¥çœ‹?æœ: output/")
     print()
 
 

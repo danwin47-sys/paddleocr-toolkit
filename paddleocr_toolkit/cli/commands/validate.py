@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr validate - OCR?ªG??©R¥O
+paddleocr validate - OCR?æœ??å‘½ä»¤
 """
 
 import difflib
@@ -12,19 +12,19 @@ from typing import List
 
 def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
     """
-    ?ºâ¦r²Å­ãÚÌ²v
+    ?ç®—å­—ç¬¦å‡†ç¡®ç‡
 
     Args:
-        predicted: ??¤å¥»
-        ground_truth: ¯u?¤å¥»
+        predicted: ??æ–‡æœ¬
+        ground_truth: çœŸ?æ–‡æœ¬
 
     Returns:
-        ­ãÚÌ²v (0-1)
+        å‡†ç¡®ç‡ (0-1)
     """
     if not ground_truth:
         return 0.0
 
-    # ¨Ï¥Î??¶ZÖÃ
+    # ä½¿ç”¨??è·ç¦»
     distance = edit_distance(predicted, ground_truth)
     max_len = max(len(predicted), len(ground_truth))
 
@@ -36,7 +36,7 @@ def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
 
 
 def edit_distance(s1: str, s2: str) -> int:
-    """?ºâ??¶ZÖÃ (Levenshtein distance)"""
+    """?ç®—??è·ç¦» (Levenshtein distance)"""
     if len(s1) < len(s2):
         return edit_distance(s2, s1)
 
@@ -47,7 +47,7 @@ def edit_distance(s1: str, s2: str) -> int:
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
-            # ´¡¤J¡B?°£¡B´À?
+            # æ’å…¥ã€?é™¤ã€æ›¿?
             insertions = previous_row[j + 1] + 1
             deletions = current_row[j] + 1
             substitutions = previous_row[j] + (c1 != c2)
@@ -60,7 +60,7 @@ def edit_distance(s1: str, s2: str) -> int:
 def calculate_word_accuracy(
     predicted_words: List[str], ground_truth_words: List[str]
 ) -> float:
-    """?ºâ?­ãÚÌ²v"""
+    """?ç®—?å‡†ç¡®ç‡"""
     if not ground_truth_words:
         return 0.0
 
@@ -70,29 +70,29 @@ def calculate_word_accuracy(
 
 def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     """
-    ??OCR?ªG
+    ??OCR?æœ
 
     Args:
-        ocr_results_file: OCR?ªG¤å¥ó (JSON)
-        ground_truth_file: ¯u?¤å¥»¤å¥ó (TXT)
+        ocr_results_file: OCR?æœæ–‡ä»¶ (JSON)
+        ground_truth_file: çœŸ?æ–‡æœ¬æ–‡ä»¶ (TXT)
     """
     print("\n" + "=" * 70)
-    print(" PaddleOCR Toolkit ?ªG??")
+    print(" PaddleOCR Toolkit ?æœ??")
     print("=" * 70)
     print()
 
-    # ?¨úOCR?ªG
+    # ?å–OCR?æœ
     ocr_path = Path(ocr_results_file)
     if not ocr_path.exists():
-        print(f"??: OCR?ªG¤å¥ó¤£¦s¦b: {ocr_results_file}")
+        print(f"??: OCR?æœæ–‡ä»¶ä¸å­˜åœ¨: {ocr_results_file}")
         return
 
     with open(ocr_path, "r", encoding="utf-8") as f:
         ocr_data = json.load(f)
 
-    # ´£¨úOCR¤å¥»
+    # æå–OCRæ–‡æœ¬
     if isinstance(ocr_data, list):
-        # °²?¬O?­±?ªG¦Cªí
+        # å‡?æ˜¯?é¢?æœåˆ—è¡¨
         ocr_text = "\n".join(
             item.get("text", "")
             for page in ocr_data
@@ -103,41 +103,41 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     else:
         ocr_text = str(ocr_data)
 
-    # ?¨ú¯u?¤å¥»
+    # ?å–çœŸ?æ–‡æœ¬
     gt_path = Path(ground_truth_file)
     if not gt_path.exists():
-        print(f"??: ¯u?¤å¥»¤å¥ó¤£¦s¦b: {ground_truth_file}")
+        print(f"??: çœŸ?æ–‡æœ¬æ–‡ä»¶ä¸å­˜åœ¨: {ground_truth_file}")
         return
 
     with open(gt_path, "r", encoding="utf-8") as f:
         gt_text = f.read()
 
-    # ?ºâ«ü?
-    print("?ºâ??«ü?...")
+    # ?ç®—æŒ‡?
+    print("?ç®—??æŒ‡?...")
     print()
 
-    # 1. ¦r²Å­ãÚÌ²v
+    # 1. å­—ç¬¦å‡†ç¡®ç‡
     char_accuracy = calculate_character_accuracy(ocr_text, gt_text)
-    print(f"¦r²Å­ãÚÌ²v: {char_accuracy:.2%}")
+    print(f"å­—ç¬¦å‡†ç¡®ç‡: {char_accuracy:.2%}")
 
-    # 2. ?­ãÚÌ²v
+    # 2. ?å‡†ç¡®ç‡
     ocr_words = ocr_text.split()
     gt_words = gt_text.split()
     word_accuracy = calculate_word_accuracy(ocr_words, gt_words)
-    print(f"?­ãÚÌ²v: {word_accuracy:.2%}")
+    print(f"?å‡†ç¡®ç‡: {word_accuracy:.2%}")
 
-    # 3. ??¶ZÖÃ
+    # 3. ??è·ç¦»
     distance = edit_distance(ocr_text, gt_text)
-    print(f"??¶ZÖÃ: {distance}")
+    print(f"??è·ç¦»: {distance}")
 
-    # 4. ?«×??
-    print(f"\nOCR¤å¥»?«×: {len(ocr_text)} ¦r²Å, {len(ocr_words)} ?")
-    print(f"¯u?¤å¥»?«×: {len(gt_text)} ¦r²Å, {len(gt_words)} ?")
+    # 4. ?åº¦??
+    print(f"\nOCRæ–‡æœ¬?åº¦: {len(ocr_text)} å­—ç¬¦, {len(ocr_words)} ?")
+    print(f"çœŸ?æ–‡æœ¬?åº¦: {len(gt_text)} å­—ç¬¦, {len(gt_words)} ?")
 
-    # 5. ®tÉİ?¤ñ
-    print("\n" + "¢w" * 70)
-    print(" ¤å¥»®tÉİ?¤ñ («e300¦r²Å)")
-    print("¢w" * 70)
+    # 5. å·®å¼‚?æ¯”
+    print("\n" + "â”€" * 70)
+    print(" æ–‡æœ¬å·®å¼‚?æ¯” (å‰300å­—ç¬¦)")
+    print("â”€" * 70)
 
     diff = list(
         difflib.unified_diff(
@@ -146,44 +146,44 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     )
 
     if diff:
-        for line in diff[:20]:  # ¥u?¥Ü«e20¦æ®tÉİ
+        for line in diff[:20]:  # åª?ç¤ºå‰20è¡Œå·®å¼‚
             if line.startswith("-"):
-                print(f"[¯u?] {line}")
+                print(f"[çœŸ?] {line}")
             elif line.startswith("+"):
                 print(f"[OCR]  {line}")
     else:
-        print("? §¹¥ş¤Ç°t¡I")
+        print("? å®Œå…¨åŒ¹é…ï¼")
 
-    # 6. ?¤À
+    # 6. ?åˆ†
     print("\n" + "=" * 70)
-    print(" ?¦X?¤À")
+    print(" ?åˆ?åˆ†")
     print("=" * 70)
 
     overall_score = (char_accuracy + word_accuracy) / 2
 
     if overall_score >= 0.95:
-        grade = "É¬¨q"
+        grade = "ä¼˜ç§€"
         emoji = "+++"
     elif overall_score >= 0.85:
-        grade = "¨}¦n"
+        grade = "è‰¯å¥½"
         emoji = "++"
     elif overall_score >= 0.70:
-        grade = "¤¤µ¥"
+        grade = "ä¸­ç­‰"
         emoji = "+"
     else:
-        grade = "»İ§ï?"
+        grade = "éœ€æ”¹?"
         emoji = "-"
 
-    print(f"\n?¦X­ãÚÌ²v: {overall_score:.2%}")
+    print(f"\n?åˆå‡†ç¡®ç‡: {overall_score:.2%}")
     print(f"??: {emoji} {grade}")
 
-    print("\n«Ø?:")
+    print("\nå»º?:")
     if overall_score < 0.95:
-        print("  ¡E ??´£°ªDPI («Ø?200-300)")
-        print("  ¡E ¨Ï¥Îhybrid©Îstructure¼Ò¦¡")
-        print("  ¡E ?¦æ?¤ù??²z (­°¾¸¡B¤G­È¤Æ)")
+        print("  â€§ ??æé«˜DPI (å»º?200-300)")
+        print("  â€§ ä½¿ç”¨hybridæˆ–structureæ¨¡å¼")
+        print("  â€§ ?è¡Œ?ç‰‡??ç† (é™å™ªã€äºŒå€¼åŒ–)")
     else:
-        print("  ¡E OCR­ãÚÌ²v¤w?«Ü°ª¡I")
+        print("  â€§ OCRå‡†ç¡®ç‡å·²?å¾ˆé«˜ï¼")
 
     print()
 
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print("¨Ï¥Î¤èªk: python validate.py <OCR?ªGJSON> <¯u?¤å¥»TXT>")
-        print("­S¨Ò: python validate.py output.json ground_truth.txt")
+        print("ä½¿ç”¨æ–¹æ³•: python validate.py <OCR?æœJSON> <çœŸ?æ–‡æœ¬TXT>")
+        print("èŒƒä¾‹: python validate.py output.json ground_truth.txt")
     else:
         validate_ocr_results(sys.argv[1], sys.argv[2])

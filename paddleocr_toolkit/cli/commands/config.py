@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr config - °t¸m¦V?©R¥O
+paddleocr config - é…ç½®å‘?å‘½ä»¤
 """
 
 from pathlib import Path
@@ -10,19 +10,21 @@ from typing import Any, List, Optional
 import yaml
 
 
-def prompt(question: str, default: Optional[str] = None, options: Optional[List[Any]] = None) -> str:
+def prompt(
+    question: str, default: Optional[str] = None, options: Optional[List[Any]] = None
+) -> str:
     """
-    ¥æ¤¬¦¡´£¥Ü
+    äº¤äº’å¼æç¤º
 
     Args:
-        question: ??¤å¥»
-        default: Àq?­È
-        options: ¥i??¦Cªí
+        question: ??æ–‡æœ¬
+        default: é»˜?å€¼
+        options: å¯??åˆ—è¡¨
     """
     if options:
         print(f"\n{question}")
         for i, option in enumerate(options, 1):
-            marker = " (Àq?)" if option == default else ""
+            marker = " (é»˜?)" if option == default else ""
             print(f"  {i}. {option}{marker}")
 
         while True:
@@ -33,9 +35,9 @@ def prompt(question: str, default: Optional[str] = None, options: Optional[List[
                 idx = int(choice) - 1
                 if 0 <= idx < len(options):
                     return options[idx]
-                print(f"??¤J 1-{len(options)} ¤§?ªº?¦r")
+                print(f"??å…¥ 1-{len(options)} ä¹‹?çš„?å­—")
             except (ValueError, IndexError):
-                print("?®Ä?¤J¡A?­«?")
+                print("?æ•ˆ?å…¥ï¼Œ?é‡?")
     else:
         prompt_text = f"{question}"
         if default:
@@ -47,71 +49,71 @@ def prompt(question: str, default: Optional[str] = None, options: Optional[List[
 
 
 def config_wizard():
-    """¥æ¤¬¦¡°t¸m¦V?"""
+    """äº¤äº’å¼é…ç½®å‘?"""
     print("\n" + "=" * 60)
-    print(" PaddleOCR Toolkit °t¸m¦V?")
+    print(" PaddleOCR Toolkit é…ç½®å‘?")
     print("=" * 60)
-    print("\n???§U±z?«Ø¦Û©w?°t¸m¤å¥ó")
-    print("(ª½±µ«öEnter¨Ï¥ÎÀq?­È)\n")
+    print("\n???åŠ©æ‚¨?å»ºè‡ªå®š?é…ç½®æ–‡ä»¶")
+    print("(ç›´æ¥æŒ‰Enterä½¿ç”¨é»˜?å€¼)\n")
 
     config = {}
 
-    # OCR?¸m
-    print("\n??? OCR ?¸m ???")
+    # OCR?ç½®
+    print("\n??? OCR ?ç½® ???")
 
     config["ocr"] = {}
     config["ocr"]["mode"] = prompt(
-        "??OCR¼Ò¦¡",
+        "??OCRæ¨¡å¼",
         default="hybrid",
         options=["basic", "structure", "hybrid", "vl", "formula"],
     )
 
-    config["ocr"]["device"] = prompt("???ºâ??", default="gpu", options=["gpu", "cpu"])
+    config["ocr"]["device"] = prompt("???ç®—??", default="gpu", options=["gpu", "cpu"])
 
-    config["ocr"]["dpi"] = int(prompt("PDF??DPI («Ø?: 150-300)", default="200"))
+    config["ocr"]["dpi"] = int(prompt("PDF??DPI (å»º?: 150-300)", default="200"))
 
     config["ocr"]["lang"] = prompt(
-        "???¨¥", default="ch", options=["ch", "en", "korean", "japan", "chinese_cht"]
+        "???è¨€", default="ch", options=["ch", "en", "korean", "japan", "chinese_cht"]
     )
 
-    # ?¥X?¸m
-    print("\n??? ?¥X?¸m ???")
+    # ?å‡º?ç½®
+    print("\n??? ?å‡º?ç½® ???")
 
     config["output"] = {}
 
-    # ¥i¥H¦h?
-    print("\n???¥X®æ¦¡ (¥Î³r?¤À¹j¡A¦p: md,json)")
-    print("  ¥i?: md, json, html, txt")
-    formats = input(f"®æ¦¡ [md]: ").strip()
+    # å¯ä»¥å¤š?
+    print("\n???å‡ºæ ¼å¼ (ç”¨é€—?åˆ†éš”ï¼Œå¦‚: md,json)")
+    print("  å¯?: md, json, html, txt")
+    formats = input(f"æ ¼å¼ [md]: ").strip()
     config["output"]["format"] = formats if formats else "md"
 
-    config["output"]["directory"] = prompt("?¥X¥Ø?", default="./output")
+    config["output"]["directory"] = prompt("?å‡ºç›®?", default="./output")
 
-    # ©Ê¯à?¸m
-    print("\n??? ©Ê¯à?¸m ???")
+    # æ€§èƒ½?ç½®
+    print("\n??? æ€§èƒ½?ç½® ???")
 
     config["performance"] = {}
-    config["performance"]["batch_size"] = int(prompt("§å¦¸¤j¤p («Ø?: 4-16)", default="8"))
+    config["performance"]["batch_size"] = int(prompt("æ‰¹æ¬¡å¤§å° (å»º?: 4-16)", default="8"))
 
-    config["performance"]["max_workers"] = int(prompt("³Ì¤j¤u§@?µ{ («Ø?: 2-8)", default="4"))
+    config["performance"]["max_workers"] = int(prompt("æœ€å¤§å·¥ä½œ?ç¨‹ (å»º?: 2-8)", default="4"))
 
-    enable_cache = prompt("?¥Î?¦s?", default="yes", options=["yes", "no"])
+    enable_cache = prompt("?ç”¨?å­˜?", default="yes", options=["yes", "no"])
     config["performance"]["enable_cache"] = enable_cache == "yes"
 
-    # ¤é§Ó?¸m
-    print("\n??? ¤é§Ó?¸m ???")
+    # æ—¥å¿—?ç½®
+    print("\n??? æ—¥å¿—?ç½® ???")
 
     config["logging"] = {}
     config["logging"]["level"] = prompt(
-        "¤é§Ó??", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
+        "æ—¥å¿—??", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
     )
 
-    config["logging"]["file"] = prompt("¤é§Ó¤å¥ó¸ô?", default="./logs/paddleocr.log")
+    config["logging"]["file"] = prompt("æ—¥å¿—æ–‡ä»¶è·¯?", default="./logs/paddleocr.log")
 
-    # «O¦s°t¸m
-    print("\n??? «O¦s°t¸m ???")
+    # ä¿å­˜é…ç½®
+    print("\n??? ä¿å­˜é…ç½® ???")
 
-    config_name = prompt("°t¸m¤å¥ó¦W?", default="custom")
+    config_name = prompt("é…ç½®æ–‡ä»¶å?", default="custom")
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
@@ -121,24 +123,24 @@ def config_wizard():
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-    print(f"\n? °t¸m¤w«O¦s¨ì: {config_path}")
-    print(f"\n¨Ï¥Î¤èªk:")
+    print(f"\n? é…ç½®å·²ä¿å­˜åˆ°: {config_path}")
+    print(f"\nä½¿ç”¨æ–¹æ³•:")
     print(f"  python -m paddleocr_toolkit input.pdf --config {config_path}")
     print()
 
 
 def show_config(config_file: str):
-    """?¥Ü°t¸m¤å¥ó?®e"""
+    """?ç¤ºé…ç½®æ–‡ä»¶?å®¹"""
     config_path = Path(config_file)
 
     if not config_path.exists():
-        print(f"??: °t¸m¤å¥ó¤£¦s¦b: {config_file}")
+        print(f"??: é…ç½®æ–‡ä»¶ä¸å­˜åœ¨: {config_file}")
         return
 
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    print(f"\n°t¸m¤å¥ó: {config_file}")
+    print(f"\né…ç½®æ–‡ä»¶: {config_file}")
     print("=" * 60)
     print(yaml.dump(config, default_flow_style=False, allow_unicode=True))
 
