@@ -17,20 +17,21 @@
 
 ```bash
 # 处理单个文件
+# 處理單個檔案
 python -m paddleocr_toolkit input/document.pdf
 
-# 使用配置文件
+# 使用設定檔
 python -m paddleocr_toolkit input/document.pdf --config config/default.yaml
 
-# 批量处理
+# 批次處理
 python -m paddleocr_toolkit input/
 ```
 
-## 配置
+## 設定
 
-编辑 `config/default.yaml` 来自定义设置。
+編輯 `config/default.yaml` 來自定義設定。
 
-## 文档
+## 文件
 
-- [快速开始](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
-- [API文档](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)
+- [快速開始](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
+- [API文件](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)

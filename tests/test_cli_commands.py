@@ -41,7 +41,7 @@ def test_validate_edit_distance():
     # 完全相同
     assert edit_distance("hello", "hello") == 0
 
-    # 一个字符差异
+    # 一個字元差異
     assert edit_distance("hello", "hallo") == 1
 
     # 插入

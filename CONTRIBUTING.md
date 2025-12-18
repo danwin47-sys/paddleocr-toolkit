@@ -8,7 +8,7 @@
 
 - [行為準則](#行為準則)
 - [如何貢獻](#如何貢獻)
-- [開發設置](#開發設置)
+- [開發設定](#開發設定)
 - [提交指南](#提交指南)
 - [程式碼規範](#程式碼規範)
 - [測試要求](#測試要求)
@@ -35,7 +35,7 @@
 - 預期行為
 - 實際行為
 - 環境資訊（Python 版本、作業系統等）
-- 錯誤日誌
+- 錯誤日誌誌
 
 ### 建議功能
 
@@ -55,13 +55,12 @@
 
 ---
 
-## 開發設置
+## 開發設定
 
 ### 環境要求
 
 - Python 3.8+
-- Git
-- 虛擬環境工具
+- 虛擬環境工具 (venv, conda)
 
 ### 安裝開發環境
 
@@ -72,24 +71,25 @@ cd paddleocr-toolkit
 
 # 建立虛擬環境
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Windows: venv\Scripts\activate
+# Linux/Mac: source venv/bin/activate
 
 # 安裝開發依賴
 pip install -r requirements.txt
-pip install -e ".[dev]"
+pip install -r requirements-dev.txt
 ```
 
 ### 執行測試
 
 ```bash
 # 執行所有測試
-pytest tests/
+pytest
 
 # 執行帶覆蓋率的測試
-pytest tests/ --cov=paddleocr_toolkit --cov-report=html
+pytest --cov=paddleocr_toolkit tests/
 
 # 執行特定測試
-pytest tests/test_ocr_engine.py -v
+pytest tests/test_core_models.py
 ```
 
 ---
@@ -101,11 +101,11 @@ pytest tests/test_ocr_engine.py -v
 我們使用 [Conventional Commits](https://www.conventionalcommits.org/) 規範：
 
 ```
-<type>(<scope>): <subject>
+<type>[optional scope]: <description>
 
-<body>
+[optional body]
 
-<footer>
+[optional footer(s)]
 ```
 
 **類型**:

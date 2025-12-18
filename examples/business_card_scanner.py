@@ -94,12 +94,12 @@ class BusinessCardScanner:
         return None
 
     def _extract_phone(self, text: str) -> List[str]:
-        """提取电话号码"""
-        # 各种电话格式
+        """提取電話號碼"""
+        # 尋找手機號碼
         patterns = [
-            r"1[3-9]\d{9}",  # 中国手机
-            r"\d{3,4}[-\s]?\d{7,8}",  # 固定电话
-            r"\+\d{1,3}[-\s]?\d{1,14}",  # 国际号码
+            r"09\d{8}",  # 台灣手機
+            r"\d{2,4}[-\s]?\d{6,8}",  # 台灣市話 (區碼2-4位, 號碼6-8位)
+            r"\+\d{1,3}[-\s]?\d{1,14}",  # 國際號碼
             r"\(\d{3}\)\s?\d{3}[-\s]?\d{4}",  # (123) 456-7890
         ]
 
@@ -111,16 +111,16 @@ class BusinessCardScanner:
         return list(set(phones))  # 去重
 
     def _extract_email(self, text: str) -> Optional[str]:
-        """提取电子邮件"""
+        """提取電子郵件"""
         pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
         match = re.search(pattern, text)
         return match.group(0) if match else None
 
     def _extract_address(self, text: str) -> Optional[str]:
         """提取地址"""
-        # 查找包含地址关键字的行
-        lines = text.split("\n")
-        address_keywords = ["路", "街", "区", "市", "省", "Street", "Road", "Ave", "City"]
+        # 尋找包含地址關鍵字的行
+        lines = text.split('\n')
+        address_keywords = ["路", "街", "號", "市", "區", "縣", "段", "巷", "弄", "Street", "Road", "Ave", "City"]
 
         for line in lines:
             if any(keyword in line for keyword in address_keywords):
@@ -128,34 +128,34 @@ class BusinessCardScanner:
         return None
 
     def _extract_website(self, text: str) -> Optional[str]:
-        """提取网站"""
+        """提取網站"""
         pattern = r"(?:https?://)?(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}"
         match = re.search(pattern, text)
         return match.group(0) if match else None
 
     def print_card_info(self, info: Dict):
-        """美化显示名片资讯"""
+        """美化顯示名片資訊"""
         print("\n" + "=" * 50)
-        print("名片扫描结果")
+        print("名片掃描結果")
         print("=" * 50)
 
         if info.get("name"):
             print(f"姓名: {info['name']}")
 
         if info.get("title"):
-            print(f"职位: {info['title']}")
+            print(f"職位: {info['title']}")
 
         if info.get("company"):
             print(f"公司: {info['company']}")
 
         if info.get("phone"):
-            print(f"电话: {', '.join(info['phone'])}")
+            print(f"電話: {', '.join(info['phone'])}")
 
         if info.get("email"):
-            print(f"邮箱: {info['email']}")
+            print(f"信箱: {info['email']}")
 
         if info.get("website"):
-            print(f"网站: {info['website']}")
+            print(f"網站: {info['website']}")
 
         if info.get("address"):
             print(f"地址: {info['address']}")
@@ -163,7 +163,7 @@ class BusinessCardScanner:
         print("=" * 50 + "\n")
 
     def export_to_vcard(self, info: Dict, output_path: str):
-        """导出为vCard格式"""
+        """匯出為vCard格式"""
         vcard = "BEGIN:VCARD\nVERSION:3.0\n"
 
         if info.get("name"):
@@ -192,40 +192,40 @@ class BusinessCardScanner:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(vcard)
 
-        print(f"vCard已保存至: {output_path}")
+        print(f"vCard已儲存至: {output_path}")
 
 
 def main():
     """主程式"""
     if len(sys.argv) < 2:
-        print("使用方法: python business_card_scanner.py <图片路径或资料夹>")
-        print("范例: python business_card_scanner.py card.jpg")
+        print("使用方法: python business_card_scanner.py <圖片路徑或資料夾>")
+        print("範例: python business_card_scanner.py card.jpg")
         print("      python business_card_scanner.py cards/")
         return
 
     input_path = Path(sys.argv[1])
 
-    # 初始化扫描器
+    # 初始化掃描器
     scanner = BusinessCardScanner()
 
-    # 处理输入
+    # 處理輸入
     if input_path.is_file():
-        # 单个档案
+        # 單一檔案
         info = scanner.scan_card(str(input_path))
         scanner.print_card_info(info)
 
-        # 保存结果
+        # 儲存結果
         json_file = input_path.stem + "_contact.json"
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(info, f, ensure_ascii=False, indent=2)
-        print(f"JSON已保存至: {json_file}")
+        print(f"JSON已儲存至: {json_file}")
 
-        # 导出vCard
+        # 匯出vCard
         vcard_file = input_path.stem + ".vcf"
         scanner.export_to_vcard(info, vcard_file)
 
     elif input_path.is_dir():
-        # 批次处理
+        # 批次處理
         image_files = (
             list(input_path.glob("*.jpg"))
             + list(input_path.glob("*.png"))
@@ -233,10 +233,10 @@ def main():
         )
 
         if not image_files:
-            print("未找到图片档案")
+            print("未找到圖片檔案")
             return
 
-        print(f"找到 {len(image_files)} 个图片档案\n")
+        print(f"找到 {len(image_files)} 個圖片檔案\n")
 
         all_contacts = []
         for i, img_file in enumerate(image_files, 1):

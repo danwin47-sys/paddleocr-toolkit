@@ -33,16 +33,6 @@ def test_windows_ascii_icons():
 
 
 def test_print_functions_no_crash(capsys):
-    """测试print函数不会崩溃"""
-    # 这些函数应该能正常运行，不抛出UnicodeEncodeError
-    try:
-        rich_ui.print_success("测试成功")
-        rich_ui.print_error("测试错误")
-        rich_ui.print_warning("测试警告")
-        rich_ui.print_info("测试信息")
-        success = True
-    except UnicodeEncodeError:
-        success = False
 
     assert success, "print函数出现编码错误"
 

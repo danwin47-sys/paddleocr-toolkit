@@ -42,21 +42,21 @@ class TestEndToEndWorkflow:
             # 2. 初始化OCR
             ocr_tool = PaddleOCRTool(mode="basic")
 
-            # 3. 处理PDF
+            # 3. 處理PDF
             all_results, _ = ocr_tool.process_pdf(temp_pdf)
 
-            # 4. 验证结果
+            # 4. 驗證結果
             assert len(all_results) >= 1
-            # 验证至少有一些结果（可能为空因为是简单测试文本）
+            # 驗證至少有一些結果（可能為空因為是簡單測試文本）
 
-            # 5. 提取文字（使用正确的方法）
+            # 5. 提取文字（使用正確的方法）
             full_text = []
             for page_results in all_results:
-                if page_results:  # 如果页面有结果
+                if page_results:  # 如果頁面有結果
                     for result in page_results:
                         full_text.append(result.text)
 
-            # 验证处理完成（即使没有识别到文字）
+            # 驗證處理完成（即使沒有識別到文字）
             assert all_results is not None
 
         finally:

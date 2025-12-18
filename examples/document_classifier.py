@@ -20,45 +20,45 @@ from paddle_ocr_tool import PaddleOCRTool
 
 
 class DocumentClassifier:
-    """文档分类器"""
+    """文件分類器"""
 
-    # 文档类型特征关键词
+    # 文件類型特徵關鍵詞
     DOCUMENT_PATTERNS = {
-        "invoice": ["发票", "Invoice", "税号", "Tax", "金额", "Amount"],
-        "contract": ["合同", "Contract", "甲方", "乙方", "Party A", "Party B"],
-        "resume": ["简历", "Resume", "教育", "Education", "工作经验", "Experience"],
-        "report": ["报告", "Report", "摘要", "Abstract", "结论", "Conclusion"],
-        "certificate": ["证书", "Certificate", "认证", "颁发", "Issued"],
-        "id_card": ["身份证", "ID Card", "姓名", "Name", "性别", "Gender"],
-        "business_card": ["名片", "职位", "Position", "电话", "Tel", "Email"],
-        "letter": ["信函", "Letter", "敬启", "Dear", "此致", "Sincerely"],
+        "invoice": ["發票", "Invoice", "稅號", "Tax", "金額", "Amount"],
+        "contract": ["合約", "Contract", "甲方", "乙方", "Party A", "Party B"],
+        "resume": ["履歷", "Resume", "教育", "Education", "工作經驗", "Experience"],
+        "report": ["報告", "Report", "摘要", "Abstract", "結論", "Conclusion"],
+        "certificate": ["證書", "Certificate", "認證", "頒發", "Issued"],
+        "id_card": ["身分證", "ID Card", "姓名", "Name", "性別", "Gender"],
+        "business_card": ["名片", "職位", "Position", "電話", "Tel", "Email"],
+        "letter": ["信函", "Letter", "敬啟", "Dear", "此致", "Sincerely"],
     }
 
     def __init__(self):
         """初始化OCR引擎"""
-        print("初始化文档分类器...")
+        print("初始化文件分類器...")
         self.ocr_tool = PaddleOCRTool(mode="basic")
-        print("就绪!\n")
+        print("就緒!\n")
 
     def classify_document(self, image_path: str) -> Dict:
         """
-        分类文档
+        分類文件
 
         Args:
-            image_path: 文档图片路径
+            image_path: 文件圖片路徑
 
         Returns:
-            分类结果字典
+            分類結果字典
         """
-        print(f"分类文档: {image_path}")
+        print(f"分類文件: {image_path}")
 
-        # OCR识别
+        # OCR識別
         results = self.ocr_tool.process_image(image_path)
 
-        # 合并文字
+        # 合併文字
         all_text = " ".join([r.text for r in results])
 
-        # 分类
+        # 分類
         doc_type, confidence = self._classify_text(all_text)
 
         return {
@@ -70,7 +70,7 @@ class DocumentClassifier:
         }
 
     def _classify_text(self, text: str) -> tuple:
-        """分类文字"""
+        """分類文字"""
         scores = {}
 
         for doc_type, keywords in self.DOCUMENT_PATTERNS.items():
@@ -81,7 +81,7 @@ class DocumentClassifier:
         if not scores:
             return "unknown", 0.0
 
-        # 找出得分最高的类型
+        # 找出得分最高的類型
         best_type = max(scores, key=scores.get)
         max_score = scores[best_type]
         total_keywords = len(self.DOCUMENT_PATTERNS[best_type])
@@ -91,7 +91,7 @@ class DocumentClassifier:
         return best_type, confidence
 
     def batch_classify(self, directory: Path) -> List[Dict]:
-        """批次分类"""
+        """批次分類"""
         results = []
 
         image_files = (
@@ -101,26 +101,26 @@ class DocumentClassifier:
         )
 
         if not image_files:
-            print("未找到图片文件")
+            print("未找到圖片文件")
             return results
 
-        print(f"找到 {len(image_files)} 个文件\n")
+        print(f"找到 {len(image_files)} 個文件\n")
 
         for i, img_file in enumerate(image_files, 1):
             print(f"[{i}/{len(image_files)}]")
             result = self.classify_document(str(img_file))
             results.append(result)
 
-            print(f"  类型: {result['type']}")
+            print(f"  類型: {result['type']}")
             print(f"  信心度: {result['confidence']:.1%}\n")
 
         return results
 
     def organize_by_type(self, results: List[Dict], output_dir: Path):
-        """按类型组织文件"""
+        """按類型組織文件"""
         output_dir.mkdir(exist_ok=True)
 
-        # 按类型分组
+        # 按類型分組
         by_type = {}
         for result in results:
             doc_type = result["type"]
@@ -128,12 +128,12 @@ class DocumentClassifier:
                 by_type[doc_type] = []
             by_type[doc_type].append(result["file"])
 
-        # 创建类型目录并移动文件
+        # 創建類型目錄並移動文件
         for doc_type, files in by_type.items():
             type_dir = output_dir / doc_type
             type_dir.mkdir(exist_ok=True)
 
-            print(f"\n{doc_type}: {len(files)} 个文件")
+            print(f"\n{doc_type}: {len(files)} 個文件")
             for file_path in files:
                 print(f"  - {Path(file_path).name}")
 
@@ -141,20 +141,20 @@ class DocumentClassifier:
 def main():
     """主程序"""
     if len(sys.argv) < 2:
-        print("使用方法: python document_classifier.py <图片或资料夹>")
+        print("使用方法: python document_classifier.py <圖片或資料夾>")
         return
 
     input_path = Path(sys.argv[1])
     classifier = DocumentClassifier()
 
     if input_path.is_file():
-        # 单个文件
+        # 單個文件
         result = classifier.classify_document(str(input_path))
-        print(f"\n类型: {result['type']}")
+        print(f"\n類型: {result['type']}")
         print(f"信心度: {result['confidence']:.1%}")
 
     elif input_path.is_dir():
-        # 批次分类
+        # 批次分類
         results = classifier.batch_classify(input_path)
 
         # 保存结果
