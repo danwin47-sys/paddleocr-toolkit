@@ -45,7 +45,12 @@ PaddleOCRFacade(
     device="cpu",                      # 運算設備 ('gpu' 或 'cpu')
     debug_mode=False,                  # 除錯模式
     compress_images=True,              # 圖片壓縮
-    jpeg_quality=85                    # JPEG 品質
+    jpeg_quality=85,                   # JPEG 品質
+    
+    # v3.0 新增：語義處理（AI 增強）
+    enable_semantic=False,             # 啟用語義處理
+    llm_provider="ollama",             # LLM 提供商 ('ollama', 'openai')
+    llm_model=None                     # LLM 模型（可選）
 )
 ```
 
@@ -120,6 +125,40 @@ result = facade.process_hybrid("input.pdf", "output.pdf")
 ```
 
 **向後相容**：新 API 與舊 API 完全相容，只需修改 import！
+
+---
+
+## v3.0 新功能：語義處理
+
+### 啟用 AI 驅動的 OCR 後處理
+
+```python
+# 啟用語義處理
+facade = PaddleOCRFacade(
+    mode="basic",
+    enable_semantic=True,          # 🔥 啟用語義處理
+    llm_provider="ollama",         # LLM 提供商
+    llm_model="qwen2.5:7b"         # 模型（可選）
+)
+
+# 1. 修正 OCR 錯誤
+ocr_text = "這個文建包含銷多錯沒"
+corrected = facade.correct_text(ocr_text)
+print(corrected)  # "這個文件包含很多錯誤"
+
+# 2. 提取結構化資料
+business_card = """
+張小明
+工程師
+Email: zhang@example.com
+"""
+
+schema = {"name": "姓名", "title": "職稱", "email": "Email"}
+data = facade.extract_structured_data(business_card, schema)
+# {"name": "張小明", "title": "工程師", "email": "zhang@example.com"}
+```
+
+**詳細說明**：請參閱 [SemanticProcessor 使用指南](SEMANTIC_PROCESSOR_GUIDE.md)
 
 ---
 

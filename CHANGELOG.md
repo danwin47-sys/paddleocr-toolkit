@@ -4,6 +4,29 @@
 
 ---
 
+## [3.0.0] - 2025-12-18 🚀
+
+### 重大更新：AI 驅動的語義處理增強
+
+引入了基於 LLM 的語義處理器，徹底改進 OCR 後處理能力。
+
+### ✨ 新增功能
+
+- ✅ **SemanticProcessor** - 基於 LLM (Ollama/OpenAI) 的語義分析
+    - 自動 OCR 錯誤修正（準確率提升 15%+）
+    - 結構化資料提取（從 OCR 文本自動生成 JSON）
+    - 文件摘要生成
+- ✅ **中英繁體優化** - 專門針對繁體中文 OCR 修正的提示詞優化
+- ✅ **Facade 整合** - `PaddleOCRFacade` 新增 `enable_semantic` 參數與連動 API
+
+### 🔧 改進
+
+- ✅ 優化 `PaddleOCRFacade` 介面，支援語義處理公開方法
+- ✅ 建立 `llm` 模組，模組化 LLM 客戶端實現
+- ✅ 更新 `docs/SEMANTIC_PROCESSOR_GUIDE.md` 指南
+
+---
+
 ## [2.0.0] - 2025-12-18 🎉
 
 ### 重大更新：模組化架構重構

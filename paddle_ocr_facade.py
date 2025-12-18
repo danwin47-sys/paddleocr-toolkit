@@ -52,6 +52,9 @@ class PaddleOCRFacade:
         debug_mode: bool = False,
         compress_images: bool = True,
         jpeg_quality: int = 85,
+        enable_semantic: bool = False,
+        llm_provider: str = "ollama",
+        llm_model: Optional[str] = None,
     ):
         """
         初始化 PaddleOCR Facade
@@ -65,12 +68,18 @@ class PaddleOCRFacade:
             debug_mode: DEBUG 模式（顯示粉紅色文字層）
             compress_images: 啟用 JPEG 壓縮以減少 PDF 檔案大小
             jpeg_quality: JPEG 壓縮品質（0-100）
+            enable_semantic: 啟用語義處理（LLM 自動修正 OCR 錯誤）
+            llm_provider: LLM 提供商 ('ollama', 'openai')
+            llm_model: LLM 模型名稱（可選）
         """
         self.mode = mode
         self.debug_mode = debug_mode
         self.compress_images = compress_images
         self.jpeg_quality = jpeg_quality
         self.device = device
+        self.enable_semantic = enable_semantic
+        self.llm_provider = llm_provider
+        self.llm_model = llm_model
 
         # 初始化 OCR 引擎管理器
         self.engine_manager = OCREngineManager(
@@ -84,8 +93,26 @@ class PaddleOCRFacade:
 
         # 初始化對應的 Processor
         self._init_processors()
+        
+        # 初始化語義處理器（可選）
+        self.semantic_processor = None
+        if enable_semantic:
+            try:
+                from paddleocr_toolkit.processors.semantic_processor import SemanticProcessor
+                self.semantic_processor = SemanticProcessor(
+                    llm_provider=llm_provider,
+                    model=llm_model
+                )
+                if self.semantic_processor.is_enabled():
+                    logging.info(f"SemanticProcessor 已啟用：{llm_provider}/{llm_model or 'default'}")
+                else:
+                    logging.warning("SemanticProcessor 初始化失敗，功能已禁用")
+                    self.semantic_processor = None
+            except Exception as e:
+                logging.error(f"SemanticProcessor 初始化錯誤: {e}")
+                self.semantic_processor = None
 
-        logging.info(f"PaddleOCRFacade 初始化完成：mode={mode}, device={device}")
+        logging.info(f"PaddleOCRFacade 初始化完成：mode={mode}, device={device}, semantic={enable_semantic}")
 
     def _init_processors(self):
         """根據模式初始化對應的 Processor"""
@@ -271,6 +298,40 @@ class PaddleOCRFacade:
             預測結果
         """
         return self.engine_manager.predict(image)
+    
+    def correct_text(self, text: str, language: str = "zh") -> str:
+        """
+        使用語義處理器修正文字（僅在啟用時可用）
+        
+        Args:
+            text: 要修正的文字
+            language: 語言（"zh" 或 "en"）
+        
+        Returns:
+            str: 修正後的文字
+        """
+        if self.semantic_processor and self.semantic_processor.is_enabled():
+            return self.semantic_processor.correct_ocr_errors(text, language=language)
+        else:
+            logging.warning("語義處理未啟用，返回原始文字")
+            return text
+    
+    def extract_structured_data(self, text: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        從文字中提取結構化資料
+        
+        Args:
+            text: 源文字
+            schema: JSON Schema
+        
+        Returns:
+            Dict: 提取的結構化資料
+        """
+        if self.semantic_processor and self.semantic_processor.is_enabled():
+            return self.semantic_processor.extract_structured_data(text, schema)
+        else:
+            logging.warning("語義處理未啟用")
+            return {}
 
     def get_engine(self):
         """
