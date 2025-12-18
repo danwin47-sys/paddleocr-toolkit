@@ -1,307 +1,219 @@
 # Docker 部署指南
 
-PaddleOCR Toolkit Docker 部署文件。
+## 快速開始
 
----
+### 1. 環境準備
 
-## 🐳 快速開始
+```bash
+# 複製環境變數範本
+cp .env.example .env
 
-### 方法 1：Docker Compose（推薦）
+# 編輯 .env 設定 API Key
+nano .env
+```
+
+### 2. 啟動服務
 
 ```bash
 # 啟動所有服務
 docker-compose up -d
 
-# 查看服務狀態
-docker-compose ps
-
 # 查看日誌
 docker-compose logs -f
 ```
 
-存取：
-
-- Web 介面: <http://localhost>
-- API 文件: <http://localhost:8000/docs>
-
----
-
-### 方法 2：單獨 Docker
+### 3. 初始化 Ollama 模型
 
 ```bash
-# 建構映像檔
-docker build -t paddleocr-toolkit .
+# 進入 Ollama 容器
+docker exec -it paddleocr-ollama bash
 
-# 執行容器
-docker run -d \
-  -p 8000:8000 \
-  -v $(pwd)/uploads:/app/uploads \
-  -v $(pwd)/output:/app/output \
-  --name paddleocr \
-  paddleocr-toolkit
+# 下載模型（首次使用）
+ollama pull qwen2.5:7b
+
+# 退出容器
+exit
 ```
 
----
+### 4. 測試 API
 
-## 📦 服務組成
+```bash
+# 健康檢查
+curl http://localhost:8000/docs
 
-### API 服務
-
-- **連接埠**: 8000
-- **映像檔**: 自行建構
-- **磁碟卷 (Volumes)**: uploads, output, logs
-
-### Web 服務
-
-- **連接埠**: 80
-- **映像檔**: nginx:alpine
-- **功能**:
-  - 提供 Web 介面
-  - API 反向代理
-  - WebSocket 代理
-
-### Redis（可選）
-
-- **連接埠**: 6379
-- **用途**: 任務佇列和快取
-
----
-
-## ⚙️ 設定
-
-### 環境變數
-
-在 `docker-compose.yml` 中設定：
-
-```yaml
-environment:
-  - UPLOAD_DIR=/app/uploads
-  - OUTPUT_DIR=/app/output
-  - REDIS_URL=redis://redis:6379
-  - MAX_WORKERS=4
+# 測試 OCR（需要 API Key）
+curl -X POST http://localhost:8000/api/ocr \
+  -H "X-API-Key: your-api-key-here" \
+  -F "file=@test.pdf"
 ```
 
----
+## 服務說明
 
-### 磁碟卷掛載 (Volume Mounting)
+### Ollama (LLM 服務)
+- **端口**: 11434
+- **用途**: 提供本地 LLM 推理
+- **數據持久化**: `ollama_data` volume
 
-```yaml
-volumes:
-  - ./uploads:/app/uploads    # 上傳檔案
-  - ./output:/app/output      # 輸出結果
-  - ./logs:/app/logs          # 日誌檔案
+### PaddleOCR API
+- **端口**: 8000
+- **API 文檔**: http://localhost:8000/docs
+- **上傳目錄**: `./uploads`
+- **輸出目錄**: `./output`
+
+## 環境變數
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
+| `API_KEY` | dev-key-change-in-production | API 認證金鑰 |
+| `ALLOWED_ORIGINS` | * | CORS 允許的來源 |
+| `OLLAMA_MODEL` | qwen2.5:7b | Ollama 模型名稱 |
+| `ENABLE_PLUGINS` | true | 是否啟用插件 |
+
+## 生產環境部署
+
+### 安全性設定
+
+1. **設定強 API Key**:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))" > api_key.txt
+# 將生成的 key 設定到 .env
 ```
 
----
-
-## 🚀 GPU 支援
-
-### 啟用 GPU
-
-在 `docker-compose.yml` 中取消註解：
-
-```yaml
-deploy:
-  resources:
-    reservations:
-      devices:
-        - driver: nvidia
-          count: 1
-          capabilities: [gpu]
+2. **限制 CORS**:
+```env
+ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
 ```
 
-### 需求
+3. **禁用插件**（如不需要）:
+```env
+ENABLE_PLUGINS=false
+```
 
-1. 安裝 NVIDIA Docker Runtime：
+### 使用 HTTPS
 
-    ```bash
-    # Ubuntu
-    sudo apt-get install nvidia-docker2
-    sudo systemctl restart docker
-    ```
+建議使用 Nginx 或 Traefik 作為反向代理：
 
-2. 驗證：
+```nginx
+server {
+    listen 443 ssl;
+    server_name ocr.yourdomain.com;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
 
-    ```bash
-    docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-    ```
-
----
-
-## 📊 監控
+## 維護
 
 ### 查看日誌
-
 ```bash
 # 所有服務
 docker-compose logs -f
 
 # 特定服務
-docker-compose logs -f api
-docker-compose logs -f web
+docker-compose logs -f paddleocr-api
+docker-compose logs -f ollama
 ```
 
-### 服務狀態
-
+### 重啟服務
 ```bash
-# 查看執行中的容器
-docker-compose ps
-
-# 資源使用
-docker stats
-```
-
----
-
-## 🔧 維護
-
-### 更新映像檔
-
-```bash
-# 重新建構
-docker-compose build
-
-# 重新啟動
-docker-compose up -d --build
-```
-
-### 備份資料
-
-```bash
-# 備份上傳和輸出
-tar -czf backup.tar.gz uploads/ output/
-```
-
-### 清理空間
-
-```bash
-# 清理舊檔案（透過 API）
-curl -X POST http://localhost:8000/api/files/cleanup?days=7
-
-# 清理 Docker
-docker system prune -a
-```
-
----
-
-## 🌐 生產環境部署
-
-### 1. 使用環境變數檔
-
-建立 `.env` 檔案：
-
-```env
-API_HOST=0.0.0.0
-API_PORT=8000
-MAX_WORKERS=8
-UPLOAD_LIMIT=100M
-REDIS_URL=redis://redis:6379
-```
-
-### 2. 啟用 HTTPS
-
-更新 `nginx.conf`：
-
-```nginx
-server {
-    listen 443 ssl;
-    ssl_certificate /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-    # ... 其他設定
-}
-```
-
-### 3. 設定重啟策略
-
-```yaml
-restart: always
-```
-
-### 4. 資源限制
-
-```yaml
-deploy:
-  resources:
-    limits:
-      cpus: '2'
-      memory: 4G
-```
-
----
-
-## 🐛 疑難排解
-
-### API 無法啟動
-
-檢查日誌：
-
-```bash
-docker-compose logs api
-```
-
-常見問題：
-
-- 連接埠衝突：修改 `docker-compose.yml` 中的連接埠
-- 權限問題：確保磁碟卷目錄可寫
-
-### Web 介面無法存取
-
-1. 檢查 nginx 狀態：
-
-    ```bash
-    docker-compose logs web
-    ```
-
-2. 驗證 API 連線：
-
-    ```bash
-    curl http://localhost:8000/
-    ```
-
-### GPU 不可用
-
-1. 檢查 NVIDIA 驅動：
-
-    ```bash
-    nvidia-smi
-    ```
-
-2. 驗證 Docker GPU 支援：
-
-    ```bash
-    docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-    ```
-
----
-
-## 📝 常用命令
-
-```bash
-# 啟動
-docker-compose up -d
-
-# 停止
-docker-compose down
-
-# 重啟
+# 重啟所有服務
 docker-compose restart
 
-# 查看日誌
-docker-compose logs -f
-
-# 進入容器
-docker-compose exec api bash
-
-# 更新並重啟
-docker-compose up -d --build
-
-# 僅啟動 API
-docker-compose up -d api
-
-# 擴充服務
-docker-compose up -d --scale api=3
+# 重啟特定服務
+docker-compose restart paddleocr-api
 ```
 
----
+### 更新服務
+```bash
+# 拉取最新代碼
+git pull
 
-**更多資訊**: [Docker 官方文件](https://docs.docker.com/)
+# 重新建構並啟動
+docker-compose up -d --build
+```
+
+### 清理
+```bash
+# 停止並移除容器
+docker-compose down
+
+# 同時移除 volumes（會刪除數據！）
+docker-compose down -v
+```
+
+## 故障排除
+
+### Ollama 無法連接
+```bash
+# 檢查 Ollama 健康狀態
+docker exec paddleocr-ollama curl http://localhost:11434/api/tags
+
+# 重啟 Ollama
+docker-compose restart ollama
+```
+
+### API 無法啟動
+```bash
+# 查看詳細日誌
+docker-compose logs paddleocr-api
+
+# 檢查環境變數
+docker exec paddleocr-api env | grep -E "API_KEY|OLLAMA"
+```
+
+### 記憶體不足
+```bash
+# 限制容器記憶體
+# 在 docker-compose.yml 中添加：
+services:
+  paddleocr-api:
+    mem_limit: 4g
+    memswap_limit: 4g
+```
+
+## 性能優化
+
+### GPU 支援
+
+如果有 NVIDIA GPU：
+
+```yaml
+services:
+  paddleocr-api:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - PADDLEOCR_DEVICE=gpu
+```
+
+### 擴展服務
+
+```bash
+# 運行多個 API 實例
+docker-compose up -d --scale paddleocr-api=3
+```
+
+## 監控
+
+### Prometheus + Grafana（可選）
+
+參考 `monitoring/docker-compose.monitoring.yml` 配置。
+
+## 支援
+
+如遇問題，請查看：
+- [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
+- [安全性指南](docs/SECURITY_HARDENING.md)
+- [API 文檔](docs/FACADE_API_GUIDE.md)
