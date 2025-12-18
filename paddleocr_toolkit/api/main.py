@@ -13,13 +13,17 @@ from typing import Any, Optional
 
 from fastapi import (
     BackgroundTasks,
+    Depends,
     FastAPI,
     File,
     HTTPException,
+    Security,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
+    status,
 )
+from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,6 +32,39 @@ from pydantic import BaseModel
 from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
+
+# 環境變數讀取
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # 讀取 .env 檔案
+
+# 安全性設定
+API_KEY = os.getenv("API_KEY", "dev-key-change-in-production")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+# API Key 驗證
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    """
+    驗證 API Key
+    
+    Args:
+        api_key: 從 header 中提取的 API Key
+    
+    Raises:
+        HTTPException: 如果 API Key 無效
+    """
+    if api_key != API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API Key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    return api_key
+
 
 # 找到 web 目錄
 WEB_DIR = Path(__file__).parent.parent.parent / "web"
@@ -40,10 +77,10 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS设置
+# CORS設定 (使用環境變數)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -233,6 +270,7 @@ async def upload_and_ocr(
     file: UploadFile = File(...),
     background_tasks: BackgroundTasks = None,  # type: ignore[assignment]
     mode: str = "hybrid",
+    api_key: str = Depends(verify_api_key),
 ):
     """
     上传文件并进行OCR处理
@@ -248,8 +286,9 @@ async def upload_and_ocr(
     # 生成任务ID
     task_id = str(uuid.uuid4())
 
-    # 保存文件
-    file_path = UPLOAD_DIR / f"{task_id}_{file.filename}"
+    # 保存文件 (安全性：清理檔名以防止路徑遍歷)
+    safe_filename = Path(file.filename).name
+    file_path = UPLOAD_DIR / f"{task_id}_{safe_filename}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
@@ -350,15 +389,22 @@ async def list_files():
 
 
 @app.delete("/api/files/{filename}")
-async def delete_file(filename: str):
+async def delete_file(filename: str, api_key: str = Depends(verify_api_key)):
     """刪除檔案"""
-    file_path = UPLOAD_DIR / filename
+    # 安全性：清理檔名以防止路徑遍歷
+    safe_filename = Path(filename).name
+    file_path = UPLOAD_DIR / safe_filename
+    
+    # 確保檔案在 UPLOAD_DIR 內
+    if not file_path.resolve().is_relative_to(UPLOAD_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="無效的檔案路徑")
+    
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
 
     try:
         os.remove(file_path)
-        return {"message": f"檔案 {filename} 已刪除"}
+        return {"message": f"檔案 {safe_filename} 已刪除"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"刪除失敗: {str(e)}")
 
@@ -366,12 +412,19 @@ async def delete_file(filename: str):
 @app.get("/api/files/{filename}/download")
 async def download_file(filename: str):
     """下載檔案"""
-    file_path = UPLOAD_DIR / filename
+    # 安全性：清理檔名以防止路徑遍歷
+    safe_filename = Path(filename).name
+    file_path = UPLOAD_DIR / safe_filename
+    
+    # 確保檔案在 UPLOAD_DIR 內
+    if not file_path.resolve().is_relative_to(UPLOAD_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="無效的檔案路徑")
+    
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
 
     return FileResponse(
-        path=file_path, filename=filename, media_type="application/octet-stream"
+        path=file_path, filename=safe_filename, media_type="application/octet-stream"
     )
 
 
