@@ -214,6 +214,7 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         tasks[task_id] = {"status": "failed", "progress": 0}
         await manager.send_error(task_id, error_msg)
 
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """提供用戶友好的 Web 介面"""

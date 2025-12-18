@@ -205,7 +205,7 @@ class EnhancedTranslationProcessor:
         """
         try:
             # 動態導入翻譯模組
-            from pdf_translator import (
+            from pdf_translator import (  # noqa: F811
                 BilingualPDFGenerator,
                 MonolingualPDFGenerator,
                 OllamaTranslator,
@@ -297,7 +297,7 @@ class EnhancedTranslationProcessor:
             List[TranslatedBlock]: 翻譯後的文字塊列表
         """
         try:
-            from pdf_translator import TranslatedBlock
+            from pdf_translator import TranslatedBlock  # noqa: F811
         except ImportError:
             logging.error("TranslatedBlock 類別導入失敗")
             return []

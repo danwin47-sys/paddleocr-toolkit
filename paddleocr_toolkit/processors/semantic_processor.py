@@ -122,7 +122,8 @@ class SemanticProcessor:
     
     def _build_chinese_correction_prompt(self, text: str, context: str) -> str:
         """建立中文修正提示詞"""
-        prompt = f"""你是一個專業的繁體中文 OCR 文字校對助手。以下文字是從圖片識別出來的，可能包含錯別字、標點符號錯誤或語句不通順的地方。
+        prompt = f"""你是一個專業的繁體中文 OCR 文字校對助手。
+以下文字是從圖片識別出來的，可能包含錯別字、標點符號錯誤或語句不通順的地方。
 
 **重要規則**：
 1. **必須使用繁體中文輸出**，不可轉換為簡體中文
@@ -144,7 +145,8 @@ class SemanticProcessor:
     
     def _build_english_correction_prompt(self, text: str, context: str) -> str:
         """建立英文修正提示詞"""
-        prompt = f"""You are a professional OCR text proofreader. The following text was extracted from an image and may contain spelling errors, punctuation mistakes, or unclear sentences.
+        prompt = f"""You are a professional OCR text proofreader.
+The following text was extracted from an image and may contain errors.
 
 Please correct these errors following these rules:
 1. Only fix obvious mistakes, don't change the original meaning
