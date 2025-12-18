@@ -21,16 +21,47 @@ class PluginLoader:
     負責發現、載入和管理插件
     """
 
-    def __init__(self, plugin_dir: str = "plugins"):
+    def __init__(self, plugin_dir: str = "plugins", enable_plugins: bool = True):
         """
         初始化插件載入器
 
         Args:
             plugin_dir: 插件目錄路徑
+            enable_plugins: 是否啟用插件載入（安全性選項）
         """
         self.plugin_dir = Path(plugin_dir)
         self.plugins: Dict[str, OCRPlugin] = {}
         self.logger = logging.getLogger("PluginLoader")
+        self.enable_plugins = enable_plugins
+        
+        # 安全性檢查：警告如果插件目錄可寫
+        if self.plugin_dir.exists():
+            self._check_directory_permissions()
+
+    def _check_directory_permissions(self) -> None:
+        """
+        檢查插件目錄權限（安全性）
+        
+        警告：如果插件目錄對當前進程可寫，可能存在安全風險。
+        """
+        import os
+        import stat
+        
+        try:
+            # 檢查目錄是否可寫
+            if os.access(self.plugin_dir, os.W_OK):
+                self.logger.warning(
+                    f"安全性警告：插件目錄 {self.plugin_dir} 對當前進程可寫。"
+                    "建議設定為唯讀以防止未授權的插件上傳。"
+                )
+            
+            # 檢查目錄權限
+            dir_stat = self.plugin_dir.stat()
+            mode = stat.filemode(dir_stat.st_mode)
+            self.logger.info(f"插件目錄權限: {mode}")
+            
+        except Exception as e:
+            self.logger.debug(f"無法檢查插件目錄權限: {e}")
 
     def discover_plugins(self) -> List[str]:
         """
@@ -113,6 +144,11 @@ class PluginLoader:
         Returns:
             成功載入的插件數量
         """
+        # 安全性：如果插件被禁用，跳過載入
+        if not self.enable_plugins:
+            self.logger.info("插件載入已禁用（安全性設定）")
+            return 0
+        
         plugin_files = self.discover_plugins()
         loaded_count = 0
 

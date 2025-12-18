@@ -95,8 +95,9 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 
-# 初始化插件載入器
-plugin_loader = PluginLoader(str(PLUGIN_DIR))
+# 初始化插件載入器（安全性：可透過環境變數禁用）
+ENABLE_PLUGINS = os.getenv("ENABLE_PLUGINS", "true").lower() == "true"
+plugin_loader = PluginLoader(str(PLUGIN_DIR), enable_plugins=ENABLE_PLUGINS)
 plugin_loader.load_all_plugins()
 
 # 圖片大小限制 (避免 OCR 記憶體不足)
