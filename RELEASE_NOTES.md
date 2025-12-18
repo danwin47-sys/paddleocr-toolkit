@@ -1,69 +1,69 @@
-# Release Notes - v1.0.1
+# 發布說明 - v1.0.1
 
-**Release Date**: 2024-12-15  
-**Status**: ✅ Ready for Release
-
----
-
-## 🎉 What's New
-
-### v1.1.0 - Quality & Documentation Release
-
-This release focuses on improving test coverage, documentation, and developer experience.
-
-#### 📊 Testing Improvements (Week 1)
-
-- **+42 new tests** across 3 modules
-- **Coverage increased** from 83% to 84%
-- **100% test pass rate** (391 tests total)
-
-**Details**:
-
-- `batch_processor`: 71% → 74% (+16 tests)
-- `result_parser`: 75% → 91% (+18 tests)  
-- `streaming_utils`: 67% → 85% (+8 tests)
-
-#### 📚 Complete Documentation (Week 2)
-
-7 new comprehensive guides:
-
-- Quick Start Guide - Get running in 5 minutes
-- API Reference - Complete API documentation
-- Best Practices - Production deployment guide
-- FAQ - 40+ common questions answered
-- Troubleshooting - Debug & fix issues
-- Architecture - System design diagrams  
-- Video Script - Tutorial planning
-
-#### 🛠️ Example Tools
-
-5 practical example tools added:
-
-1. **Receipt Scanner** - Extract invoice information
-2. **Performance Benchmark** - Test & optimize performance
-3. **Business Card Scanner** - Extract contacts with vCard export
-4. **CLI Beautifier** - Rich terminal UI
-5. **Document Classifier** - Auto-classify document types
-
-#### 🚀 DevOps & CI/CD
-
-Production-ready infrastructure:
-
-- **GitHub Actions** - Automated testing & deployment
-- **Docker Support** - Multi-stage build configuration
-- **PyPI Ready** - setup.py for distribution
-- **Issue Templates** - Bug report & feature request
-- **Contributing Guidelines** - Open source ready
+**發布日期**: 2024-12-15  
+**狀態**: ✅ 準備發布
 
 ---
 
-## 📦 Installation
+## 🎉 更新亮點
+
+### v1.1.0 - 品質與文件更新版本
+
+此版本專注於提升測試覆蓋率、完善文件以及改善開發者體驗。
+
+#### 📊 測試改善 (第 1 週)
+
+- **新增 42 個測試案例**，橫跨 3 個模組
+- **覆蓋率提升** 從 83% 增加到 84%
+- **100% 測試通過率** (總計 391 個測試)
+
+**詳情**:
+
+- `batch_processor`: 71% → 74% (+16 個測試)
+- `result_parser`: 75% → 91% (+18 個測試)  
+- `streaming_utils`: 67% → 85% (+8 個測試)
+
+#### 📚 完整文件 (第 2 週)
+
+新增 7 份全面指南：
+
+- 快速開始指南 - 5 分鐘內上手
+- API 參考 - 完整的 API 文件
+- 最佳實踐 - 生產環境部署指南
+- FAQ - 解答 40 多個常見問題
+- 故障排除 - 調查與修復問題
+- 架構設計 - 系統設計圖解
+- 影片劇本 - 教學規劃
+
+#### 🛠️ 範例工具
+
+新增 5 個實用的範例工具：
+
+1. **收據掃描器** - 提取發票資訊
+2. **效能基準測試** - 測試與優化效能
+3. **名片掃描器** - 提取聯絡人並匯出 vCard
+4. **CLI 美化器** - Rich 終端機 UI
+5. **文件分類器** - 自動分類文件類型
+
+#### 🚀 DevOps 與 CI/CD
+
+生產級基礎設施：
+
+- **GitHub Actions** - 自動化測試與部署
+- **Docker 支援** - 多階段建置配置
+- **PyPI 準備** - 用於分發的 setup.py
+- **Issue 範本** - Bug 回報與功能建議
+- **貢獻指南** - 開源準備就緒
+
+---
+
+## 📦 安裝
 
 ```bash
 pip install paddleocr-toolkit
 ```
 
-or from source:
+或是從原始碼安裝：
 
 ```bash
 git clone https://github.com/danwin47-sys/paddleocr-toolkit.git
@@ -73,72 +73,72 @@ pip install -e .
 
 ---
 
-## 🔧 Breaking Changes
+## 🔧 重大變更
 
-None - Fully backward compatible with v1.0.0
-
----
-
-## 🐛 Bug Fixes
-
-- Fixed e2e test failures
-- Improved Windows encoding compatibility
-- Enhanced error handling in streaming utils
+無 - 完全向下相容於 v1.0.0
 
 ---
 
-## ⚡ Performance
+## 🐛 Bug 修復
 
-- Maintained excellent performance from v1.0.0
-- Memory usage: <400MB for large PDFs
-- Speed: 1.25s/page average
+- 修復端對端 (e2e) 測試失敗問題
+- 改善 Windows 編碼相容性
+- 增強串流工具 (streaming utils) 中的錯誤處理
 
 ---
 
-## 📊 Statistics
+## ⚡ 效能
+
+- 維持 v1.0.0 的優異效能
+- 記憶體使用：處理大型 PDF 時 < 400MB
+- 速度：平均每頁 1.25 秒
+
+---
+
+## 📊 數據統計
 
 ```
-Total Tests:      391 (+45 from v1.0.0)
-Test Coverage:    84% (+1%)
-Modules:          26 (+7)
-Example Tools:    5 (new)
-Documentation:    13 files (new)
+總測試數:         391 (較 v1.0.0 增加 45 個)
+測試覆蓋率:       84% (+1%)
+模組數:           26 (+7)
+範例工具:         5 (新增)
+文件檔案:         13 個 (新增)
 ```
 
 ---
 
-## 🤝 Contributors
+## 🤝 貢獻者
 
-- Development: Antigravity AI
-- Testing: Community
-- Documentation: Complete
-
----
-
-## 📖 Documentation
-
-- [Quick Start](docs/QUICK_START.md)
-- [API Guide](docs/API_GUIDE.md)
-- [Best Practices](docs/BEST_PRACTICES.md)
-- [Examples](examples/)
-- [Contributing](CONTRIBUTING.md)
+- 開發: Antigravity AI
+- 測試: 社群
+- 文件: 已完成
 
 ---
 
-## 🔗 Links
+## 📖 文件
 
-- [GitHub Repository](https://github.com/danwin47-sys/paddleocr-toolkit)
-- [Issue Tracker](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
-- [Changelog](CHANGELOG.md)
-
----
-
-## 🙏 Acknowledgments
-
-- PaddleOCR team for the excellent OCR engine  
-- Contributors and users for feedback
-- Open source community
+- [快速開始](docs/QUICK_START.md)
+- [API 指南](docs/API_GUIDE.md)
+- [最佳實踐](docs/BEST_PRACTICES.md)
+- [範例](examples/)
+- [貢獻指南](CONTRIBUTING.md)
 
 ---
 
-**Full Changelog**: [v1.0.0...v1.1.0](https://github.com/danwin47-sys/paddleocr-toolkit/compare/v1.0.0...v1.1.0)
+## 🔗 連結
+
+- [GitHub 儲存庫](https://github.com/danwin47-sys/paddleocr-toolkit)
+- [Issue 追蹤器](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
+- [更新日誌](CHANGELOG.md)
+
+---
+
+## 🙏 致謝
+
+- PaddleOCR 團隊提供優異的 OCR 引擎  
+- 貢獻者與使用者的回饋
+- 開源社群
+
+---
+
+**完整更新日誌**: [v1.0.0...v1.1.0](https://github.com/danwin47-sys/paddleocr-toolkit/compare/v1.0.0...v1.1.0)

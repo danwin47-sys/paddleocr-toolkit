@@ -1,12 +1,12 @@
-# Docker部署指南
+# Docker 部署指南
 
-PaddleOCR Toolkit Docker部署文檔。
+PaddleOCR Toolkit Docker 部署文件。
 
 ---
 
 ## 🐳 快速開始
 
-### 方法1：Docker Compose（推薦）
+### 方法 1：Docker Compose（推薦）
 
 ```bash
 # 啟動所有服務
@@ -19,17 +19,17 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-訪問：
+存取：
 
-- Web界面: <http://localhost>
-- API文檔: <http://localhost:8000/docs>
+- Web 介面: <http://localhost>
+- API 文件: <http://localhost:8000/docs>
 
 ---
 
-### 方法2：單獨Docker
+### 方法 2：單獨 Docker
 
 ```bash
-# 建構映像
+# 建構映像檔
 docker build -t paddleocr-toolkit .
 
 # 執行容器
@@ -45,20 +45,20 @@ docker run -d \
 
 ## 📦 服務組成
 
-### API服務
+### API 服務
 
 - **連接埠**: 8000
-- **映像**: 自行建構
-- **卷**: uploads, output, logs
+- **映像檔**: 自行建構
+- **磁碟卷 (Volumes)**: uploads, output, logs
 
-### Web服務
+### Web 服務
 
 - **連接埠**: 80
-- **映像**: nginx:alpine
+- **映像檔**: nginx:alpine
 - **功能**:
-  - 提供Web界面
-  - API反向代理
-  - WebSocket代理
+  - 提供 Web 介面
+  - API 反向代理
+  - WebSocket 代理
 
 ### Redis（可選）
 
@@ -83,7 +83,7 @@ environment:
 
 ---
 
-### 卷掛載
+### 磁碟卷掛載 (Volume Mounting)
 
 ```yaml
 volumes:
@@ -94,11 +94,11 @@ volumes:
 
 ---
 
-## 🚀 GPU支援
+## 🚀 GPU 支援
 
-### 啟用GPU
+### 啟用 GPU
 
-在 `docker-compose.yml` 中取消註釋：
+在 `docker-compose.yml` 中取消註解：
 
 ```yaml
 deploy:
@@ -114,17 +114,17 @@ deploy:
 
 1. 安裝 NVIDIA Docker Runtime：
 
-   ```bash
-   # Ubuntu
-   sudo apt-get install nvidia-docker2
-   sudo systemctl restart docker
-   ```
+    ```bash
+    # Ubuntu
+    sudo apt-get install nvidia-docker2
+    sudo systemctl restart docker
+    ```
 
 2. 驗證：
 
-   ```bash
-   docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-   ```
+    ```bash
+    docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+    ```
 
 ---
 
@@ -155,7 +155,7 @@ docker stats
 
 ## 🔧 維護
 
-### 更新映像
+### 更新映像檔
 
 ```bash
 # 重新建構
@@ -175,10 +175,10 @@ tar -czf backup.tar.gz uploads/ output/
 ### 清理空間
 
 ```bash
-# 清理舊檔案（透過API）
+# 清理舊檔案（透過 API）
 curl -X POST http://localhost:8000/api/files/cleanup?days=7
 
-# 清理Docker
+# 清理 Docker
 docker system prune -a
 ```
 
@@ -198,7 +198,7 @@ UPLOAD_LIMIT=100M
 REDIS_URL=redis://redis:6379
 ```
 
-### 2. 啟用HTTPS
+### 2. 啟用 HTTPS
 
 更新 `nginx.conf`：
 
@@ -231,7 +231,7 @@ deploy:
 
 ## 🐛 疑難排解
 
-### API無法啟動
+### API 無法啟動
 
 檢查日誌：
 
@@ -242,35 +242,35 @@ docker-compose logs api
 常見問題：
 
 - 連接埠衝突：修改 `docker-compose.yml` 中的連接埠
-- 權限問題：確保卷目錄可寫
+- 權限問題：確保磁碟卷目錄可寫
 
-### Web界面無法訪問
+### Web 介面無法存取
 
-1. 檢查nginx狀態：
+1. 檢查 nginx 狀態：
 
-   ```bash
-   docker-compose logs web
-   ```
+    ```bash
+    docker-compose logs web
+    ```
 
-2. 驗證API連線：
+2. 驗證 API 連線：
 
-   ```bash
-   curl http://localhost:8000/
-   ```
+    ```bash
+    curl http://localhost:8000/
+    ```
 
-### GPU不可用
+### GPU 不可用
 
-1. 檢查NVIDIA驅動：
+1. 檢查 NVIDIA 驅動：
 
-   ```bash
-   nvidia-smi
-   ```
+    ```bash
+    nvidia-smi
+    ```
 
-2. 驗證Docker GPU支援：
+2. 驗證 Docker GPU 支援：
 
-   ```bash
-   docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-   ```
+    ```bash
+    docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+    ```
 
 ---
 
@@ -295,13 +295,13 @@ docker-compose exec api bash
 # 更新並重啟
 docker-compose up -d --build
 
-# 僅啟動API
+# 僅啟動 API
 docker-compose up -d api
 
-# 擴展服務
+# 擴充服務
 docker-compose up -d --scale api=3
 ```
 
 ---
 
-**更多資訊**: [Docker官方文檔](https://docs.docker.com/)
+**更多資訊**: [Docker 官方文件](https://docs.docker.com/)

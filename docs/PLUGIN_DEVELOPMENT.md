@@ -1,6 +1,6 @@
 # 插件開發指南
 
-PaddleOCR Toolkit v1.2.0 插件系統開發文檔。
+PaddleOCR Toolkit v1.2.0 插件系統開發文件。
 
 ---
 
@@ -11,7 +11,7 @@ PaddleOCR Toolkit v1.2.0 插件系統開發文檔。
 3. [生命週期](#生命週期)
 4. [開發範例](#開發範例)
 5. [最佳實踐](#最佳實踐)
-6. [API參考](#api參考)
+6. [API 參考](#api-參考)
 
 ---
 
@@ -26,7 +26,7 @@ class MyFirstPlugin(OCRPlugin):
     name = "My First Plugin"
     version = "1.0.0"
     author = "Your Name"
-    description = "我的第一個OCR插件"
+    description = "我的第一個 OCR 插件"
     
     def on_init(self):
         """插件初始化"""
@@ -34,12 +34,12 @@ class MyFirstPlugin(OCRPlugin):
         return True
     
     def on_before_ocr(self, image):
-        """OCR前處理"""
+        """OCR 前處理"""
         # 處理圖片
         return image
     
     def on_after_ocr(self, results):
-        """OCR後處理"""
+        """OCR 後處理"""
         # 處理結果
         return results
 ```
@@ -98,7 +98,7 @@ class ImageProcessor(PreprocessorPlugin):
 
 ### 3. 後處理插件
 
-僅處理OCR結果：
+僅處理 OCR 結果：
 
 ```python
 from paddleocr_toolkit.plugins.base import PostprocessorPlugin
@@ -121,11 +121,11 @@ class ResultProcessor(PostprocessorPlugin):
    ↓
 2. on_init() - 初始化
    ↓
-3. on_before_ocr() - 預處理（每次OCR前）
+3. on_before_ocr() - 預處理（每次 OCR 前）
    ↓
-4. [OCR處理]
+4. [OCR 處理]
    ↓
-5. on_after_ocr() - 後處理（每次OCR後）
+5. on_after_ocr() - 後處理（每次 OCR 後）
    ↓
 6. on_error() - 錯誤處理（如有錯誤）
    ↓
@@ -136,7 +136,7 @@ class ResultProcessor(PostprocessorPlugin):
 
 ## 💡 開發範例
 
-### 範例1：圖片去噪插件
+### 範例 1：圖片降噪插件
 
 ```python
 from paddleocr_toolkit.plugins.base import PreprocessorPlugin
@@ -151,7 +151,7 @@ class DenoisePlugin(PreprocessorPlugin):
         return True
     
     def on_before_ocr(self, image):
-        # 使用OpenCV降噪
+        # 使用 OpenCV 降噪
         denoised = cv2.fastNlMeansDenoising(
             image, 
             None, 
@@ -160,7 +160,7 @@ class DenoisePlugin(PreprocessorPlugin):
         return denoised
 ```
 
-### 範例2：文字格式化插件
+### 範例 2：文字格式化插件
 
 ```python
 from paddleocr_toolkit.plugins.base import PostprocessorPlugin
@@ -182,7 +182,7 @@ class TextFormatterPlugin(PostprocessorPlugin):
         return results
 ```
 
-### 範例3：效能監控插件
+### 範例 3：效能監控插件
 
 ```python
 from paddleocr_toolkit.plugins.base import OCRPlugin
@@ -203,7 +203,7 @@ class PerformanceMonitor(OCRPlugin):
     def on_after_ocr(self, results):
         elapsed = time.time() - self.start_time
         self.timings.append(elapsed)
-        self.logger.info(f"處理耗時: {elapsed:.3f}秒")
+        self.logger.info(f"處理耗時: {elapsed:.3f} 秒")
         return results
     
     def get_average_time(self):
@@ -214,13 +214,13 @@ class PerformanceMonitor(OCRPlugin):
 
 ## ✨ 最佳實踐
 
-### 1. 配置管理
+### 1. 設定管理
 
-使用 `self.config` 接收配置：
+使用 `self.config` 接收設定：
 
 ```python
 def on_init(self):
-    # 讀取配置，提供預設值
+    # 讀取設定，提供預設值
     self.param1 = self.config.get('param1', default_value)
     self.param2 = self.config.get('param2', default_value)
     return True
@@ -289,7 +289,7 @@ def on_after_ocr(self, results):
 
 ---
 
-## 📖 API參考
+## 📖 API 參考
 
 ### OCRPlugin 基類
 
@@ -300,7 +300,7 @@ name: str           # 插件名稱
 version: str        # 版本號
 author: str         # 作者
 description: str    # 描述
-config: Dict        # 配置字典
+config: Dict        # 設定字典
 logger: Logger      # 日誌記錄器
 enabled: bool       # 是否啟用
 ```
@@ -313,13 +313,13 @@ on_init() -> bool
     返回: 是否成功
 
 on_before_ocr(image) -> Any
-    OCR前處理
+    OCR 前處理
     參數: image - 輸入圖片
     返回: 處理後的圖片
 
 on_after_ocr(results) -> Any
-    OCR後處理
-    參數: results - OCR結果
+    OCR 後處理
+    參數: results - OCR 結果
     返回: 處理後的結果
 
 on_error(error: Exception) -> None
@@ -392,7 +392,7 @@ class CommunicatingPlugin(OCRPlugin):
         return results
 ```
 
-### 配置檔案
+### 設定檔案
 
 建立 `plugin_config.yaml`：
 
@@ -411,7 +411,7 @@ statistics:
   save_to_file: true
 ```
 
-載入配置：
+載入設定：
 
 ```python
 import yaml
@@ -458,7 +458,7 @@ assert result is not None
 
 ```python
 def on_before_ocr(self, image):
-    assert image is not None, "圖片不能為None"
+    assert image is not None, "圖片不能為 None"
     assert len(image.shape) == 3, "圖片必須是彩色"
     # 處理...
 ```
@@ -490,7 +490,7 @@ python setup.py sdist bdist_wheel
 
 ### 3. 分享
 
-將插件分享到插件市場或GitHub。
+將插件分享到插件市場或 GitHub。
 
 ---
 
@@ -514,7 +514,7 @@ self.logger.debug(f"變數值: {value}")
 
 ### Q: 插件間如何共享資料？
 
-A: 使用類變數或配置系統：
+A: 使用類變數或設定系統：
 
 ```python
 class MyPlugin(OCRPlugin):

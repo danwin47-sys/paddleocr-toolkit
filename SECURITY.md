@@ -1,47 +1,47 @@
-# Security Policy
+# 安全政策
 
-## Supported Versions
+## 支援版本
 
-| Version | Supported          |
+| 版本 | 是否支援          |
 | ------- | ------------------ |
 | 1.0.x   | :white_check_mark: |
 | < 1.0   | :x:                |
 
-## Reporting a Vulnerability
+## 回報漏洞
 
-We take the security of PaddleOCR Toolkit seriously. If you discover a security vulnerability, please follow these steps:
+我們非常重視 PaddleOCR Toolkit 的安全性。如果你發現了安全漏洞，請遵循以下步驟：
 
-### 1. Do Not Public Disclose
+### 1. 請勿公開洩漏
 
-Please do not publicly disclose the vulnerability until it has been addressed.
+在漏洞得到修復之前，請不要公開洩漏漏洞細節。
 
-### 2. Report Privately
+### 2. 私下回報
 
-Email security details to: [INSERT SECURITY EMAIL]
+將安全詳情發送郵件至：[在此插入安全電子郵件]
 
-Include:
+請包含：
 
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Suggested fix (if any)
+- 漏洞描述
+- 重現步驟
+- 潛在影響
+- 建議的修復方案（如有）
 
-### 3. Response Time
+### 3. 回應時間
 
-- Initial response: Within 48 hours
-- Status update: Within 7 days
-- Fix timeline: Depends on severity
+- 初步回應：48 小時內
+- 狀態更新：7 天內
+- 修復時間表：視嚴重程度而定
 
-## Security Best Practices
+## 安全最佳實踐
 
-When using PaddleOCR Toolkit:
+使用 PaddleOCR Toolkit 時：
 
-1. **Keep Updated**: Always use the latest version
-2. **Validate Input**: Sanitize all user inputs
-3. **Secure Deployment**: Use HTTPS for API deployments
-4. **Access Control**: Implement proper authentication
-5. **Audit Logs**: Enable logging for security monitoring
+1. **保持更新**：始終使用最新版本
+2. **驗證輸入**：過濾所有使用者輸入
+3. **安全部署**：為 API 部署使用 HTTPS
+4. **存取控制**：實施適當的身份驗證 (Authentication)
+5. **稽核日誌**：啟用日誌紀錄以進行安全監控
 
-## Known Issues
+## 已知問題
 
-Check our [Security Advisories](https://github.com/danwin47-sys/paddleocr-toolkit/security/advisories) for known issues.
+請查看我們的 [安全公告](https://github.com/danwin47-sys/paddleocr-toolkit/security/advisories) 以瞭解已知問題。

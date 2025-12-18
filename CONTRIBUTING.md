@@ -1,94 +1,94 @@
 # Contributing to PaddleOCR Toolkit
 
-感谢你考虑为 PaddleOCR Toolkit 做贡献！
+感謝你考慮為 PaddleOCR Toolkit 做貢獻！
 
 ---
 
-## 📋 目录
+## 📋 目錄
 
-- [行为准则](#行为准则)
-- [如何贡献](#如何贡献)
-- [开发设置](#开发设置)
+- [行為準則](#行為準則)
+- [如何貢獻](#如何貢獻)
+- [開發設置](#開發設置)
 - [提交指南](#提交指南)
-- [代码规范](#代码规范)
-- [测试要求](#测试要求)
+- [程式碼規範](#程式碼規範)
+- [測試要求](#測試要求)
 
 ---
 
-## 行为准则
+## 行為準則
 
-本项目采用 [Contributor Covenant](CODE_OF_CONDUCT.md) 行为准则。参与本项目即表示你同意遵守其条款。
+本專案採用 [Contributor Covenant](CODE_OF_CONDUCT.md) 行為準則。參與本專案即表示你同意遵守其條款。
 
 ---
 
-## 如何贡献
+## 如何貢獻
 
-### 报告Bug
+### 回報 Bug
 
-在提交Bug报告前，请先搜索现有的Issues，确保问题尚未被报告。
+在提交 Bug 回報前，請先搜尋現有的 Issues，確保問題尚未被回報。
 
-**Bug报告应包含**:
+**Bug 回報應包含**:
 
-- 清晰的标题
-- 详细的描述
-- 重现步骤
-- 预期行为
-- 实际行为
-- 环境信息（Python版本、操作系统等）
-- 错误日志
+- 清晰的標題
+- 詳細的描述
+- 重現步驟
+- 預期行為
+- 實際行為
+- 環境資訊（Python 版本、作業系統等）
+- 錯誤日誌
 
-### 建议功能
+### 建議功能
 
-我们欢迎新功能建议！请在Issue中：
+我們歡迎新功能建議！請在 Issue 中：
 
 - 描述功能的用途
-- 解释为什么需要这个功能
-- 提供使用范例
+- 解釋為什麼需要這個功能
+- 提供使用範例
 
-### 提交Pull Request
+### 提交 Pull Request
 
-1. Fork仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交变更 (`git commit -m 'Add some AmazingFeature'`)
+1. Fork 儲存庫
+2. 建立功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启Pull Request
+5. 開啟 Pull Request
 
 ---
 
-## 开发设置
+## 開發設置
 
-### 环境要求
+### 環境要求
 
 - Python 3.8+
 - Git
-- 虚拟环境工具
+- 虛擬環境工具
 
-### 安装开发环境
+### 安裝開發環境
 
 ```bash
-# 克隆仓库
+# 克隆儲存庫
 git clone https://github.com/danwin47-sys/paddleocr-toolkit.git
 cd paddleocr-toolkit
 
-# 创建虚拟环境
+# 建立虛擬環境
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 安装开发依赖
+# 安裝開發依賴
 pip install -r requirements.txt
 pip install -e ".[dev]"
 ```
 
-### 运行测试
+### 執行測試
 
 ```bash
-# 运行所有测试
+# 執行所有測試
 pytest tests/
 
-# 运行带覆盖率的测试
+# 執行帶覆蓋率的測試
 pytest tests/ --cov=paddleocr_toolkit --cov-report=html
 
-# 运行特定测试
+# 執行特定測試
 pytest tests/test_ocr_engine.py -v
 ```
 
@@ -96,9 +96,9 @@ pytest tests/test_ocr_engine.py -v
 
 ## 提交指南
 
-### Commit消息格式
+### Commit 訊息格式
 
-我们使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+我們使用 [Conventional Commits](https://www.conventionalcommits.org/) 規範：
 
 ```
 <type>(<scope>): <subject>
@@ -108,17 +108,17 @@ pytest tests/test_ocr_engine.py -v
 <footer>
 ```
 
-**类型**:
+**類型**:
 
 - `feat`: 新功能
-- `fix`: Bug修复
-- `docs`: 文档更新
-- `style`: 代码格式（不影响功能）
-- `refactor`: 重构
-- `test`: 测试相关
-- `chore`: 构建/工具变更
+- `fix`: Bug 修正
+- `docs`: 文件更新
+- `style`: 程式碼格式（不影響功能）
+- `refactor`: 重構
+- `test`: 測試相關
+- `chore`: 建置/工具變更
 
-**范例**:
+**範例**:
 
 ```
 feat(ocr): add support for formula recognition
@@ -131,43 +131,43 @@ Closes #123
 
 ---
 
-## 代码规范
+## 程式碼規範
 
-### Python代码风格
+### Python 程式碼風格
 
-遵循 [PEP 8](https://pep8.org/) 规范，使用以下工具：
+遵循 [PEP 8](https://pep8.org/) 規範，使用以下工具：
 
 ```bash
-# 代码格式化
+# 程式碼格式化
 black paddleocr_toolkit/ tests/
 
-# 导入排序
+# 匯入排序
 isort paddleocr_toolkit/ tests/
 
-# 代码检查
+# 程式碼檢查
 flake8 paddleocr_toolkit/
 
-# 类型检查
+# 型別檢查
 mypy paddleocr_toolkit/
 ```
 
-### 文档字符串
+### 文件字串 (Docstrings)
 
-使用Google风格的docstrings：
+使用 Google 風格的 docstrings：
 
 ```python
 def process_image(image_path: str, dpi: int = 150) -> List[OCRResult]:
-    """处理单张图片
+    """處理單張圖片
     
     Args:
-        image_path: 图片文件路径
-        dpi: 解析度，默认150
+        image_path: 圖片檔案路徑
+        dpi: 解析度，預設 150
         
     Returns:
-        OCR结果列表
+        OCR 結果列表
         
     Raises:
-        FileNotFoundError: 图片文件不存在时
+        FileNotFoundError: 圖片檔案不存在時
         
     Example:
         >>> results = process_image("doc.jpg", dpi=200)
@@ -177,29 +177,29 @@ def process_image(image_path: str, dpi: int = 150) -> List[OCRResult]:
     pass
 ```
 
-### 类型提示
+### 型別提示 (Type Hints)
 
-所有公共函数都应该有类型提示：
+所有公開函式都應該有型別提示：
 
 ```python
 from typing import List, Optional, Dict
 
 def get_config(path: Optional[str] = None) -> Dict[str, Any]:
-    """加载配置文件"""
+    """載入設定檔"""
     pass
 ```
 
 ---
 
-## 测试要求
+## 測試要求
 
-### 单元测试
+### 單元測試
 
-所有新功能都必须包含测试：
+所有新功能都必須包含測試：
 
 ```python
 def test_new_feature():
-    """测试新功能"""
+    """測試新功能"""
     tool = PaddleOCRTool(mode="basic")
     result = tool.new_feature()
     
@@ -207,22 +207,22 @@ def test_new_feature():
     assert len(result) > 0
 ```
 
-### 测试覆盖率
+### 測試覆蓋率
 
-- 目标覆盖率：85%+
-- 新增代码覆盖率：90%+
+- 目標覆蓋率：85%+
+- 新增程式碼覆蓋率：90%+
 
 ```bash
 pytest tests/ --cov=paddleocr_toolkit --cov-report=term-missing
 ```
 
-### 集成测试
+### 整合測試
 
-对于重要功能，提供端到端测试：
+對於重要功能，提供端對端測試：
 
 ```python
 def test_complete_workflow():
-    """测试完整工作流程"""
+    """測試完整工作流程"""
     tool = PaddleOCRTool()
     results, _ = tool.process_pdf("test.pdf")
     text = tool.get_text(results)
@@ -231,47 +231,47 @@ def test_complete_workflow():
 
 ---
 
-## Pull Request检查清单
+## Pull Request 檢查清單
 
-提交PR前，请确认：
+提交 PR 前，請確認：
 
-- [ ] 代码通过所有测试
-- [ ] 新功能有相应测试
-- [ ] 测试覆盖率不降低
-- [ ] 代码已格式化 (black, isort)
-- [ ] 通过代码检查 (flake8, mypy)
-- [ ] 更新了相关文档
-- [ ] 添加了docstrings
-- [ ] Commit消息符合规范
-- [ ] 没有合并冲突
-
----
-
-## 代码审查流程
-
-1. 自动化检查（CI/CD）
-2. 代码审查（至少1人）
-3. 测试验证
-4. 文档更新确认
-5. 合并到主分支
+- [ ] 程式碼通過所有測試
+- [ ] 新功能有相應測試
+- [ ] 測試覆蓋率不降低
+- [ ] 程式碼已格式化 (black, isort)
+- [ ] 通過程式碼檢查 (flake8, mypy)
+- [ ] 更新了相關文件
+- [ ] 新增了 docstrings
+- [ ] Commit 訊息符合規範
+- [ ] 沒有合併衝突
 
 ---
 
-## 发布流程
+## 程式碼審查流程
 
-1. 更新版本号
-2. 更新CHANGELOG
-3. 创建发布标签
-4. 触发自动发布
+1. 自動化檢查（CI/CD）
+2. 程式碼審查（至少 1 人）
+3. 測試驗證
+4. 文件更新確認
+5. 合併到主分支
 
 ---
 
-## 问题与帮助
+## 發布流程
 
-- 📧 提交Issue
+1. 更新版本號
+2. 更新 CHANGELOG
+3. 建立發布標籤
+4. 觸發自動發布
+
+---
+
+## 問題與幫助
+
+- 📧 提交 Issue
 - 💬 GitHub Discussions
-- 📖 查看文档
+- 📖 查看文件
 
 ---
 
-**感谢你的贡献！** 🎉
+**感謝你的貢獻！** 🎉

@@ -1,16 +1,16 @@
 # 📚 API 使用指南
 
-完整的 PaddleOCR Toolkit API 參考文檔。
+完整的 PaddleOCR Toolkit API 參考文件。
 
 ---
 
 ## 📖 目錄
 
 - [核心類別](#核心類別)
-- [OCR處理](#ocr處理)
-- [PDF處理](#pdf處理)
+- [OCR 處理](#ocr-處理)
+- [PDF 處理](#pdf-處理)
 - [輸出管理](#輸出管理)
-- [工具函數](#工具函數)
+- [工具函式](#工具函式)
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### PaddleOCRTool
 
-主要的OCR處理類別。
+主要的 OCR 處理類別。
 
 #### 初始化
 
@@ -26,12 +26,12 @@
 from paddle_ocr_tool import PaddleOCRTool
 
 ocr_tool = PaddleOCRTool(
-    mode="basic",          # OCR模式: basic, structure, vl, formula, hybrid
+    mode="basic",          # OCR 模式: basic, structure, vl, formula, hybrid
     device="gpu",          # 裝置: gpu, cpu
     lang="ch",             # 語言: ch, en, etc.
     use_angle_cls=True,    # 使用角度分類
-    use_gpu=True,          # 使用GPU
-    dpi=150                # PDF轉圖片DPI
+    use_gpu=True,          # 使用 GPU
+    dpi=150                # PDF 轉圖片 DPI
 )
 ```
 
@@ -39,16 +39,16 @@ ocr_tool = PaddleOCRTool(
 
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
-| `mode` | str | "basic" | OCR模式 |
+| `mode` | str | "basic" | OCR 模式 |
 | `device` | str | "gpu" | 計算裝置 |
 | `lang` | str | "ch" | 識別語言 |
 | `use_angle_cls` | bool | True | 文字方向分類 |
-| `use_gpu` | bool | True | 使用GPU |
-| `dpi` | int | 150 | PDF解析度 |
+| `use_gpu` | bool | True | 使用 GPU |
+| `dpi` | int | 150 | PDF 解析度 |
 
 ---
 
-## OCR處理
+## OCR 處理
 
 ### process_image()
 
@@ -59,7 +59,7 @@ results = ocr_tool.process_image(
     image_path="document.jpg"
 )
 
-# 返回: List[OCRResult]
+# 傳回: List[OCRResult]
 for result in results:
     print(result.text)           # 識別文字
     print(result.confidence)     # 信心度 (0-1)
@@ -76,10 +76,10 @@ class OCRResult:
     
     # 便利屬性
     @property
-    def x(self) -> float:  # 左上角x座標
+    def x(self) -> float:  # 左上角 x 座標
     
     @property
-    def y(self) -> float:  # 左上角y座標
+    def y(self) -> float:  # 左上角 y 座標
     
     @property
     def width(self) -> float:  # 寬度
@@ -90,32 +90,32 @@ class OCRResult:
 
 ### process_pdf()
 
-處理PDF文件。
+處理 PDF 文件。
 
 ```python
 all_results, pdf_generator = ocr_tool.process_pdf(
     pdf_path="document.pdf",
     output_searchable_pdf="output.pdf",  # 可選
-    pages=None,                          # None=全部頁面，或[0,1,2]
-    dpi=200,                            # 覆蓋預設DPI
+    pages=None,                          # None=全部頁面，或 [0,1,2]
+    dpi=200,                            # 覆蓋預設 DPI
     show_progress=True                   # 顯示進度條
 )
 
 # all_results: List[List[OCRResult]] - 每頁的結果
-# pdf_generator: PDFGenerator - PDF生成器（如果output_searchable_pdf不為None）
+# pdf_generator: PDFGenerator - PDF 生成器（如果 output_searchable_pdf 不為 None）
 ```
 
 #### 範例：處理特定頁面
 
 ```python
-# 只處理第1, 3, 5頁
+# 只處理第 1, 3, 5 頁
 results, _ = ocr_tool.process_pdf(
     "document.pdf",
     pages=[0, 2, 4]  # 0-indexed
 )
 ```
 
-#### 範例：生成可搜尋PDF
+#### 範例：生成可搜尋 PDF
 
 ```python
 results, pdf_gen = ocr_tool.process_pdf(
@@ -124,16 +124,16 @@ results, pdf_gen = ocr_tool.process_pdf(
     dpi=300
 )
 
-# PDF會自動保存
+# PDF 會自動儲存
 ```
 
 ---
 
-## PDF處理
+## PDF 處理
 
 ### get_text()
 
-從OCR結果提取純文字。
+從 OCR 結果提取純文字。
 
 ```python
 # 單頁結果
@@ -153,7 +153,7 @@ full_text = ocr_tool.get_text(
 
 ### save_as_markdown()
 
-儲存為Markdown格式。
+儲存為 Markdown 格式。
 
 ```python
 ocr_tool.save_as_markdown(
@@ -165,13 +165,13 @@ ocr_tool.save_as_markdown(
 
 ### save_as_json()
 
-儲存為JSON格式。
+儲存為 JSON 格式。
 
 ```python
 ocr_tool.save_as_json(
     all_results,
     output_path="output.json",
-    indent=2                # JSON縮排
+    indent=2                # JSON 縮排
 )
 ```
 
@@ -221,7 +221,7 @@ output_mgr.write_text(results, "doc.txt")
 
 ---
 
-## 工具函數
+## 工具函式
 
 ### 批次處理
 
@@ -258,14 +258,14 @@ binary_img = preprocessor.binarize(image)
 rotated_img = preprocessor.deskew(image)
 ```
 
-### 配置載入
+### 設定載入
 
 ```python
 from paddleocr_toolkit.core import load_config
 
 config = load_config("config.yaml")
 
-# 套用到args
+# 套送到 args
 from paddleocr_toolkit.cli import apply_config_to_args
 apply_config_to_args(config, args)
 ```
@@ -294,7 +294,7 @@ ocr_results = parser.parse_basic_result(raw_result)
 engine.close()
 ```
 
-### 使用Context Manager
+### 使用 Context Manager
 
 ```python
 from paddleocr_toolkit.core import OCREngineManager
@@ -304,7 +304,7 @@ with OCREngineManager(mode="basic") as engine:
     # 自動清理
 ```
 
-### 串流處理大型PDF
+### 串流處理大型 PDF
 
 ```python
 from paddleocr_toolkit.core import streaming_utils
@@ -325,19 +325,19 @@ with streaming_utils.open_pdf_context("large.pdf") as pdf_doc:
 try:
     results = ocr_tool.process_pdf("document.pdf")
 except FileNotFoundError:
-    print("PDF檔案不存在")
+    print("PDF 檔案不存在")
 except ImportError:
     print("缺少必要的套件")
 except Exception as e:
     print(f"處理錯誤: {e}")
 ```
 
-### 使用strict_mode
+### 使用 strict_mode
 
 ```python
 from paddleocr_toolkit.core import OCRResultParser
 
-# 嚴格模式：錯誤時拋出異常
+# 嚴格模式：錯誤時丟出異常
 parser = OCRResultParser(strict_mode=True)
 
 try:
@@ -348,9 +348,9 @@ except ValueError as e:
 
 ---
 
-## 性能優化
+## 效能優化
 
-### GPU加速
+### GPU 加速
 
 ```python
 ocr_tool = PaddleOCRTool(
@@ -384,7 +384,7 @@ ocr_tool = PaddleOCRTool(
     jpeg_quality=85
 )
 
-# 降低DPI
+# 降低 DPI
 results, _ = ocr_tool.process_pdf("doc.pdf", dpi=150)
 ```
 
@@ -392,7 +392,7 @@ results, _ = ocr_tool.process_pdf("doc.pdf", dpi=150)
 
 ## 完整範例
 
-### 端到端OCR流程
+### 端到端 OCR 流程
 
 ```python
 from paddle_ocr_tool import PaddleOCRTool
@@ -402,7 +402,7 @@ from paddleocr_toolkit.outputs import OutputManager
 ocr_tool = PaddleOCRTool(mode="hybrid", device="gpu")
 output_mgr = OutputManager(output_dir="./output")
 
-# 2. 處理PDF
+# 2. 處理 PDF
 all_results, pdf_gen = ocr_tool.process_pdf(
     "input.pdf",
     output_searchable_pdf="output_searchable.pdf",
@@ -424,7 +424,7 @@ avg_confidence = sum(
     for page in all_results
 ) / total_texts
 
-print(f"處理完成: {total_pages}頁, {total_texts}個文字塊")
+print(f"處理完成: {total_pages}頁, {total_texts}個文字區塊")
 print(f"平均信心度: {avg_confidence:.1%}")
 ```
 
@@ -435,7 +435,7 @@ print(f"平均信心度: {avg_confidence:.1%}")
 - [快速開始](QUICK_START.md)
 - [最佳實踐](BEST_PRACTICES.md)
 - [故障排除](TROUBLESHOOTING.md)
-- [示例項目](../examples/README.md)
+- [範例項目](../examples/README.md)
 
 ---
 

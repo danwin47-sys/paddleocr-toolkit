@@ -20,36 +20,36 @@
 
 ### 功能特色
 
-| 功能 | 说明 |
+| 功能 | 說明 |
 |------|------|
-| 📄 可搜索 PDF | 在原始 PDF 上叠加透明文字层，可选取、搜索 |
-| 📝 多种输出格式 | 纯文字、Markdown、JSON、HTML、Excel、LaTeX |
-| 🔀 混合模式 | PP-StructureV3 版面分析 + PP-OCRv5 精确坐标 |
-| 🌐 PDF 翻译 | 使用 Ollama 本地模型翻译，支持双语输出 |
-| 🔧 文字修正 | 自动修复 OCR 空格和格式问题 |
-| 📊 进度条 | 处理多页 PDF 时显示进度 |
-| 🔄 方向校正 | 自动旋转倾斜文档 |
-| ⚙️ 设定档支持 | 支持 YAML 设定档，简化参数输入 |
-| 🛠️ 批次处理 | 支持多线程批次处理图片 |
-| 🎨 CLI美化 | Rich UI支持，炫酷终端界面 |
+| 📄 可搜索 PDF | 在原始 PDF 上疊加透明文字層，可選取、搜尋 |
+| 📝 多種輸出格式 | 純文字、Markdown、JSON、HTML、Excel、LaTeX |
+| 🔀 混合模式 | PP-StructureV3 版面分析 + PP-OCRv5 精確座標 |
+| 🌐 PDF 翻譯 | 使用 Ollama 本地模型翻譯，支持雙語輸出 |
+| 🔧 文字修正 | 自動修復 OCR 空格和格式問題 |
+| 📊 進度條 | 處理多頁 PDF 時顯示進度 |
+| 🔄 方向校正 | 自動旋轉傾斜文檔 |
+| ⚙️ 設定檔支持 | 支持 YAML 設定檔，簡化參數輸入 |
+| 🛠️ 批次處理 | 支持多線程批次處理圖片 |
+| 🎨 CLI美化 | Rich UI支持，炫酷終端界面 |
 
-### 🆕 性能优化（Stage 2）
+### 🆕 性能優化（Stage 2）
 
-| 项目 | 改善 |
+| 項目 | 改善 |
 |------|------|
-| PDF 记忆体使用 | **-90%** (600MB → 20MB) |
-| I/O 写入速度 | **+50%** |
-| 串流处理 | 恒定记忆体处理大型 PDF |
-| 批次缓冲 | 智能批次写入优化 |
+| PDF 記憶體使用 | **-90%** (600MB → 20MB) |
+| I/O 寫入速度 | **+50%** |
+| 串流處理 | 恒定記憶體處理大型 PDF |
+| 批次緩衝 | 智慧批次寫入優化 |
 
-### 🧩 模块化架构（Stage 3）
+### 🧩 模組化架構（Stage 3）
 
-**26个专业化组件**:
+**26 個專業化組件**:
 
-- **CLI层**: `argument_parser`, `config_handler`, `mode_processor`, `output_manager`, `rich_ui`
-- **核心层**: `ocr_engine`, `result_parser`, `pdf_generator`, `pdf_utils`, `streaming_utils`, `config_loader`, `models`
-- **处理器层**: `batch_processor`, `pdf_processor`, `image_preprocessor`, `structure_processor`, `translation_processor`
-- **输出层**: `output_manager`
+- **CLI 層**: `argument_parser`, `config_handler`, `mode_processor`, `output_manager`, `rich_ui`
+- **核心 層**: `ocr_engine`, `result_parser`, `pdf_generator`, `pdf_utils`, `streaming_utils`, `config_loader`, `models`
+- **處理器 層**: `batch_processor`, `pdf_processor`, `image_preprocessor`, `structure_processor`, `translation_processor`
+- **輸出 層**: `output_manager`
 
 ### 📊 代碼質量
 

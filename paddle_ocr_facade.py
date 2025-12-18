@@ -1,0 +1,290 @@
+# -*- coding: utf-8 -*-
+"""
+PaddleOCR Facade - 輕量級 API 層
+
+本模組提供簡化的公開 API，內部委派給各個專業 Processor。
+這是現代化架構的主入口，替代傳統的 paddle_ocr_tool.py。
+
+Example:
+    >>> from paddle_ocr_facade import PaddleOCRFacade
+    >>> 
+    >>> # 基本使用
+    >>> tool = PaddleOCRFacade(mode="hybrid")
+    >>> result = tool.process("document.pdf")
+    >>> 
+    >>> # 帶翻譯
+    >>> result = tool.process("document.pdf", translate=True, target_lang="en")
+"""
+
+import logging
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from paddleocr_toolkit.core import OCRMode
+from paddleocr_toolkit.core.ocr_engine import OCREngineManager
+
+
+class PaddleOCRFacade:
+    """
+    PaddleOCR Facade - 輕量級 API 層
+
+    提供統一的介面，內部委派給專業的 Processor 處理。
+
+    Attributes:
+        mode: OCR 模式
+        engine_manager: OCR 引擎管理器
+        debug_mode: 除錯模式
+        compress_images: 是否壓縮圖片
+        jpeg_quality: JPEG 壓縮品質
+
+    Example:
+        >>> facade = PaddleOCRFacade(mode="hybrid")
+        >>> result = facade.process_hybrid("input.pdf", "output.pdf")
+    """
+
+    def __init__(
+        self,
+        mode: str = "basic",
+        use_orientation_classify: bool = False,
+        use_doc_unwarping: bool = False,
+        use_textline_orientation: bool = False,
+        device: str = "cpu",
+        debug_mode: bool = False,
+        compress_images: bool = True,
+        jpeg_quality: int = 85,
+    ):
+        """
+        初始化 PaddleOCR Facade
+
+        Args:
+            mode: OCR 模式 ('basic', 'structure', 'vl', 'hybrid', 'formula')
+            use_orientation_classify: 是否啟用文件方向自動校正
+            use_doc_unwarping: 是否啟用文件彎曲校正
+            use_textline_orientation: 是否啟用文字行方向偵測
+            device: 運算設備 ('gpu' 或 'cpu')
+            debug_mode: DEBUG 模式（顯示粉紅色文字層）
+            compress_images: 啟用 JPEG 壓縮以減少 PDF 檔案大小
+            jpeg_quality: JPEG 壓縮品質（0-100）
+        """
+        self.mode = mode
+        self.debug_mode = debug_mode
+        self.compress_images = compress_images
+        self.jpeg_quality = jpeg_quality
+        self.device = device
+
+        # 初始化 OCR 引擎管理器
+        self.engine_manager = OCREngineManager(
+            mode=mode,
+            device=device,
+            use_orientation_classify=use_orientation_classify,
+            use_doc_unwarping=use_doc_unwarping,
+            use_textline_orientation=use_textline_orientation,
+        )
+        self.engine_manager.init_engine()
+
+        # 初始化對應的 Processor
+        self._init_processors()
+
+        logging.info(f"PaddleOCRFacade 初始化完成：mode={mode}, device={device}")
+
+    def _init_processors(self):
+        """根據模式初始化對應的 Processor"""
+        if self.mode == "hybrid":
+            from paddleocr_toolkit.processors.hybrid_processor import (
+                HybridPDFProcessor,
+            )
+
+            self.hybrid_processor = HybridPDFProcessor(
+                self.engine_manager,
+                debug_mode=self.debug_mode,
+                compress_images=self.compress_images,
+                jpeg_quality=self.jpeg_quality,
+            )
+            logging.info("HybridPDFProcessor 初始化完成")
+
+        elif self.mode == "basic":
+            from paddleocr_toolkit.processors.basic_processor import BasicProcessor
+
+            self.basic_processor = BasicProcessor(
+                self.engine_manager,
+                debug_mode=self.debug_mode,
+                compress_images=self.compress_images,
+                jpeg_quality=self.jpeg_quality,
+            )
+            logging.info("BasicProcessor 初始化完成")
+
+        # 可以在這裡添加其他模式的 Processor
+        # elif self.mode == "structure":
+        #     self.structure_processor = StructureProcessor(self.engine_manager)
+
+    def process(
+        self,
+        input_path: str,
+        output_path: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """
+        統一處理介面（根據模式自動選擇 Processor）
+
+        Args:
+            input_path: 輸入檔案路徑
+            output_path: 輸出檔案路徑（可選）
+            **kwargs: 其他參數
+
+        Returns:
+            Dict[str, Any]: 處理結果
+
+        Raises:
+            ValueError: 當模式不支援時
+        """
+        if self.mode == "hybrid":
+            return self.process_hybrid(input_path, output_path, **kwargs)
+        elif self.mode == "structure":
+            return self.process_structured(input_path, output_path, **kwargs)
+        elif self.mode == "formula":
+            return self.process_formula(input_path, output_path, **kwargs)
+        elif self.mode == "basic":
+            return self.process_basic(input_path, output_path, **kwargs)
+        else:
+            raise ValueError(f"不支援的模式: {self.mode}")
+
+    def process_hybrid(
+        self,
+        input_path: str,
+        output_path: Optional[str] = None,
+        markdown_output: Optional[str] = None,
+        json_output: Optional[str] = None,
+        html_output: Optional[str] = None,
+        dpi: int = 150,
+        show_progress: bool = True,
+        translate_config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        混合模式處理（委派給 HybridPDFProcessor）
+
+        Args:
+            input_path: 輸入檔案路徑
+            output_path: 可搜尋 PDF 輸出路徑
+            markdown_output: Markdown 輸出路徑
+            json_output: JSON 輸出路徑
+            html_output: HTML 輸出路徑
+            dpi: PDF 解析度
+            show_progress: 是否顯示進度
+            translate_config: 翻譯配置（可選）
+
+        Returns:
+            Dict[str, Any]: 處理結果
+        """
+        if self.mode != "hybrid":
+            raise ValueError(f"process_hybrid 僅適用於 hybrid 模式，當前: {self.mode}")
+
+        return self.hybrid_processor.process_pdf(
+            input_path,
+            output_path=output_path,
+            markdown_output=markdown_output,
+            json_output=json_output,
+            html_output=html_output,
+            dpi=dpi,
+            show_progress=show_progress,
+            translate_config=translate_config,
+        )
+
+    def process_structured(
+        self,
+        input_path: str,
+        output_path: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """
+        結構化識別模式（待實作）
+
+        Args:
+            input_path: 輸入檔案路徑
+            output_path: 輸出路徑
+            **kwargs: 其他參數
+
+        Returns:
+            Dict[str, Any]: 處理結果
+        """
+        raise NotImplementedError("Structure 模式 Processor 尚未實作")
+
+    def process_formula(
+        self,
+        input_path: str,
+        output_path: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """
+        公式識別模式（待實作）
+
+        Args:
+            input_path: 輸入檔案路徑
+            output_path: 輸出路徑
+            **kwargs: 其他參數
+
+        Returns:
+            Dict[str, Any]: 處理結果
+        """
+        raise NotImplementedError("Formula 模式 Processor 尚未實作")
+
+    def process_basic(
+        self,
+        input_path: str,
+        output_path: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """
+        基本 OCR 模式（委派給 BasicProcessor）
+
+        Args:
+            input_path: 輸入檔案路徑
+            output_path: 輸出路徑
+            **kwargs: 其他參數
+
+        Returns:
+            Dict[str, Any]: 處理結果
+        """
+        if self.mode != "basic":
+            raise ValueError(f"process_basic 僅適用於 basic 模式，當前: {self.mode}")
+
+        # 判斷是 PDF 還是圖片
+        from pathlib import Path
+
+        file_ext = Path(input_path).suffix.lower()
+
+        if file_ext == ".pdf":
+            return self.basic_processor.process_pdf(
+                input_path, output_path=output_path, **kwargs
+            )
+        else:
+            # 單張圖片
+            return self.basic_processor.process_image(input_path, **kwargs)
+
+    def predict(self, image):
+        """
+        直接預測（委派給引擎管理器）
+
+        Args:
+            image: 輸入圖片
+
+        Returns:
+            預測結果
+        """
+        return self.engine_manager.predict(image)
+
+    def get_engine(self):
+        """
+        獲取底層 OCR 引擎（用於向後相容）
+
+        Returns:
+            OCR 引擎實例
+        """
+        return self.engine_manager.get_engine()
+
+    def __repr__(self) -> str:
+        """字串表示"""
+        return f"PaddleOCRFacade(mode={self.mode}, device={self.device})"
+
+
+# 向後相容：提供舊名稱的別名
+PaddleOCRTool = PaddleOCRFacade

@@ -6,13 +6,13 @@
 
 ## 📦 安裝
 
-### 方法1: 使用 pip (推薦)
+### 方法 1: 使用 pip (推薦)
 
 ```bash
 pip install paddleocr PyMuPDF pillow
 ```
 
-### 方法2: 從源碼安裝
+### 方法 2: 從原始碼安裝
 
 ```bash
 git clone https://github.com/danwin47-sys/paddleocr-toolkit.git
@@ -22,9 +22,9 @@ pip install -r requirements.txt
 
 ---
 
-## 🎯 第一個OCR程序
+## 🎯 第一個 OCR 程式
 
-### 1. 基本圖片OCR
+### 1. 基本圖片 OCR
 
 ```python
 from paddle_ocr_tool import PaddleOCRTool
@@ -41,7 +41,7 @@ for result in results:
     print(f"信心度: {result.confidence:.2%}")
 ```
 
-### 2. PDF轉文字
+### 2. PDF 轉文字
 
 ```python
 from paddle_ocr_tool import PaddleOCRTool
@@ -49,7 +49,7 @@ from paddle_ocr_tool import PaddleOCRTool
 # 初始化
 ocr_tool = PaddleOCRTool(mode="basic", dpi=200)
 
-# 處理PDF
+# 處理 PDF
 all_results, pdf_gen = ocr_tool.process_pdf("document.pdf")
 
 # 提取所有文字
@@ -57,14 +57,15 @@ full_text = ocr_tool.get_text(all_results)
 print(full_text)
 ```
 
-### 3. 生成可搜尋PDF
+### 3. 生成可搜尋 PDF
 
 ```python
 from paddle_ocr_tool import PaddleOCRTool
 
+# 初始化
 ocr_tool = PaddleOCRTool(mode="basic")
 
-# 生成可搜尋PDF
+# 生成可搜尋 PDF
 ocr_tool.process_pdf(
     "input.pdf",
     output_searchable_pdf="output_searchable.pdf"
@@ -81,13 +82,13 @@ ocr_tool.process_pdf(
 # 處理圖片
 python paddle_ocr_tool.py document.jpg
 
-# 處理PDF
+# 處理 PDF
 python paddle_ocr_tool.py document.pdf
 
 # 指定輸出格式
 python paddle_ocr_tool.py document.pdf --format md json html
 
-# 生成可搜尋PDF
+# 生成可搜尋 PDF
 python paddle_ocr_tool.py document.pdf --searchable
 ```
 
@@ -97,10 +98,10 @@ python paddle_ocr_tool.py document.pdf --searchable
 # 使用結構化模式
 python paddle_ocr_tool.py document.pdf --mode structure
 
-# 設定DPI
+# 設定 DPI
 python paddle_ocr_tool.py document.pdf --dpi 300
 
-# 使用GPU
+# 使用 GPU
 python paddle_ocr_tool.py document.pdf --device gpu
 
 # 翻譯功能
@@ -114,7 +115,7 @@ python paddle_ocr_tool.py input_folder/ --batch
 
 ## 📖 常用模式
 
-### basic模式（最快）
+### basic 模式（最快）
 
 ```python
 ocr_tool = PaddleOCRTool(mode="basic")
@@ -124,7 +125,7 @@ ocr_tool = PaddleOCRTool(mode="basic")
 - 📝 適合純文字文件
 - 💾 記憶體使用最少
 
-### structure模式（最準確）
+### structure 模式（最準確）
 
 ```python
 ocr_tool = PaddleOCRTool(mode="structure")
@@ -134,7 +135,7 @@ ocr_tool = PaddleOCRTool(mode="structure")
 - 📊 保留文件結構
 - 🔍 適合複雜文件
 
-### hybrid模式（平衡）
+### hybrid 模式（平衡）
 
 ```python
 ocr_tool = PaddleOCRTool(mode="hybrid")
@@ -154,7 +155,7 @@ ocr_tool = PaddleOCRTool(mode="hybrid")
 ocr_tool = PaddleOCRTool(
     mode="hybrid",
     dpi=300,           # 提高解析度
-    device="gpu"       # 使用GPU加速
+    device="gpu"       # 使用 GPU 加速
 )
 ```
 
@@ -182,9 +183,9 @@ ocr_tool = PaddleOCRTool(
 
 ---
 
-## 🔧 配置文件
+## 🔧 設定檔
 
-創建 `config.yaml`:
+建立 `config.yaml`:
 
 ```yaml
 ocr:
@@ -201,7 +202,7 @@ compression:
   jpeg_quality: 85
 ```
 
-使用配置:
+使用設定:
 
 ```bash
 python paddle_ocr_tool.py document.pdf --config config.yaml
@@ -239,9 +240,9 @@ python paddle_ocr_tool.py doc.pdf --format md json html
 
 ## ❓ 常見問題
 
-### Q: GPU加速不工作？
+### Q: GPU 加速報錯？
 
-**A**: 確認已安裝GPU版本的PaddlePaddle:
+**A**: 確認已安裝 GPU 版本的 PaddlePaddle:
 
 ```bash
 python -m pip install paddlepaddle-gpu
@@ -249,7 +250,7 @@ python -m pip install paddlepaddle-gpu
 
 ### Q: 記憶體不足？
 
-**A**: 降低DPI或啟用壓縮:
+**A**: 降低 DPI 或啟用壓縮:
 
 ```bash
 python paddle_ocr_tool.py doc.pdf --dpi 150 --compress
@@ -257,7 +258,7 @@ python paddle_ocr_tool.py doc.pdf --dpi 150 --compress
 
 ### Q: 中文識別不準確？
 
-**A**: 使用更高的DPI和hybrid模式:
+**A**: 使用更高的 DPI 和 hybrid 模式:
 
 ```bash
 python paddle_ocr_tool.py doc.pdf --mode hybrid --dpi 300
@@ -267,9 +268,9 @@ python paddle_ocr_tool.py doc.pdf --mode hybrid --dpi 300
 
 ## 🎓 下一步
 
-- 📖 閱讀 [API文檔](API_GUIDE.md)
+- 📖 閱讀 [API 文件](API_GUIDE.md)
 - 🔧 查看 [最佳實踐](BEST_PRACTICES.md)
-- 💡 試用 [示例項目](../examples/README.md)
+- 💡 試用 [範例項目](../examples/README.md)
 - 🐛 [故障排除](TROUBLESHOOTING.md)
 
 ---

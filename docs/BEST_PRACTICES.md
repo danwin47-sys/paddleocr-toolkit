@@ -19,11 +19,11 @@ ocr_tool = PaddleOCRTool(mode="structure")
 ocr_tool = PaddleOCRTool(mode="hybrid")
 ```
 
-### DPI設定建議
+### DPI 設定建議
 
-| 文件類型 | 推薦DPI | 說明 |
+| 文件類型 | 推薦 DPI | 說明 |
 |----------|---------|------|
-| 掃描文件 | 200-300 | 高質量掃描 |
+| 掃描文件 | 200-300 | 高品質掃描 |
 | 拍照文件 | 150-200 | 清晰照片 |
 | 螢幕截圖 | 72-150 | 數位文件 |
 | 低品質掃描 | 300+ | 模糊文件 |
@@ -31,10 +31,10 @@ ocr_tool = PaddleOCRTool(mode="hybrid")
 ### GPU vs CPU
 
 ```python
-# 大量文件 → 使用GPU
+# 大量文件 → 使用 GPU
 ocr_tool = PaddleOCRTool(device="gpu")
 
-# 少量文件 → CPU即可
+# 少量文件 → CPU 即可
 ocr_tool = PaddleOCRTool(device="cpu")
 ```
 
@@ -86,10 +86,10 @@ high_confidence_results = [
 
 ## 💾 記憶體管理
 
-### 處理大型PDF
+### 處理大型 PDF
 
 ```python
-# 方法1: 分批處理
+# 方法 1: 分批處理
 from paddleocr_toolkit.core import streaming_utils
 
 for batch in streaming_utils.batch_pages_generator("large.pdf", batch_size=10):
@@ -102,7 +102,7 @@ for batch in streaming_utils.batch_pages_generator("large.pdf", batch_size=10):
 ```
 
 ```python
-# 方法2: 啟用壓縮
+# 方法 2: 啟用壓縮
 ocr_tool = PaddleOCRTool(
     enable_compression=True,
     jpeg_quality=85
@@ -159,7 +159,7 @@ from tqdm import tqdm
 
 pdf_files = list(Path("pdfs/").glob("*.pdf"))
 
-for pdf_file in tqdm(pdf_files, desc="處理PDF"):
+for pdf_file in tqdm(pdf_files, desc="處理 PDF"):
     results, _ = ocr_tool.process_pdf(
         str(pdf_file),
         show_progress=False  # 關閉內部進度
@@ -212,7 +212,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def safe_process_pdf(pdf_path):
-    """安全處理PDF with完整錯誤處理"""
+    """安全處理 PDF 並帶有完整錯誤處理"""
     try:
         results, _ = ocr_tool.process_pdf(pdf_path)
         return results, None
@@ -248,28 +248,28 @@ def process_with_retry(pdf_path):
 
 ---
 
-## 📊 質量控制
+## 📊 品質控制
 
-### 自動質量檢查
+### 自動品質檢查
 
 ```python
 def quality_check(results):
-    """檢查OCR結果質量"""
+    """檢查 OCR 結果品質"""
     issues = []
     
-    # 檢查1: 平均信心度
+    # 檢查 1: 平均信心度
     avg_conf = sum(r.confidence for page in results for r in page) / \
                sum(len(page) for page in results)
     
     if avg_conf < 0.7:
         issues.append(f"平均信心度過低: {avg_conf:.1%}")
     
-    # 檢查2: 空頁面
+    # 檢查 2: 空頁面
     empty_pages = [i for i, page in enumerate(results) if len(page) == 0]
     if empty_pages:
         issues.append(f"空頁面: {empty_pages}")
     
-    # 檢查3: 文字過少
+    # 檢查 3: 文字過少
     min_texts = min(len(page) for page in results if len(page) > 0)
     if min_texts < 5:
         issues.append(f"某些頁面文字過少: {min_texts}")
@@ -279,7 +279,7 @@ def quality_check(results):
 # 使用
 issues = quality_check(all_results)
 if issues:
-    print("質量問題:")
+    print("品質問題:")
     for issue in issues:
         print(f"  - {issue}")
 ```
@@ -329,7 +329,7 @@ my_ocr_project/
 └── main.py
 ```
 
-### 配置管理
+### 設定管理
 
 ```yaml
 # config/production.yaml
@@ -376,7 +376,7 @@ def test_basic_ocr():
 
 ```python
 def test_pdf_workflow():
-    """測試完整PDF處理流程"""
+    """測試完整 PDF 處理流程"""
     ocr_tool = PaddleOCRTool(mode="hybrid")
     
     # 處理
@@ -392,19 +392,19 @@ def test_pdf_workflow():
 
 ---
 
-## 📚 文檔建議
+## 📚 文件建議
 
 ### 程式碼註解
 
 ```python
 class MyOCRProcessor:
-    """自定義OCR處理器
+    """自定義 OCR 處理器
     
-    負責處理特定類型的文件，包括預處理、
-    OCR處理、後處理和results驗證。
+    負責處理特定類型之文件，包括預處理、
+    OCR 處理、後處理和結果驗證。
     
     Attributes:
-        ocr_tool: PaddleOCRTool實例
+        ocr_tool: PaddleOCRTool 實例
         preprocessor: 圖片預處理器
         validator: 結果驗證器
         
@@ -415,17 +415,17 @@ class MyOCRProcessor:
     """
     
     def process(self, pdf_path: str) -> List[List[OCRResult]]:
-        """處理PDF文件
+        """處理 PDF 文件
         
         Args:
-            pdf_path: PDF檔案路徑
+            pdf_path: PDF 檔案路徑
             
         Returns:
-            每頁的OCR結果列表
+            每頁之 OCR 結果列表
             
         Raises:
             FileNotFoundError: 檔案不存在
-            ValueError: PDF格式錯誤
+            ValueError: PDF 格式錯誤
         """
         pass
 ```
@@ -440,7 +440,7 @@ class MyOCRProcessor:
 import time
 
 def benchmark_ocr(pdf_path, modes=["basic", "hybrid", "structure"]):
-    """對比不同模式的性能"""
+    """對比不同模式之效能"""
     results = {}
     
     for mode in modes:
@@ -463,7 +463,7 @@ def benchmark_ocr(pdf_path, modes=["basic", "hybrid", "structure"]):
 
 ## 🌟 生產部署
 
-### Docker部署
+### Docker 部署
 
 ```dockerfile
 FROM python:3.8
@@ -483,7 +483,7 @@ CMD ["python", "main.py"]
 ```python
 import os
 
-# 從環境變數讀取配置
+# 從環境變數讀取設定
 OCR_MODE = os.getenv("OCR_MODE", "hybrid")
 OCR_DEVICE = os.getenv("OCR_DEVICE", "gpu")
 DPI = int(os.getenv("DPI", "200"))
@@ -500,9 +500,9 @@ ocr_tool = PaddleOCRTool(
 ## 📖 延伸閱讀
 
 - [快速開始](QUICK_START.md)
-- [API指南](API_GUIDE.md)
+- [API 指南](API_GUIDE.md)
 - [故障排除](TROUBLESHOOTING.md)
-- [示例項目](../examples/README.md)
+- [範例項目](../examples/README.md)
 
 ---
 

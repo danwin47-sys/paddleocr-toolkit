@@ -1,14 +1,14 @@
-# CLI Commands Documentation
+# CLI 命令文件
 
 ## 可用命令
 
-PaddleOCR Toolkit v1.2.0提供以下CLI命令：
+PaddleOCR Toolkit v1.2.0 提供以下 CLI 命令：
 
 ---
 
 ## paddleocr init
 
-初始化PaddleOCR Toolkit项目。
+初始化 PaddleOCR Toolkit 專案。
 
 ### 用法
 
@@ -16,35 +16,35 @@ PaddleOCR Toolkit v1.2.0提供以下CLI命令：
 paddleocr init [directory]
 ```
 
-### 参数
+### 參數
 
-- `directory`: 项目目录（可选，默认为当前目录）
+- `directory`: 專案目錄（可選，預設為當前目錄）
 
-### 示例
+### 範例
 
 ```bash
-# 在当前目录初始化
+# 在當前目錄初始化
 paddleocr init
 
-# 在指定目录初始化
+# 在指定目錄初始化
 paddleocr init my_ocr_project
 ```
 
-### 创建内容
+### 建立內容
 
-- `input/` - 输入文件目录
-- `output/` - 输出结果目录
-- `config/` - 配置文件目录
-- `logs/` - 日志文件目录
-- `config/default.yaml` - 默认配置
-- `README.md` - 项目说明
-- `.gitignore` - Git忽略文件
+- `input/` - 輸入檔案目錄
+- `output/` - 輸出結果目錄
+- `config/` - 設定檔目錄
+- `logs/` - 日誌檔案目錄
+- `config/default.yaml` - 預設設定
+- `README.md` - 專案說明
+- `.gitignore` - Git 忽略檔案
 
 ---
 
 ## paddleocr config
 
-交互式配置向导。
+互動式設定精靈。
 
 ### 用法
 
@@ -52,32 +52,32 @@ paddleocr init my_ocr_project
 paddleocr config [--show CONFIG_FILE]
 ```
 
-### 选项
+### 選項
 
-- `--show CONFIG_FILE`: 显示指定配置文件的内容
+- `--show CONFIG_FILE`: 顯示指定設定檔的內容
 
-### 示例
+### 範例
 
 ```bash
-# 启动配置向导
+# 啟動設定精靈
 paddleocr config
 
-# 显示配置文件
+# 顯示設定檔
 paddleocr config --show config/default.yaml
 ```
 
-### 配置项
+### 設定項
 
-- **OCR设置**: mode, device, dpi, lang
-- **输出设置**: format, directory
-- **性能设置**: batch_size, max_workers, enable_cache
-- **日志设置**: level, file
+- **OCR 設定**: mode, device, dpi, lang
+- **輸出設定**: format, directory
+- **效能設定**: batch_size, max_workers, enable_cache
+- **日誌設定**: level, file
 
 ---
 
 ## paddleocr process
 
-处理文件或目录。
+處理檔案或目錄。
 
 ### 用法
 
@@ -85,26 +85,26 @@ paddleocr config --show config/default.yaml
 paddleocr process INPUT [options]
 ```
 
-### 参数
+### 參數
 
-- `INPUT`: 输入文件或目录
+- `INPUT`: 輸入檔案或目錄
 
-### 选项
+### 選項
 
-- `--mode {basic,hybrid,structure}`: OCR模式（默认: hybrid）
-- `--output DIR`: 输出目录
-- `--format FORMAT`: 输出格式（默认: md）
+- `--mode {basic,hybrid,structure}`: OCR 模式（預設: hybrid）
+- `--output DIR`: 輸出目錄
+- `--format FORMAT`: 輸出格式（預設: md）
 
-### 示例
+### 範例
 
 ```bash
-# 处理单个PDF
+# 處理單個 PDF
 paddleocr process document.pdf
 
-# 指定模式和输出
+# 指定模式和輸出
 paddleocr process document.pdf --mode structure --output results/
 
-# 批量处理
+# 批次處理
 paddleocr process documents/ --format json
 ```
 
@@ -112,7 +112,7 @@ paddleocr process documents/ --format json
 
 ## paddleocr benchmark
 
-性能基准测试。
+效能基準測試。
 
 ### 用法
 
@@ -120,43 +120,43 @@ paddleocr process documents/ --format json
 paddleocr benchmark PDF [--output REPORT]
 ```
 
-### 参数
+### 參數
 
-- `PDF`: 测试PDF文件
+- `PDF`: 測試 PDF 檔案
 
-### 选项
+### 選項
 
-- `--output REPORT`: 报告输出路径（可选）
+- `--output REPORT`: 報告輸出路徑（可選）
 
-### 示例
+### 範例
 
 ```bash
-# 运行基准测试
+# 執行基準測試
 paddleocr benchmark test.pdf
 
-# 保存报告
+# 儲存報告
 paddleocr benchmark test.pdf --output benchmark_report.json
 ```
 
-### 测试场景
+### 測試場景
 
 1. Basic (DPI 150)
 2. Basic (DPI 200)
 3. Hybrid (DPI 150)
 4. Hybrid (DPI 200)
 
-### 输出
+### 輸出
 
-- 处理时间
-- 速度（秒/页）
-- 内存使用
-- JSON格式报告
+- 處理時間
+- 速度（秒/頁）
+- 記憶體使用
+- JSON 格式報告
 
 ---
 
 ## paddleocr validate
 
-验证OCR结果准确率。
+驗證 OCR 結果準確率。
 
 ### 用法
 
@@ -164,88 +164,88 @@ paddleocr benchmark test.pdf --output benchmark_report.json
 paddleocr validate OCR_RESULTS GROUND_TRUTH
 ```
 
-### 参数
+### 參數
 
-- `OCR_RESULTS`: OCR结果JSON文件
-- `GROUND_TRUTH`: 真实文本TXT文件
+- `OCR_RESULTS`: OCR 結果 JSON 檔案
+- `GROUND_TRUTH`: 真實文字 TXT 檔案
 
-### 示例
+### 範例
 
 ```bash
 paddleocr validate output.json ground_truth.txt
 ```
 
-### 指标
+### 指標
 
-- **字符准确率**: 字符级别的准确度
-- **词准确率**: 词级别的准确度
-- **编辑距离**: Levenshtein距离
-- **综合评分**: 整体评级
+- **字元準確率**: 字元層級的準確度
+- **詞準確率**: 詞層級的準確度
+- **編輯距離**: Levenshtein 距離
+- **綜合評分**: 整體評級
 
-### 输出
+### 輸出
 
 ```
-字符准确率: 95.2%
-词准确率: 92.8%
-编辑距离: 45
-综合准确率: 94.0%
-评级: +++ 优秀
+字元準確率: 95.2%
+詞準確率: 92.8%
+編輯距離: 45
+綜合準確率: 94.0%
+評級: +++ 優秀
 ```
 
 ---
 
-## 全局选项
+## 全域選項
 
-所有命令都支持以下全局选项：
+所有命令都支援以下全域選項：
 
-- `--version`: 显示版本信息
-- `--help`: 显示帮助信息
+- `--version`: 顯示版本資訊
+- `--help`: 顯示幫助資訊
 
 ---
 
-## 示例工作流
+## 範例工作流程
 
-### 1. 创建新项目
+### 1. 建立新專案
 
 ```bash
 # 初始化
 paddleocr init my_project
 cd my_project
 
-# 配置
+# 設定
 paddleocr config
 
-# 处理文件
+# 處理檔案
 cp ~/document.pdf input/
 paddleocr process input/document.pdf
 
-# 查看结果
+# 查看結果
 cat output/document.md
 ```
 
-### 2. 性能测试
+### 2. 效能測試
 
 ```bash
-# 测试性能
+# 測試效能
 paddleocr benchmark test.pdf --output report.json
 
-# 查看报告
+# 查看報告
 cat report.json
 ```
 
-### 3. 质量验证
+### 3. 品質驗證
 
 ```bash
-# 处理文件
+# 處理檔案
 paddleocr process document.pdf --format json --output results/
 
-# 验证准确率
+# 驗證準確率
 paddleocr validate results/document.json ground_truth.txt
 ```
 
 ---
 
-## 配置文件示例
+## 設定檔範例
 
 `config/default.yaml`:
 
@@ -273,25 +273,25 @@ logging:
 
 ---
 
-## 常见问题
+## 常見問題
 
-### Q: 如何更改OCR语言？
+### Q: 如何更改 OCR 語言？
 
-A: 使用`config`命令或编辑配置文件中的`ocr.lang`。
+A: 使用 `config` 命令或編輯設定檔中的 `ocr.lang`。
 
-### Q: 如何提升处理速度？
+### Q: 如何提升處理速度？
 
 A:
 
-1. 使用GPU (`device: gpu`)
-2. 降低DPI (`dpi: 150`)
-3. 启用缓存 (`enable_cache: true`)
+1. 使用 GPU (`device: gpu`)
+2. 降低 DPI (`dpi: 150`)
+3. 啟用快取 (`enable_cache: true`)
 4. 增加批次大小 (`batch_size: 16`)
 
-### Q: 支持哪些输出格式？
+### Q: 支援哪些輸出格式？
 
 A: md, json, html, txt, xlsx
 
 ---
 
-**更多信息**: [完整文档](https://github.com/danwin47-sys/paddleocr-toolkit)
+**更多資訊**: [完整文件](https://github.com/danwin47-sys/paddleocr-toolkit)

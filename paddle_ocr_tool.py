@@ -45,6 +45,13 @@ from typing import Any, Dict, List, Optional, Tuple
 # 停用模型來源檢查以加快啟動速度（已有本機模型時不需要連線檢查）
 os.environ["DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
+# ===== 設定 Poppler 路徑 =====
+# 設定 Poppler 的二進位檔案路徑，確保 pdftoppm, pdfimages 等工具可被調用
+poppler_bin = Path(__file__).parent / "Release-25.07.0-0" / "poppler-25.07.0" / "Library" / "bin"
+if poppler_bin.exists():
+    os.environ["PATH"] = str(poppler_bin) + os.pathsep + os.environ["PATH"]
+    logging.debug(f"已將 Poppler 路徑加入 PATH: {poppler_bin}")
+
 # ===== 從 paddleocr_toolkit 套件匯入模組 =====
 try:
     from paddleocr_toolkit.core import (
@@ -66,7 +73,7 @@ try:
         fix_english_spacing,
     )
 
-    # Stage 3 新模組（可選導入，確保向後兼容）
+    # Stage 3 新模組（選擇性匯入，確保向後相容）
     try:
         from paddleocr_toolkit.core import OCREngineManager, OCRResultParser
         from paddleocr_toolkit.outputs import OutputManager
@@ -75,7 +82,7 @@ try:
         HAS_STAGE3_MODULES = True
     except ImportError:
         HAS_STAGE3_MODULES = False
-        logging.warning("Stage 3 模組未安裝，使用傳統實現")
+        logging.warning("Stage 3 模組未安裝，使用傳統實作")
 
     HAS_TOOLKIT = True
 except ImportError:
@@ -338,7 +345,7 @@ class PaddleOCRTool:
                 logging.info("[Stage 3] 使用模組化架構初始化")
 
             except Exception as e:
-                logging.warning(f"[Stage 3] 模組化初始化失敗: {e}，回退到傳統實現")
+                logging.warning(f"[Stage 3] 模組化初始化失敗: {e}，回退到傳統實作")
                 self._using_stage3 = False
                 self._legacy_init(
                     mode,
@@ -366,7 +373,7 @@ class PaddleOCRTool:
         use_textline_orientation: bool,
         device: str,
     ):
-        """傳統初始化方法（向後兼容）"""
+        """傳統初始化方法（向後相容）"""
         # 初始化對應的 OCR 引擎
         print(f"正在初始化 PaddleOCR 3.x (模式: {mode})...")
         if self.debug_mode:
@@ -446,7 +453,7 @@ class PaddleOCRTool:
         if self._using_stage3 and hasattr(self, "result_parser"):
             return self.result_parser.parse_basic_result(predict_result)
 
-        # 傳統實現（向後兼容）
+        # 傳統實作（向後相容）
         results = []
 
         try:
@@ -509,7 +516,7 @@ class PaddleOCRTool:
                 predict_result = self.engine_manager.predict(input=processed_path)
                 results = self.result_parser.parse_basic_result(predict_result)
             else:
-                # === 传统实现 ===
+                # === 傳統實作 ===
                 # PaddleOCR 3.x 使用 predict() 方法
                 predict_result = self.ocr.predict(input=processed_path)
                 results = self._parse_predict_result(predict_result)
@@ -571,7 +578,7 @@ class PaddleOCRTool:
                     pass
             return results
 
-    # ========== Structured 处理辅助方法 ==========
+    # ========== Structured 處理輔助方法 ==========
 
     def _setup_structured_output_paths(
         self,
@@ -579,7 +586,7 @@ class PaddleOCRTool:
         json_output: Optional[str],
         script_dir: Path,
     ) -> Tuple[Optional[Path], Optional[Path]]:
-        """设定 structured 模式的输出路径"""
+        """設定 structured 模式的輸出路徑"""
         md_path, json_path = None, None
 
         if markdown_output:
@@ -599,7 +606,7 @@ class PaddleOCRTool:
     def _process_with_tempdir(
         self, res, save_method_name: str, glob_pattern: str, process_func
     ) -> None:
-        """使用临时目录处理输出的通用方法"""
+        """使用臨時目錄處理輸出的通用方法"""
         temp_dir = tempfile.mkdtemp()
         try:
             save_method = getattr(res, save_method_name, None)
@@ -608,7 +615,7 @@ class PaddleOCRTool:
                 for file in Path(temp_dir).glob(glob_pattern):
                     process_func(file)
         except Exception as e:
-            logging.warning(f"{save_method_name} 失败: {e}")
+            logging.warning(f"{save_method_name} 失敗: {e}")
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -627,7 +634,7 @@ class PaddleOCRTool:
         all_markdown_content: List[str],
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存单页的各种输出"""
+        """儲存單頁的各種輸出"""
         # Markdown
         if markdown_output:
             self._process_with_tempdir(
@@ -654,7 +661,7 @@ class PaddleOCRTool:
         if excel_output:
             if not HAS_OPENPYXL:
                 if page_count == 1:
-                    print("警告：需要安装 openpyxl: pip install openpyxl")
+                    print("警告：需要安裝 openpyxl: pip install openpyxl")
             else:
                 excel_path = Path(excel_output)
 
@@ -696,12 +703,12 @@ class PaddleOCRTool:
         md_path: Path,
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存合并后的 Markdown 文件"""
+        """儲存合併後的 Markdown 檔案"""
         if all_markdown_content:
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("\n\n---\n\n".join(all_markdown_content))
             result_summary["markdown_files"].append(str(md_path))
-            print(f"[OK] Markdown 已保存：{md_path}")
+            print(f"[OK] Markdown 已儲存：{md_path}")
 
     def process_structured(
         self,
@@ -728,7 +735,7 @@ class PaddleOCRTool:
         """
         if self.mode not in ["structure", "vl"]:
             raise ValueError(
-                f"process_structured 仅适用于 structure 或 vl 模式，当前模式: {self.mode}"
+                f"process_structured 僅適用於 structure 或 vl 模式，當前模式: {self.mode}"
             )
 
         result_summary = {
@@ -742,9 +749,9 @@ class PaddleOCRTool:
         }
 
         try:
-            print(f"正在处理: {input_path}")
+            print(f"正在處理: {input_path}")
 
-            # 使用 predict() 方法处理
+            # 使用 predict() 方法處理
             output = self.ocr.predict(input=input_path)
 
             # 获取脚本所在目录作为默认输出目录
@@ -778,26 +785,26 @@ class PaddleOCRTool:
                     result_summary,
                 )
 
-            # 保存合并的 Markdown
+            # 儲存合併的 Markdown
             if markdown_output and md_path:
                 self._save_structured_markdown(
                     all_markdown_content, md_path, result_summary
                 )
 
-            # 完成消息
+            # 完成訊息
             if result_summary.get("excel_files"):
-                print(f"[OK] Excel 已保存：{len(result_summary['excel_files'])} 个文件")
+                print(f"[OK] Excel 已儲存：{len(result_summary['excel_files'])} 個檔案")
 
             if result_summary.get("html_files"):
-                print(f"[OK] HTML 已保存：{len(result_summary['html_files'])} 个文件")
+                print(f"[OK] HTML 已儲存：{len(result_summary['html_files'])} 個檔案")
 
             result_summary["pages_processed"] = page_count
-            print(f"[OK] 处理完成：{page_count} 页")
+            print(f"[OK] 處理完成：{page_count} 頁")
 
             return result_summary
 
         except Exception as e:
-            print(f"错误：处理失败 ({input_path}): {e}")
+            print(f"錯誤：處理失敗 ({input_path}): {e}")
             result_summary["error"] = str(e)
             return result_summary
 
@@ -806,13 +813,13 @@ class PaddleOCRTool:
     def _setup_pdf_generator(
         self, pdf_path: str, output_path: Optional[str], searchable: bool
     ) -> Tuple[Optional[str], Optional["PDFGenerator"]]:
-        """设定 PDF 生成器"""
+        """設定 PDF 生成器"""
         if not searchable:
             return None, None
         if not output_path:
             base_name = Path(pdf_path).stem
             output_path = str(Path(pdf_path).parent / f"{base_name}_searchable.pdf")
-        logging.info(f"准备生成可搜索 PDF: {output_path}")
+        logging.info(f"準備生成可搜尋 PDF: {output_path}")
         return output_path, PDFGenerator(output_path, debug_mode=self.debug_mode)
 
     def _process_single_pdf_page(
@@ -824,25 +831,25 @@ class PaddleOCRTool:
         pdf_generator: Optional["PDFGenerator"],
         show_progress: bool,
     ) -> List[OCRResult]:
-        """处理单个 PDF 页面"""
-        logging.info(f"开始处理第 {page_num + 1}/{total_pages} 页")
+        """處理單個 PDF 頁面"""
+        logging.info(f"開始處理第 {page_num + 1}/{total_pages} 頁")
         if not (show_progress and HAS_TQDM):
-            print(f"  处理第 {page_num + 1}/{total_pages} 页...")
+            print(f"  處理第 {page_num + 1}/{total_pages} 頁...")
 
-        # 转换为图片并执行 OCR
+        # 轉換為圖片並執行 OCR
         zoom = dpi / 72.0
         pixmap = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
         img_array = pixmap_to_numpy(pixmap)
         page_results = self.process_image_array(img_array)
 
-        # 缩放坐标
+        # 縮放座標
         scale_factor = 72.0 / dpi
         for result in page_results:
             result.bbox = [
                 [p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox
             ]
 
-        # 添加到可搜索 PDF
+        # 新增到可搜尋 PDF
         if pdf_generator:
             original_pixmap = page.get_pixmap()
             pdf_generator.add_page_from_pixmap(original_pixmap, page_results)
@@ -884,25 +891,25 @@ class PaddleOCRTool:
                 show_progress=show_progress,
             )
 
-        # === 傳統實現（向後兼容） ===
+        # === 傳統實作（向後相容） ===
         all_results = []
 
         try:
-            # 打开 PDF
-            logging.info(f"打开 PDF: {pdf_path}")
+            # 打開 PDF
+            logging.info(f"打開 PDF: {pdf_path}")
             pdf_doc = fitz.open(pdf_path)
             total_pages = len(pdf_doc)
-            print(f"正在处理 PDF: {pdf_path} ({total_pages} 页)")
+            print(f"正在處理 PDF: {pdf_path} ({total_pages} 頁)")
 
-            # 设定 PDF 生成器
+            # 設定 PDF 生成器
             output_path, pdf_generator = self._setup_pdf_generator(
                 pdf_path, output_path, searchable
             )
 
-            # 处理每一页
+            # 處理每一頁
             page_iterator = range(total_pages)
             if show_progress and HAS_TQDM:
-                page_iterator = tqdm(page_iterator, desc="OCR 处理中", unit="页", ncols=80)
+                page_iterator = tqdm(page_iterator, desc="OCR 處理中", unit="頁", ncols=80)
 
             for page_num in page_iterator:
                 try:
@@ -912,23 +919,23 @@ class PaddleOCRTool:
                     )
                     all_results.append(page_results)
                 except Exception as page_error:
-                    logging.error(f"处理第 {page_num + 1} 页错误: {page_error}")
-                    print(f"  [WARN] 处理第 {page_num + 1} 页错误: {page_error}")
+                    logging.error(f"處理第 {page_num + 1} 頁錯誤: {page_error}")
+                    print(f"  [WARN] 處理第 {page_num + 1} 頁錯誤: {page_error}")
                     all_results.append([])
                     gc.collect()
 
             pdf_doc.close()
 
-            # 保存可搜索 PDF
+            # 儲存可搜尋 PDF
             if pdf_generator:
                 pdf_generator.save()
 
-            logging.info(f"[OK] 完成处理 {total_pages} 页")
+            logging.info(f"[OK] 完成處理 {total_pages} 頁")
             return all_results, output_path
 
         except Exception as e:
-            logging.error(f"处理 PDF 失败 ({pdf_path}): {e}")
-            print(f"错误：处理 PDF 失败: {e}")
+            logging.error(f"處理 PDF 失敗 ({pdf_path}): {e}")
+            print(f"錯誤：處理 PDF 失敗: {e}")
             return all_results, None
 
     def process_directory(
@@ -1023,7 +1030,7 @@ class PaddleOCRTool:
         if self._using_stage3 and hasattr(self, "pdf_processor"):
             return self.pdf_processor.get_text(results, separator)
 
-        # === 传统实现 ===
+        # === 傳統實作 ===
         return separator.join(r.text for r in results if r.text.strip())
 
     def process_formula(
@@ -1130,10 +1137,8 @@ class PaddleOCRTool:
             output_path: 可搜尋 PDF 輸出路徑（可選）
             markdown_output: Markdown 輸出路徑（可選）
             json_output: JSON 輸出路徑（可選）
+            excel_output: Excel 輸出路徑（可選，僅表格）
             html_output: HTML 輸出路徑（可選）
-            dpi: PDF 轉圖片解析度
-            show_progress: 是否顯示進度條
-            translate_config: 翻譯配置（可選），傳入後會在生成可搜尋 PDF 後自動執行翻譯
 
         Returns:
             Dict[str, Any]: 處理結果摘要
@@ -1202,22 +1207,22 @@ class PaddleOCRTool:
             result_summary["error"] = str(e)
             return result_summary
 
-    # ========== Hybrid PDF 处理辅助方法 ==========
+    # ========== Hybrid PDF 處理輔助方法 ==========
 
     def _setup_hybrid_generators(
         self, output_path: str
     ) -> Tuple[PDFGenerator, PDFGenerator, Optional["TextInpainter"], str]:
-        """设定混合模式所需的生成器
+        """設定混合模式所需的生成器
 
         Args:
-            output_path: 输出 PDF 路径
+            output_path: 輸出 PDF 路徑
 
         Returns:
             Tuple of (pdf_generator, erased_generator, inpainter, erased_output_path)
         """
         erased_output_path = output_path.replace("_hybrid.pdf", "_erased.pdf")
 
-        # 原文可搜索 PDF
+        # 原文可搜尋 PDF
         pdf_generator = PDFGenerator(
             output_path,
             debug_mode=self.debug_mode,
@@ -1245,30 +1250,30 @@ class PaddleOCRTool:
     def _extract_markdown_from_structure_output(
         self, structure_output, page_num: int
     ) -> str:
-        """从 PP-StructureV3 输出提取 Markdown
+        """從 PP-StructureV3 輸出提取 Markdown
 
         Args:
-            structure_output: Structure 引擎输出
-            page_num: 页码（0-based）
+            structure_output: Structure 引擎輸出
+            page_num: 頁碼（0-based）
 
         Returns:
-            str: 页面的 Markdown 文本
+            str: 頁面的 Markdown 文字
         """
-        page_markdown = f"## 第 {page_num + 1} 页\n\n"
+        page_markdown = f"## 第 {page_num + 1} 頁\n\n"
 
         for res in structure_output:
             temp_md_dir = tempfile.mkdtemp()
             try:
                 if hasattr(res, "save_to_markdown"):
                     res.save_to_markdown(save_path=temp_md_dir)
-                    # 读取生成的 Markdown
+                    # 讀取生成的 Markdown
                     for md_file in Path(temp_md_dir).glob("*.md"):
                         with open(md_file, "r", encoding="utf-8") as f:
                             page_markdown += f.read()
                         break
             except Exception as md_err:
-                logging.warning(f"save_to_markdown 失败: {md_err}")
-                # 回退：使用 markdown 属性
+                logging.warning(f"save_to_markdown 失敗: {md_err}")
+                # 回退：使用 markdown 屬性
                 if hasattr(res, "markdown") and isinstance(res.markdown, str):
                     page_markdown += res.markdown
             finally:
@@ -1288,16 +1293,16 @@ class PaddleOCRTool:
         """生成原文 PDF 和擦除版 PDF
 
         Args:
-            pixmap: PyMuPDF pixmap 对象
-            img_array: 图片数组
-            sorted_results: OCR 结果列表
+            pixmap: PyMuPDF pixmap 物件
+            img_array: 圖片陣列
+            sorted_results: OCR 結果列表
             pdf_generator: 原文 PDF 生成器
             erased_generator: 擦除版 PDF 生成器
             inpainter: 文字擦除器
         """
         img_array_copy = img_array.copy()
 
-        # 1. 原文可搜索 PDF
+        # 1. 原文可搜尋 PDF
         pdf_generator.add_page_from_pixmap(pixmap, sorted_results)
 
         # 2. 擦除版 PDF
@@ -1310,18 +1315,18 @@ class PaddleOCRTool:
             ]
 
             if bboxes:
-                # 在图片上擦除文字区域
+                # 在圖片上擦除文字區域
                 erased_image = inpainter.erase_multiple_regions(
                     img_array_copy, bboxes, fill_color=(255, 255, 255)
                 )
             else:
                 erased_image = img_array_copy
 
-            # 保存擦除版图片并添加到 erased_generator
+            # 儲存擦除版圖片並新增到 erased_generator
             tmp_erased_path = tempfile.mktemp(suffix=".png")
             try:
                 Image.fromarray(erased_image).save(tmp_erased_path)
-                # 擦除版 PDF 也添加文字层（用于后续翻译）
+                # 擦除版 PDF 也新增文字層（用於後續翻譯）
                 erased_generator.add_page(tmp_erased_path, sorted_results)
             finally:
                 if os.path.exists(tmp_erased_path):
@@ -1336,11 +1341,11 @@ class PaddleOCRTool:
         erased_generator: PDFGenerator,
         inpainter: Optional["TextInpainter"],
     ) -> Tuple[str, str, List[OCRResult]]:
-        """处理单一页面（混合模式）
+        """處理單一頁面（混合模式）
 
         Args:
-            page: PyMuPDF 页面对象
-            page_num: 页码（0-based）
+            page: PyMuPDF 頁面物件
+            page_num: 頁碼（0-based）
             dpi: 解析度
             pdf_generator: PDF 生成器
             erased_generator: 擦除版生成器
@@ -1349,26 +1354,26 @@ class PaddleOCRTool:
         Returns:
             Tuple of (page_markdown, page_text, ocr_results)
         """
-        logging.info(f"处理第 {page_num + 1} 页")
+        logging.info(f"處理第 {page_num + 1} 頁")
 
-        # 转换为图片
+        # 轉換為圖片
         zoom = dpi / 72.0
         matrix = fitz.Matrix(zoom, zoom)
         pixmap = page.get_pixmap(matrix=matrix, alpha=False)
 
-        # 使用共用工具函数转换为 numpy 数组
+        # 使用共用工具函數轉換為 numpy 陣列
         img_array = pixmap_to_numpy(pixmap)
 
-        # 步骤 1：版面分析
-        logging.info(f"  执行版面分析...")
+        # 步驟 1：版面分析
+        logging.info(f"  執行版面分析...")
         structure_output = self.structure_engine.predict(input=img_array)
 
-        # 步骤 2：提取 Markdown
+        # 步驟 2：提取 Markdown
         page_markdown = self._extract_markdown_from_structure_output(
             structure_output, page_num
         )
 
-        # 提取版面区块信息
+        # 提取版面區塊資訊
         layout_blocks = []
         for res in structure_output:
             try:
@@ -1383,18 +1388,18 @@ class PaddleOCRTool:
                     if blocks:
                         layout_blocks.extend(blocks)
             except Exception as block_err:
-                logging.debug(f"提取版面区块失败: {block_err}")
+                logging.debug(f"提取版面區塊失敗: {block_err}")
 
-        logging.info(f"  取得 {len(layout_blocks)} 个版面区块")
+        logging.info(f"  取得 {len(layout_blocks)} 個版面區塊")
 
-        # 步骤 3：提取 OCR 坐标（使用 Markdown 匹配过滤）
-        logging.info(f"  提取文字坐标（使用 Markdown 匹配过滤）...")
+        # 步驟 3：提取 OCR 座標（使用 Markdown 匹配過濾）
+        logging.info(f"  提取文字座標（使用 Markdown 匹配過濾）...")
         sorted_results = self._extract_ocr_from_structure(
             structure_output, markdown_text=page_markdown
         )
-        logging.info(f"  返回 {len(sorted_results)} 个结果")
+        logging.info(f"  返回 {len(sorted_results)} 個結果")
 
-        # 步骤 4：生成双 PDF
+        # 步驟 4：生成雙 PDF
         if sorted_results:
             self._generate_dual_pdfs(
                 pixmap,
@@ -1420,13 +1425,13 @@ class PaddleOCRTool:
         markdown_output: str,
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存 Markdown 输出"""
-        # 应用英文空格修复
+        """儲存 Markdown 輸出"""
+        # 套用英文空格修復
         fixed_markdown = [fix_english_spacing(md) for md in all_markdown]
         with open(markdown_output, "w", encoding="utf-8") as f:
             f.write("\n\n---\n\n".join(fixed_markdown))
         result_summary["markdown_file"] = markdown_output
-        print(f"[OK] Markdown 已保存：{markdown_output}")
+        print(f"[OK] Markdown 已儲存：{markdown_output}")
 
     def _save_json_output(
         self,
@@ -1435,11 +1440,11 @@ class PaddleOCRTool:
         pdf_path: str,
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存 JSON 输出"""
+        """儲存 JSON 輸出項目"""
         try:
             import json
 
-            # 将 OCR 结果转换为可序列化的格式
+            # 將 OCR 結果轉換為可序列化的格式
             json_data = {"input": pdf_path, "pages": []}
             for page_num, page_results in enumerate(all_ocr_results, 1):
                 page_data = {"page": page_num, "text_blocks": []}
@@ -1456,9 +1461,9 @@ class PaddleOCRTool:
             with open(json_output, "w", encoding="utf-8") as f:
                 json.dump(json_data, f, ensure_ascii=False, indent=2)
             result_summary["json_file"] = json_output
-            print(f"[OK] JSON 已保存：{json_output}")
+            print(f"[OK] JSON 已儲存：{json_output}")
         except Exception as json_err:
-            logging.warning(f"JSON 输出失败: {json_err}")
+            logging.warning(f"JSON 輸出失敗: {json_err}")
 
     def _save_html_output(
         self,
@@ -1467,17 +1472,17 @@ class PaddleOCRTool:
         pdf_path: str,
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存 HTML 输出"""
+        """儲存 HTML 輸出"""
         try:
-            # 将 Markdown 转换为 HTML
+            # 將 Markdown 轉換為 HTML
             html_content = f"""<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{Path(pdf_path).stem} - OCR 结果</title>
+    <title>{Path(pdf_path).stem} - OCR 結果</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.6; }}
         h1, h2, h3 {{ color: #333; }}
         hr {{ border: none; border-top: 1px solid #ddd; margin: 20px 0; }}
@@ -1491,10 +1496,10 @@ class PaddleOCRTool:
 </head>
 <body>
 """
-            # 简单的 Markdown 到 HTML 转换
+            # 簡單的 Markdown 到 HTML 轉換
             for md in all_markdown:
                 fixed_md = fix_english_spacing(md)
-                # 基本转换
+                # 基本轉換
                 lines = fixed_md.split("\n")
                 for line in lines:
                     if line.startswith("### "):
@@ -1520,9 +1525,9 @@ class PaddleOCRTool:
             with open(html_output, "w", encoding="utf-8") as f:
                 f.write(html_content)
             result_summary["html_file"] = html_output
-            print(f"[OK] HTML 已保存：{html_output}")
+            print(f"[OK] HTML 已儲存：{html_output}")
         except Exception as html_err:
-            logging.warning(f"HTML 输出失败: {html_err}")
+            logging.warning(f"HTML 輸出失敗: {html_err}")
 
     def _save_hybrid_outputs(
         self,
@@ -1534,18 +1539,18 @@ class PaddleOCRTool:
         pdf_path: str,
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存混合模式的各种输出文件（统筹方法）"""
-        # 保存 Markdown
+        """儲存混合模式的各種輸出檔案（統籌方法）"""
+        # 儲存 Markdown
         if markdown_output and all_markdown:
             self._save_markdown_output(all_markdown, markdown_output, result_summary)
 
-        # 保存 JSON
+        # 儲存 JSON
         if json_output:
             self._save_json_output(
                 all_ocr_results, json_output, pdf_path, result_summary
             )
 
-        # 保存 HTML
+        # 儲存 HTML
         if html_output:
             self._save_html_output(all_markdown, html_output, pdf_path, result_summary)
 
@@ -1561,17 +1566,17 @@ class PaddleOCRTool:
         result_summary: Dict[str, Any],
         translate_config: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """处理 PDF 的混合模式
+        """處理 PDF 的混合模式
 
-        同时生成：
-        1. *_hybrid.pdf（原文可搜索）
-        2. *_erased.pdf（擦除版 + 文字层）
+        同時生成：
+        1. *_hybrid.pdf（原文可搜尋）
+        2. *_erased.pdf（擦除版 + 文字層）
         3. *_hybrid.md（Markdown）
-        4. *_hybrid.json（JSON，可选）
-        5. *_hybrid.html（HTML，可选）
+        4. *_hybrid.json（JSON，可選）
+        5. *_hybrid.html（HTML，可選）
 
         Args:
-            translate_config: 翻译配置（可选），包含 source_lang, target_lang, ollama_model 等
+            translate_config: 翻譯配置（可選），包含 source_lang, target_lang, ollama_model 等
         """
 
         # === 1. 初始化 ===
@@ -1600,46 +1605,47 @@ class PaddleOCRTool:
         page_iterator = range(total_pages)
         if show_progress and HAS_TQDM:
             page_iterator = tqdm(page_iterator, desc="混合模式处理中", unit="页", ncols=80)
+            page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁", ncols=80)
 
         for page_num in page_iterator:
             try:
                 stats_collector.start_page(page_num)
                 page = pdf_doc[page_num]
 
-                # 处理单页
+                # 處理單頁
                 page_md, page_txt, ocr_res = self._process_single_hybrid_page(
                     page, page_num, dpi, pdf_gen, erased_gen, inpainter
                 )
 
-                # 收集结果
+                # 收集結果
                 all_markdown.append(page_md)
                 all_text.append(page_txt)
                 all_ocr_results.append(ocr_res)
 
                 result_summary["pages_processed"] += 1
 
-                # 记录页面统计
+                # 記錄頁面統計
                 stats_collector.finish_page(
                     page_num=page_num, text=page_txt, ocr_results=ocr_res
                 )
 
             except Exception as page_error:
-                logging.error(f"处理第 {page_num + 1} 页时发生错误: {page_error}")
+                logging.error(f"處理第 {page_num + 1} 頁時發生錯誤: {page_error}")
                 logging.error(traceback.format_exc())
                 continue
 
         pdf_doc.close()
 
-        # === 3. 保存 PDF ===
+        # === 3. 儲存 PDF ===
         if pdf_gen.save():
             result_summary["searchable_pdf"] = output_path
-            print(f"[OK] 可搜索 PDF 已保存：{output_path}")
+            print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
 
         if erased_gen.save():
             result_summary["erased_pdf"] = erased_path
-            print(f"[OK] 擦除版 PDF 已保存：{erased_path}")
+            print(f"[OK] 擦除版 PDF 已儲存：{erased_path}")
 
-        # === 4. 保存其他输出 ===
+        # === 4. 儲存其他輸出 ===
         self._save_hybrid_outputs(
             all_markdown,
             all_ocr_results,
@@ -1652,12 +1658,12 @@ class PaddleOCRTool:
 
         result_summary["text_content"] = all_text
 
-        # === 5. 翻译处理（如果启用）===
-        # Debug 模式时关闭翻译功能
+        # === 5. 翻譯處理（如果啟用）===
+        # Debug 模式時關閉翻譯功能
         if translate_config and HAS_TRANSLATOR:
             if self.debug_mode:
-                print(f"[DEBUG] Debug 模式已启用，跳过翻译处理")
-                logging.info("Debug 模式已启用，跳过翻译处理")
+                print(f"[DEBUG] Debug 模式已啟用，跳過翻譯處理")
+                logging.info("Debug 模式已啟用，跳過翻譯處理")
             else:
                 self._process_translation_on_pdf(
                     erased_pdf_path=erased_path,
@@ -1667,8 +1673,8 @@ class PaddleOCRTool:
                     dpi=dpi,
                 )
 
-        # === 6. 完成统计 ===
-        print(f"[OK] 混合模式处理完成：{result_summary['pages_processed']} 页")
+        # === 6. 完成統計 ===
+        print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
 
         final_stats = stats_collector.finish()
         final_stats.print_summary()
@@ -2028,39 +2034,39 @@ class PaddleOCRTool:
 
         return sorted_results
 
-    # ========== Translation 处理辅助方法 ==========
+    # ========== Translation 處理輔助方法 ==========
 
     def _setup_translation_tools(
         self, erased_pdf_path: str, translate_config: Dict[str, Any]
     ) -> Tuple:
-        """设定翻译所需的工具和生成器
+        """設定翻譯所需的工具和生成器
 
         Args:
-            erased_pdf_path: 擦除版 PDF 路径
-            translate_config: 翻译配置
+            erased_pdf_path: 擦除版 PDF 路徑
+            translate_config: 翻譯配置
 
         Returns:
             Tuple of (translator, renderer, pdf_doc, hybrid_doc,
                       mono_generator, bilingual_generator,
                       translated_path, bilingual_path)
         """
-        # 初始化翻译器和绘制器
+        # 初始化翻譯器和繪製器
         translator = OllamaTranslator(
             model=translate_config["ollama_model"],
             base_url=translate_config["ollama_url"],
         )
         renderer = TextRenderer(font_path=translate_config.get("font_path"))
 
-        # 打开 PDF
+        # 打開 PDF
         pdf_doc = fitz.open(erased_pdf_path)
 
-        # 打开原始 hybrid PDF（用于双语）
+        # 打開原始 hybrid PDF（用於雙語）
         hybrid_pdf_path = erased_pdf_path.replace("_erased.pdf", "_hybrid.pdf")
         hybrid_doc = None
         if not translate_config["no_dual"] and os.path.exists(hybrid_pdf_path):
             hybrid_doc = fitz.open(hybrid_pdf_path)
 
-        # 创建输出路径
+        # 建立輸出路徑
         base_path = erased_pdf_path.replace("_erased.pdf", "")
         target_lang = translate_config["target_lang"]
         translated_path = (
@@ -2074,7 +2080,7 @@ class PaddleOCRTool:
             else None
         )
 
-        # 创建生成器
+        # 建立生成器
         mono_generator = MonolingualPDFGenerator() if translated_path else None
         bilingual_generator = (
             BilingualPDFGenerator(
@@ -2099,12 +2105,12 @@ class PaddleOCRTool:
     def _get_page_images(
         self, pdf_doc, hybrid_doc, page_num: int, dpi: int
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """获取擦除版和原始版页面图片
+        """取得擦除版和原始版頁面圖片
 
         Args:
-            pdf_doc: 擦除版 PDF 文档
-            hybrid_doc: 原始 hybrid PDF 文档
-            page_num: 页码（0-based）
+            pdf_doc: 擦除版 PDF 文件
+            hybrid_doc: 原始 hybrid PDF 文件
+            page_num: 頁碼（0-based）
             dpi: 解析度
 
         Returns:
@@ -2113,12 +2119,12 @@ class PaddleOCRTool:
         zoom = dpi / 72.0
         matrix = fitz.Matrix(zoom, zoom)
 
-        # 获取擦除版图片
+        # 取得擦除版圖片
         erased_page = pdf_doc[page_num]
         erased_pixmap = erased_page.get_pixmap(matrix=matrix)
         erased_image = pixmap_to_numpy(erased_pixmap, copy=True)
 
-        # 获取原始图片（用于双语）
+        # 取得原始圖片（用於雙語）
         original_image = erased_image.copy()
         if hybrid_doc:
             hybrid_page = hybrid_doc[page_num]
@@ -2135,19 +2141,19 @@ class PaddleOCRTool:
         target_lang: str,
         page_num: int,
     ) -> List:
-        """翻译页面的所有文字
+        """翻譯頁面的所有文字
 
         Args:
-            page_ocr_results: 页面的 OCR 结果
-            translator: 翻译器对象
-            source_lang: 来源语言
-            target_lang: 目标语言
-            page_num: 页码（0-based）
+            page_ocr_results: 頁面的 OCR 結果
+            translator: 翻譯器物件
+            source_lang: 來源語言
+            target_lang: 目標語言
+            page_num: 頁碼（0-based）
 
         Returns:
-            List[TranslatedBlock]: 翻译后的文字块列表
+            List[TranslatedBlock]: 翻譯後的文字塊列表
         """
-        # 收集需要翻译的文字
+        # 收集需要翻譯的文字
         texts_to_translate = []
         bboxes = []
         for result in page_ocr_results:
@@ -2158,14 +2164,14 @@ class PaddleOCRTool:
         if not texts_to_translate:
             return []
 
-        logging.info(f"第 {page_num + 1} 页: 翻译 {len(texts_to_translate)} 个文字区块")
+        logging.info(f"第 {page_num + 1} 頁: 翻譯 {len(texts_to_translate)} 個文字區塊")
 
-        # 批次翻译
+        # 批次翻譯
         translated_texts = translator.translate_batch(
             texts_to_translate, source_lang, target_lang, show_progress=False
         )
 
-        # 创建 TranslatedBlock 列表
+        # 建立 TranslatedBlock 列表
         translated_blocks = []
         for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
             translated_blocks.append(
@@ -2177,32 +2183,32 @@ class PaddleOCRTool:
     def _render_translated_text(
         self,
         erased_image: np.ndarray,
-        erased_page,  # PyMuPDF page object
+        erased_page,  # PyMuPDF page 物件
         translated_blocks: List,
         renderer,
         use_ocr_workaround: bool,
         dpi: int,
     ) -> np.ndarray:
-        """在擦除版图片上绘制翻译文字
+        """在擦除版圖片上繪製翻譯文字
 
         Args:
-            erased_image: 擦除版图片
-            erased_page: PyMuPDF 页面对象（OCR workaround 模式需要）
-            translated_blocks: 翻译后的文字块列表
-            renderer: TextRenderer 对象
-            use_ocr_workaround: 是否使用 OCR 补救模式
+            erased_image: 擦除版圖片
+            erased_page: PyMuPDF 頁面物件（OCR workaround 模式需要）
+            translated_blocks: 翻譯後的文字塊列表
+            renderer: TextRenderer 物件
+            use_ocr_workaround: 是否使用 OCR 補救模式
             dpi: 解析度
 
         Returns:
-            np.ndarray: 绘制了翻译文字的图片
+            np.ndarray: 繪製了翻譯文字的圖片
         """
         if use_ocr_workaround:
-            # OCR 补救模式：直接在 PDF 页面上操作
-            logging.info("使用 OCR 补救模式绘制翻译文字")
+            # OCR 補救模式：直接在 PDF 頁面上操作
+            logging.info("使用 OCR 補救模式繪製翻譯文字")
             workaround = OCRWorkaround(margin=2.0, force_black=True)
 
             for block in translated_blocks:
-                # 计算坐标
+                # 計算座標
                 x = min(p[0] for p in block.bbox)
                 y = min(p[1] for p in block.bbox)
                 width = max(p[0] for p in block.bbox) - x
@@ -2215,13 +2221,13 @@ class PaddleOCRTool:
                     erased_page, text_block, block.translated_text
                 )
 
-            # 从修改后的页面获取图片
+            # 從修改後的頁面取得圖片
             zoom = dpi / 72.0
             matrix = fitz.Matrix(zoom, zoom)
             modified_pixmap = erased_page.get_pixmap(matrix=matrix)
             translated_image = pixmap_to_numpy(modified_pixmap, copy=True)
         else:
-            # 标准模式：使用 TextRenderer
+            # 標準模式：使用 TextRenderer
             translated_image = erased_image.copy()
             translated_image = renderer.render_multiple_texts(
                 translated_image, translated_blocks
@@ -2242,35 +2248,35 @@ class PaddleOCRTool:
         translate_config: Dict[str, Any],
         dpi: int,
     ) -> None:
-        """处理单页翻译
+        """處理單頁翻譯
 
-        完整流程：获取图片 → 翻译 → 绘制 → 添加到生成器
+        完整流程：取得圖片 → 翻譯 → 繪製 → 新增到生成器
 
         Args:
-            page_num: 页码（0-based）
-            ocr_results_per_page: 每页的 OCR 结果
-            pdf_doc: 擦除版 PDF 文档
-            hybrid_doc: 原始 hybrid PDF 文档
-            translator: 翻译器对象
-            renderer: TextRenderer 对象
-            mono_generator: 单语 PDF 生成器
-            bilingual_generator: 双语 PDF 生成器
-            translate_config: 翻译配置
+            page_num: 頁碼（0-based）
+            ocr_results_per_page: 每頁的 OCR 結果
+            pdf_doc: 擦除版 PDF 文件
+            hybrid_doc: 原始 hybrid PDF 文件
+            translator: 翻譯器物件
+            renderer: TextRenderer 物件
+            mono_generator: 單語 PDF 生成器
+            bilingual_generator: 雙語 PDF 生成器
+            translate_config: 翻譯配置
             dpi: 解析度
         """
-        # 检查 OCR 结果
+        # 檢查 OCR 結果
         if page_num >= len(ocr_results_per_page):
-            logging.warning(f"第 {page_num + 1} 页没有 OCR 结果")
+            logging.warning(f"第 {page_num + 1} 頁沒有 OCR 結果")
             return
 
         page_ocr_results = ocr_results_per_page[page_num]
 
-        # 获取页面图片
+        # 獲取頁面圖片
         erased_image, original_image = self._get_page_images(
             pdf_doc, hybrid_doc, page_num, dpi
         )
 
-        # 如果没有 OCR 结果，直接添加空白页
+        # 如果沒有 OCR 結果，直接新增空白頁
         if not page_ocr_results:
             if mono_generator:
                 mono_generator.add_page(erased_image)
@@ -2278,7 +2284,7 @@ class PaddleOCRTool:
                 bilingual_generator.add_bilingual_page(original_image, erased_image)
             return
 
-        # 翻译文字
+        # 翻譯文字
         translated_blocks = self._translate_page_texts(
             page_ocr_results,
             translator,
@@ -2287,7 +2293,7 @@ class PaddleOCRTool:
             page_num,
         )
 
-        # 如果没有需要翻译的文字
+        # 如果沒有需要翻譯的文字
         if not translated_blocks:
             if mono_generator:
                 mono_generator.add_page(erased_image)
@@ -2295,7 +2301,7 @@ class PaddleOCRTool:
                 bilingual_generator.add_bilingual_page(original_image, erased_image)
             return
 
-        # 绘制翻译文字
+        # 繪製翻譯文字
         erased_page = (
             pdf_doc[page_num] if translate_config.get("ocr_workaround") else None
         )
@@ -2308,7 +2314,7 @@ class PaddleOCRTool:
             dpi,
         )
 
-        # 添加到生成器
+        # 新增到生成器
         if mono_generator:
             mono_generator.add_page(translated_image)
         if bilingual_generator:
@@ -2325,27 +2331,27 @@ class PaddleOCRTool:
         bilingual_path: Optional[str],
         result_summary: Dict[str, Any],
     ) -> None:
-        """保存翻译版和双语版 PDF
+        """儲存翻譯版和雙語版 PDF
 
         Args:
-            mono_generator: 单语 PDF 生成器
-            bilingual_generator: 双语 PDF 生成器
-            translated_path: 翻译版 PDF 路径
-            bilingual_path: 双语版 PDF 路径
-            result_summary: 结果摘要（会被更新）
+            mono_generator: 單語 PDF 生成器
+            bilingual_generator: 雙語 PDF 生成器
+            translated_path: 翻譯版 PDF 路徑
+            bilingual_path: 雙語版 PDF 路徑
+            result_summary: 結果摘要（會被更新）
         """
-        # 保存翻译版 PDF
+        # 儲存翻譯版 PDF
         if mono_generator and translated_path:
             if mono_generator.save(translated_path):
                 result_summary["translated_pdf"] = translated_path
-                print(f"[OK] 翻译 PDF 已保存：{translated_path}")
+                print(f"[OK] 翻譯 PDF 已儲存：{translated_path}")
             mono_generator.close()
 
-        # 保存双语版 PDF
+        # 儲存雙語版 PDF
         if bilingual_generator and bilingual_path:
             if bilingual_generator.save(bilingual_path):
                 result_summary["bilingual_pdf"] = bilingual_path
-                print(f"[OK] 双语对照 PDF 已保存：{bilingual_path}")
+                print(f"[OK] 雙語對照 PDF 已儲存：{bilingual_path}")
             bilingual_generator.close()
 
     def _sort_ocr_by_position(self, ocr_results: List[OCRResult]) -> List[OCRResult]:
@@ -2383,32 +2389,31 @@ class PaddleOCRTool:
 
     def _process_translation_on_pdf(
         self,
-        erased_pdf_path: str,  # 使用擦除版 PDF 作为翻译基础
+        erased_pdf_path: str,  # 使用擦除版 PDF 作為翻譯基礎
         ocr_results_per_page: List[List[OCRResult]],
         translate_config: Dict[str, Any],
         result_summary: Dict[str, Any],
         dpi: int = 150,
     ) -> None:
-        """在擦除版 PDF 基础上进行翻译处理
+        """在擦除版 PDF 基礎上進行翻譯處理
 
         流程：
-        1. 打开 *_erased.pdf（已擦除）
-        2. 翻译文字
-        3. 在擦除后的图片上绘制翻译文字
-        4. 生成 *_translated_{lang}.pdf 和 *_bilingual_{lang}.pdf
+        1. 打開 *_erased.pdf（已擦除）
+        2. 翻譯文字
+        3. 在擦除後的圖片上繪製翻譯文字
 
         Args:
-            erased_pdf_path: 已擦除的 PDF 路径（*_erased.pdf）
-            ocr_results_per_page: 每页的 OCR 结果列表
-            translate_config: 翻译配置
-            result_summary: 结果摘要（会被更新）
-            dpi: PDF 转图片时使用的 DPI
+            erased_pdf_path: 已擦除的 PDF 路徑（*_erased.pdf）
+            ocr_results_per_page: 每頁的 OCR 結果列表
+            translate_config: 翻譯配置
+            result_summary: 結果摘要（會被更新）
+            dpi: PDF 轉圖片時使用的 DPI
         """
-        print(f"\n[翻译] 开始翻译处理...")
-        logging.info(f"开始翻译处理: {erased_pdf_path}")
+        print(f"\n[翻譯] 開始翻譯處理...")
+        logging.info(f"開始翻譯處理: {erased_pdf_path}")
 
-        print(f"   来源语言: {translate_config.get('source_lang', 'auto')}")
-        print(f"   目标语言: {translate_config.get('target_lang', 'en')}")
+        print(f"   來源語言: {translate_config.get('source_lang', 'auto')}")
+        print(f"   目標語言: {translate_config.get('target_lang', 'en')}")
         print(f"   Ollama 模型: {translate_config.get('ollama_model', 'qwen2.5:7b')}")
 
         try:
@@ -2426,10 +2431,10 @@ class PaddleOCRTool:
 
             total_pages = len(pdf_doc)
 
-            # === 2. 处理所有页面 ===
+            # === 2. 處理所有頁面 ===
             page_iter = range(total_pages)
             if HAS_TQDM:
-                page_iter = tqdm(page_iter, desc="翻译页面", unit="页", ncols=80)
+                page_iter = tqdm(page_iter, desc="翻譯頁面", unit="頁", ncols=80)
 
             for page_num in page_iter:
                 try:
@@ -2446,11 +2451,11 @@ class PaddleOCRTool:
                         dpi,
                     )
                 except Exception as page_err:
-                    logging.error(f"翻译第 {page_num + 1} 页时发生错误: {page_err}")
+                    logging.error(f"翻譯第 {page_num + 1} 頁時發生錯誤: {page_err}")
                     logging.error(traceback.format_exc())
                     continue
 
-            # === 3. 保存输出 ===
+            # === 3. 儲存輸出 ===
             pdf_doc.close()
             if hybrid_doc:
                 hybrid_doc.close()
@@ -2459,13 +2464,13 @@ class PaddleOCRTool:
                 mono_gen, bilingual_gen, trans_path, bi_path, result_summary
             )
 
-            print(f"[OK] 翻译处理完成")
+            print(f"[OK] 翻譯處理完成")
 
         except Exception as e:
-            error_msg = f"翻译处理失败: {str(e)}"
+            error_msg = f"翻譯處理失敗: {str(e)}"
             logging.error(error_msg)
             logging.error(traceback.format_exc())
-            print(f"错误：{error_msg}")
+            print(f"錯誤：{error_msg}")
             result_summary["translation_error"] = str(e)
 
     def process_translate(

@@ -1,39 +1,39 @@
 # 🔧 故障排除指南
 
-遇到问题？这份指南将帮助你快速诊断和解决常见问题。
+遇到問題？這份指南將幫助你快速診斷和解決常見問題。
 
 ---
 
-## 📋 快速诊断
+## 📋 快速診斷
 
-### 问题分类
+### 問題分類
 
-运行诊断命令：
+執行診斷命令：
 
 ```python
 python -c "
 from paddle_ocr_tool import PaddleOCRTool
 import sys
-print(f'Python版本: {sys.version}')
-print(f'PaddleOCR工具: OK')
+print(f'Python 版本: {sys.version}')
+print(f'PaddleOCR 工具: OK')
 "
 ```
 
 ---
 
-## 🚨 常见错误
+## 🚨 常見錯誤
 
 ### 1. ImportError: No module named 'paddleocr'
 
-**原因**: PaddleOCR未安装
+**原因**: PaddleOCR 未安裝
 
-**解决方案**:
+**解決方案**:
 
 ```bash
 pip install paddleocr
 ```
 
-**验证**:
+**驗證**:
 
 ```python
 import paddleocr
@@ -44,92 +44,92 @@ print(paddleocr.__version__)
 
 ### 2. FileNotFoundError: PDF not found
 
-**原因**: 文件路径错误
+**原因**: 檔案路徑錯誤
 
-**解决方案**:
+**解決方案**:
 
 ```python
 from pathlib import Path
 
-# 检查文件
+# 檢查檔案
 pdf_path = Path("document.pdf")
 if not pdf_path.exists():
-    print(f"文件不存在: {pdf_path.absolute()}")
+    print(f"檔案不存在: {pdf_path.absolute()}")
 else:
-    print(f"文件存在: {pdf_path.absolute()}")
+    print(f"檔案存在: {pdf_path.absolute()}")
 ```
 
-**建议**: 使用绝对路径
+**建議**: 使用絕對路徑
 
 ---
 
-### 3. GPU不可用
+### 3. GPU 不可用
 
-**症状**:
+**症狀**:
 
 ```
 WARNING: GPU is not available, using CPU instead
 ```
 
-**诊断**:
+**診斷**:
 
 ```python
 import paddle
-print(f"GPU可用: {paddle.device.is_compiled_with_cuda()}")
-print(f"当前设备: {paddle.device.get_device()}")
+print(f"GPU 可用: {paddle.device.is_compiled_with_cuda()}")
+print(f"目前裝置: {paddle.device.get_device()}")
 ```
 
-**解决方案**:
+**解決方案**:
 
-1. **安装GPU版本**:
+1. **安裝 GPU 版本**:
 
 ```bash
 python -m pip install paddlepaddle-gpu
 ```
 
-2. **检查CUDA**:
+2. **檢查 CUDA**:
 
 ```bash
 nvidia-smi
 ```
 
-3. **指定设备**:
+3. **指定裝置**:
 
 ```python
-ocr_tool = PaddleOCRTool(device="cpu")  # 使用CPU
+ocr_tool = PaddleOCRTool(device="cpu")  # 使用 CPU
 ```
 
 ---
 
-### 4. 内存不足 (MemoryError)
+### 4. 記憶體不足 (MemoryError)
 
-**症状**:
+**症狀**:
 
 ```
 MemoryError: Unable to allocate...
 ```
 
-**解决方案**:
+**解決方案**:
 
-**方法1**: 降低DPI
+**方法 1**: 降低 DPI
 
 ```bash
 python paddle_ocr_tool.py doc.pdf --dpi 150
 ```
 
-**方法2**: 启用压缩
+**方法 2**: 啟用壓縮
 
 ```bash
 python paddle_ocr_tool.py doc.pdf --compress
 ```
 
-**方法3**: 分批处理
+**方法 3**: 分批處理
 
 ```python
 from paddleocr_toolkit.core import streaming_utils
 
 for batch in streaming_utils.batch_pages_generator("large.pdf", batch_size=5):
-    # 处理小批次
+    # 處理小批次
     pass
 ```
 
@@ -137,21 +137,21 @@ for batch in streaming_utils.batch_pages_generator("large.pdf", batch_size=5):
 
 ### 5. UnicodeEncodeError (Windows)
 
-**症状**:
+**症狀**:
 
 ```
 UnicodeEncodeError: 'cp950' codec can't encode character
 ```
 
-**解决方案**:
+**解決方案**:
 
-**方法1**: 设置环境变量
+**方法 1**: 設定環境變數
 
 ```powershell
 $env:PYTHONIOENCODING = "utf-8"
 ```
 
-**方法2**: 在代码中设置
+**方法 2**: 在程式碼中設定
 
 ```python
 import sys
@@ -160,7 +160,7 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ```
 
-**方法3**: 输出到文件
+**方法 3**: 輸出到檔案
 
 ```bash
 python paddle_ocr_tool.py doc.pdf > output.txt
@@ -168,9 +168,9 @@ python paddle_ocr_tool.py doc.pdf > output.txt
 
 ---
 
-## 🔍 调试技巧
+## 🔍 除錯技巧
 
-### 启用详细日志
+### 啟用詳細日誌
 
 ```python
 import logging
@@ -185,19 +185,19 @@ logging.basicConfig(
 )
 ```
 
-### 检查OCR结果
+### 檢查 OCR 結果
 
 ```python
 results = ocr_tool.process_image("test.jpg")
 
-print(f"找到 {len(results)} 个文字块")
+print(f"找到 {len(results)} 個文字區塊")
 for i, result in enumerate(results):
     print(f"{i+1}. 文字: {result.text}")
     print(f"   信心度: {result.confidence:.1%}")
     print(f"   位置: {result.bbox}")
 ```
 
-### 性能分析
+### 效能分析
 
 ```python
 import time
@@ -206,7 +206,7 @@ import os
 
 process = psutil.Process(os.getpid())
 
-# 性能监控
+# 效能監控
 start_time = time.time()
 start_mem = process.memory_info().rss / 1024 / 1024
 
@@ -215,17 +215,17 @@ results, _ = ocr_tool.process_pdf("doc.pdf")
 elapsed = time.time() - start_time
 peak_mem = process.memory_info().rss / 1024 / 1024
 
-print(f"耗时: {elapsed:.2f}秒")
-print(f"内存: {peak_mem - start_mem:.1f}MB")
+print(f"耗時: {elapsed:.2f} 秒")
+print(f"記憶體: {peak_mem - start_mem:.1f} MB")
 ```
 
 ---
 
-## 🛠️ 配置问题
+## 🛠️ 設定問題
 
-### 配置文件不生效
+### 設定檔不生效
 
-**检查配置**:
+**檢查設定**:
 
 ```python
 from paddleocr_toolkit.core import load_config
@@ -234,13 +234,13 @@ config = load_config("config.yaml")
 print(config)
 ```
 
-**常见问题**:
+**常見問題**:
 
-- YAML格式错误
-- 文件路径错误
-- 权限问题
+- YAML 格式錯誤
+- 檔案路徑錯誤
+- 權限問題
 
-**验证YAML**:
+**驗證 YAML**:
 
 ```python
 import yaml
@@ -248,18 +248,18 @@ import yaml
 with open("config.yaml") as f:
     try:
         config = yaml.safe_load(f)
-        print("YAML格式正确")
+        print("YAML 格式正確")
     except yaml.YAMLError as e:
-        print(f"YAML错误: {e}")
+        print(f"YAML 錯誤: {e}")
 ```
 
 ---
 
-## 📊 质量问题
+## 📊 品質問題
 
-### OCR识别率低
+### OCR 辨識率低
 
-**诊断**:
+**診斷**:
 
 ```python
 def diagnose_quality(results):
@@ -269,21 +269,21 @@ def diagnose_quality(results):
     print(f"平均信心度: {avg_conf:.1%}")
     
     if avg_conf < 0.7:
-        print("建议:")
-        print("1. 提高DPI到300")
-        print("2. 使用hybrid模式")
-        print("3. 进行图片预处理")
+        print("建議:")
+        print("1. 提高 DPI 到 300")
+        print("2. 使用 hybrid 模式")
+        print("3. 進行圖片預處理")
 ```
 
-**改进方案**:
+**改進方案**:
 
-1. **提高DPI**:
+1. **提高 DPI**:
 
 ```python
 results, _ = ocr_tool.process_pdf("doc.pdf", dpi=300)
 ```
 
-2. **预处理**:
+2. **預處理**:
 
 ```python
 from paddleocr_toolkit.processors import ImagePreprocessor
@@ -293,7 +293,7 @@ clean_img = preprocessor.denoise(image)
 binary_img = preprocessor.binarize(clean_img)
 ```
 
-3. **换模式**:
+3. **換模式**:
 
 ```python
 ocr_tool = PaddleOCRTool(mode="hybrid")
@@ -301,35 +301,35 @@ ocr_tool = PaddleOCRTool(mode="hybrid")
 
 ---
 
-## ⚠️ 运行时错误
+## ⚠️ 執行階段錯誤
 
-### 模块初始化失败
+### 模組初始化失敗
 
-**错误信息**:
+**錯誤訊息**:
 
 ```
 RuntimeError: (PreconditionNotMet) Cannot load cudnn shared library
 ```
 
-**解决方案**:
+**解決方案**:
 
 ```bash
-# 重新安装PaddlePaddle
+# 重新安裝 PaddlePaddle
 pip uninstall paddlepaddle-gpu
 pip install paddlepaddle-gpu
 ```
 
-### 模型下载失败
+### 模型下載失敗
 
-**错误信息**:
+**錯誤訊息**:
 
 ```
 URLError: <urlopen error [Errno 11001] getaddrinfo failed>
 ```
 
-**解决方案**:
+**解決方案**:
 
-1. **设置代理**:
+1. **設定代理**:
 
 ```python
 import os
@@ -337,14 +337,14 @@ os.environ['HTTP_PROXY'] = 'http://proxy:port'
 os.environ['HTTPS_PROXY'] = 'http://proxy:port'
 ```
 
-2. **手动下载模型**:
-访问 PaddleOCR 模型库下载
+2. **手動下載模型**:
+存取 PaddleOCR 模型庫下載
 
 ---
 
-## 🔄 重启和重置
+## 🔄 重啟和重置
 
-### 清理缓存
+### 清理快取
 
 ```bash
 # Windows
@@ -357,50 +357,50 @@ find . -type d -name "__pycache__" -exec rm -rf {} +
 find . -type d -name ".pytest_cache" -exec rm -rf {} +
 ```
 
-### 重新安装
+### 重新安裝
 
 ```bash
-# 完全卸载
+# 完全解除安裝
 pip uninstall -y paddleocr paddlepaddle paddlepaddle-gpu
 
-# 重新安装
+# 重新安裝
 pip install paddleocr paddlepaddle-gpu
 ```
 
 ---
 
-## 📞 获取帮助
+## 📞 取得協助
 
-### 提交问题报告
+### 提交問題報告
 
-包含以下信息：
+包含以下資訊：
 
 ```python
 import sys
 import platform
 import paddleocr
 
-print(f"Python版本: {sys.version}")
+print(f"Python 版本: {sys.version}")
 print(f"平台: {platform.platform()}")
-print(f"PaddleOCR版本: {paddleocr.__version__}")
-print(f"错误信息: [粘贴完整错误]")
+print(f"PaddleOCR 版本: {paddleocr.__version__}")
+print(f"錯誤訊息: [貼上完整錯誤]")
 ```
 
-### 社区资源
+### 社群資源
 
-- 📖 [官方文档](../README.md)
+- 📖 [官方文件](../README.md)
 - 💬 [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
 - 📚 [FAQ](FAQ.md)
-- 🎯 [最佳实践](BEST_PRACTICES.md)
+- 🎯 [最佳實踐](BEST_PRACTICES.md)
 
 ---
 
-## 🎯 预防措施
+## 🎯 預防措施
 
-### 环境设置
+### 環境設定
 
 ```bash
-# 创建虚拟环境
+# 建立虛擬環境
 python -m venv ocr_env
 
 # Windows
@@ -409,17 +409,17 @@ ocr_env\Scripts\activate
 # Linux/Mac
 source ocr_env/bin/activate
 
-# 安装依赖
+# 安裝依賴
 pip install -r requirements.txt
 ```
 
-### 测试安装
+### 測試安裝
 
 ```python
 # test_installation.py
 try:
     from paddle_ocr_tool import PaddleOCRTool
-    print("[OK] PaddleOCR工具")
+    print("[OK] PaddleOCR 工具")
     
     import fitz
     print("[OK] PyMuPDF")
@@ -427,29 +427,31 @@ try:
     import paddleocr
     print("[OK] PaddleOCR")
     
-    print("\n所有依赖已正确安装！")
+    print("\n所有依賴已正確安裝！")
     
 except ImportError as e:
-    print(f"[ERROR] 缺少依赖: {e}")
+    print(f"[ERROR] 缺少依賴: {e}")
 ```
 
 ---
 
-## 📋 检查清单
+## 📋 檢查清單
 
-运行以下检查：
+執行以下檢查：
 
-- [ ] Python版本 >= 3.8
-- [ ] PaddleOCR已安装
-- [ ] PyMuPDF已安装
-- [ ] 文件路径正确
-- [ ] 足够的磁盘空间
-- [ ] 足够的内存
-- [ ] GPU驱动正确（如使用）
+- [ ] Python 版本 >= 3.8
+- [ ] PaddleOCR 已安裝
+- [ ] PyMuPDF 已安裝
+- [ ] 檔案路徑正確
+- [ ] 足夠的磁碟空間
+- [ ] 足夠的記憶體
+- [ ] GPU 驅動正確（如使用）
 
 ---
 
-**更新时间**: 2024-12-15  
+## 📝 備註
+
+**更新時間**: 2024-12-15  
 **版本**: v1.0.0
 
-**仍有问题？提交Issue获取帮助！** 🆘
+**仍有問題？提交 Issue 取得協助！** 🆘

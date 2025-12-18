@@ -185,4 +185,4 @@ local formats="md json html txt xlsx csv xml"
 
 ---
 
-**更多資訊**: [CLI命令文件](CLI_COMMANDS.md)
+**更多資訊**: [CLI 命令文件](CLI_COMMANDS.md)
