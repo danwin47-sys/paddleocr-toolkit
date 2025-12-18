@@ -10,9 +10,9 @@
 
 🔍 **專業級 OCR 文件辨識與處理工具**
 
-基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能優化，提供生產級代碼質量。
+基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能優化，提供生產級程式碼品質。
 
-**📚 [快速開始](docs/QUICK_START.md) | [API文檔](docs/API_GUIDE.md) | [示例工具](examples/) | [貢獻指南](CONTRIBUTING.md)**
+**📚 [快速開始](docs/QUICK_START.md) | [API文檔](docs/API_GUIDE.md) | [範例工具](examples/) | [貢獻指南](CONTRIBUTING.md)**
 
 ---
 
@@ -30,8 +30,8 @@
 | 📊 進度條 | 處理多頁 PDF 時顯示進度 |
 | 🔄 方向校正 | 自動旋轉傾斜文檔 |
 | ⚙️ 設定檔支持 | 支持 YAML 設定檔，簡化參數輸入 |
-| 🛠️ 批次處理 | 支持多線程批次處理圖片 |
-| 🎨 CLI美化 | Rich UI支持，炫酷終端界面 |
+| 🛠️ 批次處理 | 支持多執行緒批次處理圖片 |
+| 🎨 CLI美化 | Rich UI支持，炫酷終端介面 |
 
 ### 🆕 性能優化（Stage 2）
 
@@ -51,14 +51,14 @@
 - **處理器 層**: `batch_processor`, `pdf_processor`, `image_preprocessor`, `structure_processor`, `translation_processor`
 - **輸出 層**: `output_manager`
 
-### 📊 代碼質量
+### 📊 程式碼品質
 
 - ✅ **391 個單元測試**（100% 通過率）⬆️
 - ✅ **84% 測試覆蓋率**⬆️
 - ✅ **100% 類型提示**
 - ✅ **100% Docstrings**
 - ✅ **模組化設計**（26 個專業化模組）⬆️
-- ✅ **代碼格式化**（Black + isort）
+- ✅ **程式碼格式化**（Black + isort）
 - ✅ **CI/CD流程**（GitHub Actions）🆕
 - ✅ **Docker支持**（生產級配置）🆕
 

@@ -279,15 +279,15 @@ class ModeProcessor:
             if not text_output_path.is_absolute():
                 text_output_path = self.script_dir / text_output_path
 
-            # 保存到文件
+            # 儲存到檔案
             with open(text_output_path, "w", encoding="utf-8") as f:
-                f.write(combined_text)
-            print(f"[OK] 文字已保存：{text_output_path}")
+                f.write(all_text)
+            print(f"[OK] 文字已儲存：{text_output_path}")
 
         # 如果两个输出都停用，则输出到终端
         if not self.args.text_output and not self.args.searchable and combined_text:
             print("\n" + "=" * 50)
-            print("OCR 识别结果：")
+            print("OCR 辨識結果：")
             print("=" * 50)
             print(combined_text)
 

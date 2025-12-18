@@ -68,12 +68,12 @@ corrected = processor.correct_ocr_errors("文建有錯沒")
 
 ```python
 # 範例 1：錯別字修正
-text = "這個文建包含銷多OCR銷別字"
+text = "這個文件包含很多OCR錯別字"
 corrected = facade.correct_text(text)
 # 輸出：「這個文件包含很多OCR錯別字」
 
 # 範例 2：繁體中文保持
-text = "請住意檢査這份檔桉"
+text = "請注意檢查這份檔案"
 corrected = facade.correct_text(text, language="zh")
 # 輸出：「請注意檢查這份檔案」（保持繁體）
 ```
@@ -182,7 +182,7 @@ facade = PaddleOCRFacade(
 
 **缺點**：
 - ❌ 需要付費
-- ❌ 需要網絡連接
+- ❌ 需要網路連接
 
 ---
 

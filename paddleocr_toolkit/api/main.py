@@ -86,7 +86,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 任务存储（生产环境应使用Redis等）
+# 任務存儲（生產環境應使用Redis等）
 tasks = {}
 results = {}
 
@@ -158,15 +158,15 @@ class OCRRequest(BaseModel):
 
 
 class TaskResponse(BaseModel):
-    """任务响应模型"""
-
+    """任務回應模型"""
     task_id: str
     status: str
     message: str
+    result: Optional[Dict[str, Any]] = None
 
 
 class OCRResult(BaseModel):
-    """OCR结果模型"""
+    """OCR結果模型"""
 
     task_id: str
     status: str
@@ -177,16 +177,16 @@ class OCRResult(BaseModel):
 
 async def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
-    后台OCR处理任务 (Async)
+    後台OCR處理任務 (Async)
 
     Args:
-        task_id: 任务ID
-        file_path: 文件路径
+        task_id: 任務ID
+        file_path: 檔案路徑
         mode: OCR模式
     """
     try:
         tasks[task_id] = {"status": "processing", "progress": 0}
-        await manager.send_progress_update(task_id, 0, "processing", "任务开始")
+        await manager.send_progress_update(task_id, 0, "processing", "任務開始")
 
         # 0. 檢測並縮小大圖片
         processed_path = file_path
@@ -198,10 +198,10 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
 
         def run_ocr():
-            # 在线程中运行阻塞的OCR操作
+            # 在執行緒中運行阻塞的OCR操作
             ocr_manager = OCREngineManager(
                 mode=mode, device="cpu", plugin_loader=plugin_loader
-            )  # 默认使用CPU以确保兼容性
+            )  # 預設使用CPU以確保兼容性
             ocr_manager.init_engine()
             return ocr_manager
 
@@ -274,58 +274,66 @@ async def upload_and_ocr(
     api_key: str = Depends(verify_api_key),
 ):
     """
-    上传文件并进行OCR处理
+    上傳檔案並進行OCR處理
 
     Args:
-        file: 上传的文件
-        background_tasks: 后台任务
+        file: 上傳的檔案
+        background_tasks: 後台任務
         mode: OCR模式
 
     Returns:
-        任务ID和状态
+        任務ID和狀態
     """
-    # 生成任务ID
+    # 生成任務ID
     task_id = str(uuid.uuid4())
 
-    # 保存文件 (安全性：清理檔名以防止路徑遍歷)
+    # 儲存檔案 (安全性：清理檔名以防止路徑遍歷)
     safe_filename = Path(file.filename).name
     file_path = UPLOAD_DIR / f"{task_id}_{safe_filename}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
 
-    # 创建后台任务
+    # 建立後台任務
     background_tasks.add_task(process_ocr_task, task_id, str(file_path), mode)
 
-    # 初始化任务状态
+    # 初始化任務狀態
     tasks[task_id] = {"status": "queued", "progress": 0}
 
-    return TaskResponse(task_id=task_id, status="queued", message="任务已创建，正在处理...")
+    return TaskResponse(task_id=task_id, status="queued", message="任務已建立，正在處理...")
 
 
-@app.get("/api/tasks/{task_id}", response_model=OCRResult)
+@app.get("/api/status/{task_id}", response_model=TaskResponse)
 async def get_task_status(task_id: str):
     """
-    获取任务状态
+    獲取任務狀態
 
     Args:
-        task_id: 任务ID
+        task_id: 任務ID
 
     Returns:
-        任务状态和结果
+        任務狀態和結果
     """
     if task_id not in tasks:
-        raise HTTPException(status_code=404, detail="任务不存在")
+        raise HTTPException(status_code=404, detail="任務不存在")
 
     task_info = tasks[task_id]
 
-    # 如果任务完成，返回结果
+    # 如果任務完成，返回結果
     if task_id in results:
-        return OCRResult(**results[task_id], task_id=task_id)
+        return TaskResponse(
+            task_id=task_id,
+            status=results[task_id]["status"],
+            message="任務已完成",
+            result=results[task_id]["results"]
+        )
 
-    # 否则返回当前状态
-    return OCRResult(
-        task_id=task_id, status=task_info["status"], progress=task_info["progress"]
+    # 否則返回當前狀態
+    return TaskResponse(
+        task_id=task_id,
+        status=task_info["status"],
+        message="任務正在處理中",
+        result=None
     )
 
 

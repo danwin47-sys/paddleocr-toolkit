@@ -126,18 +126,19 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
 
     # 最省?存
     lightest = min(results, key=lambda x: x["memory_used"])
-    print(f"最省?存: {lightest['scenario']} ({lightest['memory_used']}MB)")
+    print(f"最省記憶體: {lightest['scenario']} ({lightest['memory_used']}MB)")
 
-    # 保存?果
+    # 保存結果
     if output:
         output_path = Path(output)
     else:
-        output_path = Path("benchmark_results.json")
+        # 儲存結果
+        output_path = Path(f"benchmark_{int(time.time())}.json")
 
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
+        json.dump(results, f, indent=4, ensure_ascii=False)
 
-    print(f"\n?告已保存: {output_path}")
+    print(f"\n📊 報告已儲存: {output_path}")
     print()
 
 

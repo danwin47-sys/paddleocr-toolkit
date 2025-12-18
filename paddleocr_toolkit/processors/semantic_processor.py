@@ -64,10 +64,10 @@ class SemanticProcessor:
             )
             
             # 檢查服務可用性
-            if not self.llm_client.is_available():
-                logging.warning(f"{llm_provider} 服務不可用，語義處理功能將被禁用")
-                self.llm_client = None
-        
+            if self.llm_client.is_available():
+                print(f"語義處理器已就緒 (模型: {self.llm_client.model})")
+            else:
+                print(f"警告: LLM 服務 ({self.llm_client.provider}) 目前無法使用，功能將受限。")       
         except Exception as e:
             logging.error(f"初始化 LLM 客戶端失敗: {e}")
             self.llm_client = None

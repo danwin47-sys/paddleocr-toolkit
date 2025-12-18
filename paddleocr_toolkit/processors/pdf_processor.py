@@ -141,7 +141,7 @@ class PDFProcessor:
 
             pdf_doc.close()
 
-            # 保存可搜索 PDF
+            # 儲存可搜尋 PDF
             if pdf_generator:
                 pdf_generator.save()
 

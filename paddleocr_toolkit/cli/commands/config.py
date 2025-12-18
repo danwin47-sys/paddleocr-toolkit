@@ -105,15 +105,15 @@ def config_wizard():
 
     config["logging"] = {}
     config["logging"]["level"] = prompt(
-        "日志??", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
+        "日誌級別", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
     )
 
-    config["logging"]["file"] = prompt("日志文件路?", default="./logs/paddleocr.log")
+    config["logging"]["file"] = prompt("日誌檔案路徑", default="./logs/paddleocr.log")
 
-    # 保存配置
-    print("\n??? 保存配置 ???")
+    # 儲存配置
+    print("\n📦 儲存配置 📦")
 
-    config_name = prompt("配置文件名?", default="custom")
+    config_name = prompt("配置文件名", default="custom")
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
