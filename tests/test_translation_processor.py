@@ -1,159 +1,112 @@
 ﻿# -*- coding: utf-8 -*-
 """
-TranslationProcessor 测试
+TranslationProcessor 測試 (更新版)
 """
 
-from unittest.mock import MagicMock, Mock
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from paddleocr_toolkit.core.models import OCRResult
-from paddleocr_toolkit.processors.translation_processor import TranslationProcessor
+from paddleocr_toolkit.processors.translation_processor import EnhancedTranslationProcessor as TranslationProcessor
 
 
 class TestTranslationProcessor:
-    """测试翻译处理器"""
+    """測試翻譯處理器"""
 
     def test_init(self):
-        """测试初始化"""
+        """測試初始化"""
         processor = TranslationProcessor()
         assert processor.translator is None
         assert processor.renderer is None
 
-    def test_init_with_components(self):
-        """测试带组件的初始化"""
-        mock_translator = Mock()
-        mock_renderer = Mock()
-
-        processor = TranslationProcessor(
-            translator=mock_translator, renderer=mock_renderer
-        )
-
-        assert processor.translator == mock_translator
-        assert processor.renderer == mock_renderer
-
-    def test_process_translation_no_translator(self):
-        """测试无翻译器时的错误"""
+    @patch("paddleocr_toolkit.processors.translation_processor.fitz")
+    @patch("pdf_translator.OllamaTranslator", create=True)
+    @patch("pdf_translator.TextRenderer", create=True)
+    @patch("pdf_translator.MonolingualPDFGenerator", create=True)
+    @patch("pdf_translator.BilingualPDFGenerator", create=True)
+    def test_setup_translation_tools(
+        self, mock_bi_gen, mock_mono_gen, mock_renderer, mock_translator, mock_fitz
+    ):
+        """測試工具設定"""
         processor = TranslationProcessor()
+        
+        mock_pdf = Mock()
+        mock_fitz.open.return_value = mock_pdf
+        
+        config = {
+            "ollama_model": "qwen",
+            "ollama_url": "url",
+            "no_mono": False,
+            "no_dual": False,
+            "dual_mode": "alternating",
+            "target_lang": "en"
+        }
+        
+        with patch("os.path.exists", return_value=True):
+            setup = processor.setup_translation_tools("test_erased.pdf", config)
+            
+            assert setup is not None
+            assert len(setup) == 8
+            assert processor.translator is not None
+            assert processor.renderer is not None
 
-        results = [OCRResult("Test", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])]
-
-        with pytest.raises(ValueError):
-            processor.process_translation(results)
-
-    def test_process_translation_success(self):
-        """测试成功翻译"""
+    def test_translate_page_texts(self):
+        """測試頁面文字翻譯"""
+        processor = TranslationProcessor()
+        
         mock_translator = Mock()
-        mock_translator.translate_batch.return_value = ["Translated"]
-
-        processor = TranslationProcessor(translator=mock_translator)
-
-        results = [OCRResult("原文", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])]
-
-        translated = processor.process_translation(
-            results, source_lang="zh", target_lang="en"
-        )
-
-        assert len(translated) == 1
-        assert translated[0]["original"] == "原文"
-        assert translated[0]["translated"] == "Translated"
-        assert translated[0]["confidence"] == 0.95
-
-    def test_process_translation_multiple(self):
-        """测试多文本翻译"""
-        mock_translator = Mock()
-        mock_translator.translate_batch.return_value = ["Trans1", "Trans2"]
-
-        processor = TranslationProcessor(translator=mock_translator)
-
+        mock_translator.translate_batch.return_value = ["你好", "世界"]
+        
         results = [
-            OCRResult("Text1", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]]),
-            OCRResult("Text2", 0.92, [[0, 60], [100, 60], [100, 110], [0, 110]]),
+            OCRResult(text="Hello", confidence=0.9, bbox=[[0, 0]]),
+            OCRResult(text="World", confidence=0.9, bbox=[[0, 50]]),
         ]
+        
+        with patch("pdf_translator.TranslatedBlock", create=True) as mock_block_class:
+            mock_block_class.side_effect = lambda **kwargs: kwargs
+            
+            blocks = processor.translate_page_texts(
+                results, mock_translator, "en", "zh", 0
+            )
+            
+            assert len(blocks) == 2
+            assert blocks[0]["translated_text"] == "你好"
+            assert blocks[1]["translated_text"] == "世界"
 
-        translated = processor.process_translation(results)
-
-        assert len(translated) == 2
-        assert translated[0]["translated"] == "Trans1"
-        assert translated[1]["translated"] == "Trans2"
-
-    def test_generate_bilingual_pdf(self):
-        """测试双语PDF生成"""
+    @patch("paddleocr_toolkit.processors.translation_processor.fitz")
+    def test_render_translations_to_pdf(self, mock_fitz):
+        """測試翻譯渲染到 PDF"""
         processor = TranslationProcessor()
+        
+        mock_pdf = [Mock()]
+        mock_pdf[0].get_pixmap.return_value = Mock()
+        
+        mock_renderer = Mock()
+        mock_mono_gen = Mock()
+        
+        with patch("paddleocr_toolkit.core.pdf_utils.pixmap_to_numpy", return_value=None):
+            processor._render_translations_to_pdf(
+                0, [{"text": "t"}], mock_pdf, None, mock_renderer, 
+                mock_mono_gen, None, 150
+            )
+            
+            mock_renderer.render_multiple_texts.assert_called_once()
+            mock_mono_gen.add_page.assert_called_once()
 
-        blocks = [
-            {
-                "original": "Text",
-                "translated": "Transl",
-                "bbox": [[0, 0]],
-                "confidence": 0.9,
-            }
-        ]
-
-        # 这里只测试方法存在和返回值
-        result = processor.generate_bilingual_pdf(
-            "input.pdf", blocks, "output.pdf", mode="alternating"
+    def test_save_translation_pdfs(self):
+        """測試儲存 PDF"""
+        processor = TranslationProcessor()
+        
+        mock_mono = Mock()
+        summary = {}
+        
+        processor._save_translation_pdfs(
+            mock_mono, None, "mono.pdf", None, summary
         )
-
-        assert isinstance(result, bool)
-
-    def test_extract_translation_text_simple(self):
-        """测试提取翻译文字（仅译文）"""
-        processor = TranslationProcessor()
-
-        blocks = [
-            {
-                "original": "Hello",
-                "translated": "你好",
-                "bbox": [[0, 0]],
-                "confidence": 0.9,
-            },
-            {
-                "original": "World",
-                "translated": "世界",
-                "bbox": [[0, 50]],
-                "confidence": 0.85,
-            },
-        ]
-
-        text = processor.extract_translation_text(blocks, include_original=False)
-
-        assert text == "你好\n世界"
-
-    def test_extract_translation_text_with_original(self):
-        """测试提取翻译文字（含原文）"""
-        processor = TranslationProcessor()
-
-        blocks = [
-            {
-                "original": "Hello",
-                "translated": "你好",
-                "bbox": [[0, 0]],
-                "confidence": 0.9,
-            }
-        ]
-
-        text = processor.extract_translation_text(blocks, include_original=True)
-
-        assert "Hello" in text
-        assert "你好" in text
-
-    def test_process_translation_error(self):
-        """测试翻译错误处理"""
-        mock_translator = Mock()
-        mock_translator.translate_batch.side_effect = Exception("Translation error")
-
-        processor = TranslationProcessor(translator=mock_translator)
-
-        results = [OCRResult("Test", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])]
-
-        translated = processor.process_translation(results)
-
-        assert len(translated) == 0
-
-    def test_extract_empty_blocks(self):
-        """测试空块列表"""
-        processor = TranslationProcessor()
-
-        text = processor.extract_translation_text([], include_original=False)
-        assert text == ""
+        
+        mock_mono.save.assert_called_once_with("mono.pdf")
+        assert summary["translated_pdf"] == "mono.pdf"

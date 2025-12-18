@@ -18,6 +18,7 @@ class TestPaddleOCRFacadeInitialization:
     def test_init_basic_mode(self, mock_engine_class):
         """測試基本模式初始化"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine_class.return_value = mock_engine
 
         facade = PaddleOCRFacade(mode="basic")
@@ -33,6 +34,7 @@ class TestPaddleOCRFacadeInitialization:
     def test_init_hybrid_mode(self, mock_processor_class, mock_engine_class):
         """測試混合模式初始化"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.HYBRID
         mock_engine.init_engine = Mock()
         mock_engine_class.return_value = mock_engine
 
@@ -52,6 +54,7 @@ class TestPaddleOCRFacadeInitialization:
     def test_init_with_custom_settings(self, mock_engine_class):
         """測試自訂設定初始化"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine_class.return_value = mock_engine
 
         facade = PaddleOCRFacade(
@@ -74,6 +77,7 @@ class TestPaddleOCRFacadeProcessHybrid:
     def test_process_hybrid_delegation(self, mock_processor_class, mock_engine_class):
         """測試 process_hybrid 委派給 HybridPDFProcessor"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.HYBRID
         mock_engine.init_engine = Mock()
         mock_engine_class.return_value = mock_engine
 
@@ -91,6 +95,7 @@ class TestPaddleOCRFacadeProcessHybrid:
     def test_process_hybrid_wrong_mode_raises_error(self, mock_engine_class):
         """測試錯誤模式時拋出異常"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine_class.return_value = mock_engine
 
         facade = PaddleOCRFacade(mode="basic")
@@ -107,6 +112,7 @@ class TestPaddleOCRFacadeUnifiedProcess:
     def test_process_routes_to_hybrid(self, mock_processor_class, mock_engine_class):
         """測試 process() 正確路由到 hybrid 模式"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.HYBRID
         mock_engine.init_engine = Mock()
         mock_engine_class.return_value = mock_engine
 
@@ -123,6 +129,7 @@ class TestPaddleOCRFacadeUnifiedProcess:
     def test_process_unsupported_mode_raises_error(self, mock_engine_class):
         """測試不支援的模式"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine_class.return_value = mock_engine
 
         facade = PaddleOCRFacade(mode="unknown")
@@ -138,6 +145,7 @@ class TestPaddleOCRFacadeBackwardCompatibility:
     def test_get_engine(self, mock_engine_class):
         """測試 get_engine() 方法"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_real_engine = Mock()
         mock_engine.get_engine.return_value = mock_real_engine
         mock_engine_class.return_value = mock_engine
@@ -151,6 +159,7 @@ class TestPaddleOCRFacadeBackwardCompatibility:
     def test_predict(self, mock_engine_class):
         """測試 predict() 方法"""
         mock_engine = Mock()
+        mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine.predict.return_value = ["result"]
         mock_engine_class.return_value = mock_engine
 

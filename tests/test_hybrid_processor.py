@@ -126,9 +126,8 @@ class TestHybridPDFProcessorProcessPDF:
                 processor.process_pdf(pdf_path, dpi=150)
 
                 # 驗證 DPI 被調整為 300
-                call_args = mock_internal.call_args
-                # call_args 是 (args, kwargs) 的形式
-                assert call_args.kwargs["dpi"] == 300 or call_args[1]["dpi"] == 300
+                args, kwargs = mock_internal.call_args
+                assert kwargs.get("dpi") == 300 or (len(args) > 5 and args[5] == 300)
         finally:
             Path(pdf_path).unlink(missing_ok=True)
 

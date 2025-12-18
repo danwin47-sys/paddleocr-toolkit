@@ -5,7 +5,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 import pytest
@@ -73,45 +73,49 @@ class TestBasicProcessorProcessImage:
             )
         ]
 
-    @patch("paddleocr_toolkit.processors.basic_processor.cv2")
-    def test_process_image_success(self, mock_cv2, processor, sample_ocr_results):
-        """測試成功處理圖片"""
-        # Mock cv2.imread
+    def test_process_image_success(self, processor, sample_ocr_results):
+        """測試成功處理圖片處理"""
+        mock_cv2 = MagicMock()
         mock_image = np.zeros((100, 100, 3), dtype=np.uint8)
         mock_cv2.imread.return_value = mock_image
+        
+        with patch.dict("sys.modules", {"cv2": mock_cv2}):
+            # Mock OCR
+            processor.engine_manager.predict = Mock(return_value=["mock_result"])
+            processor.result_parser = Mock()
+            processor.result_parser.parse_basic_result.return_value = sample_ocr_results
+    
+            result = processor.process_image("test.jpg")
+    
+            assert "ocr_results" in result
+            assert result["text_count"] == 1
+            assert result["image"] == "test.jpg"
 
-        # Mock OCR
-        processor.engine_manager.predict.return_value = ["mock_result"]
-        processor.result_parser.parse_basic_result.return_value = sample_ocr_results
-
-        result = processor.process_image("test.jpg")
-
-        assert "ocr_results" in result
-        assert result["text_count"] == 1
-        assert result["image"] == "test.jpg"
-
-    @patch("paddleocr_toolkit.processors.basic_processor.cv2")
-    def test_process_image_text_format(self, mock_cv2, processor, sample_ocr_results):
+    def test_process_image_text_format(self, processor, sample_ocr_results):
         """測試文字格式輸出"""
+        mock_cv2 = MagicMock()
         mock_image = np.zeros((100, 100, 3), dtype=np.uint8)
         mock_cv2.imread.return_value = mock_image
+        
+        with patch.dict("sys.modules", {"cv2": mock_cv2}):
+            processor.engine_manager.predict = Mock(return_value=["mock_result"])
+            processor.result_parser = Mock()
+            processor.result_parser.parse_basic_result.return_value = sample_ocr_results
+    
+            result = processor.process_image("test.jpg", output_format="text")
+    
+            assert "text" in result
+            assert "測試文字" in result["text"]
 
-        processor.engine_manager.predict.return_value = ["mock_result"]
-        processor.result_parser.parse_basic_result.return_value = sample_ocr_results
-
-        result = processor.process_image("test.jpg", output_format="text")
-
-        assert "text" in result
-        assert "測試文字" in result["text"]
-
-    @patch("paddleocr_toolkit.processors.basic_processor.cv2")
-    def test_process_image_not_found(self, mock_cv2, processor):
+    def test_process_image_not_found(self, processor):
         """測試圖片不存在"""
+        mock_cv2 = MagicMock()
         mock_cv2.imread.return_value = None
-
-        result = processor.process_image("not_exist.jpg")
-
-        assert "error" in result
+        
+        with patch.dict("sys.modules", {"cv2": mock_cv2}):
+            result = processor.process_image("not_exist.jpg")
+    
+            assert "error" in result
 
 
 class TestBasicProcessorProcessBatch:
@@ -152,7 +156,7 @@ class TestBasicProcessorProcessPDF:
     def test_process_pdf_basic(self, mock_pdf_gen_class, mock_fitz, processor):
         """測試基本 PDF 處理"""
         # Mock PDF
-        mock_pdf = Mock()
+        mock_pdf = MagicMock()
         mock_pdf.__len__.return_value = 1
         mock_page = Mock()
         mock_pixmap = Mock()
@@ -166,7 +170,8 @@ class TestBasicProcessorProcessPDF:
         mock_pdf_gen_class.return_value = mock_gen
 
         # Mock OCR
-        processor.engine_manager.predict.return_value = ["result"]
+        processor.engine_manager.predict = Mock(return_value=["result"])
+        processor.result_parser = Mock()
         processor.result_parser.parse_basic_result.return_value = []
 
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
