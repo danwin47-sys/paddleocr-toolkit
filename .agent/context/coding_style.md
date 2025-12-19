@@ -49,7 +49,7 @@ class OcrResult:  # 縮寫應全大寫
     pass
 ```
 
-### 函數與方法
+### 函式與方法
 
 ```python
 # ✅ 正確
@@ -94,9 +94,9 @@ class Example:
 
 ---
 
-## 類型提示
+## 型別提示
 
-### 基本類型
+### 基本型別
 
 ```python
 from typing import List, Dict, Optional, Union, Tuple
@@ -110,29 +110,29 @@ def get_results(count: int = 10) -> List[str]:
     return ["result"] * count
 ```
 
-### Optional 類型
+### Optional 型別
 
 ```python
 from typing import Optional
 
 def find_user(user_id: int) -> Optional[User]:
-    """查找使用者，可能返回 None"""
+    """查詢使用者，可能返回 None"""
     if user_id in database:
         return database[user_id]
     return None
 ```
 
-### Union 類型
+### Union 型別
 
 ```python
 from typing import Union
 
 def process_input(data: Union[str, int, float]) -> str:
-    """處理多種類型的輸入"""
+    """處理多種型別的輸入"""
     return str(data)
 ```
 
-### 複雜類型
+### 複雜型別
 
 ```python
 from typing import List, Dict, Tuple, Callable
@@ -146,14 +146,14 @@ results: List[OCRResult] = []
 # 元組
 coordinates: Tuple[float, float, float, float] = (0, 0, 100, 100)
 
-# 回呼函數
+# 回呼函式
 def apply_callback(callback: Callable[[int], str]) -> str:
     return callback(42)
 ```
 
 ---
 
-## 文件字串（Docstrings）
+## 檔案字串（Docstrings）
 
 ### 模組層級
 
@@ -167,7 +167,7 @@ PaddleOCR Toolkit - PDF 生成器
 """
 ```
 
-### 函數文件字串（Google Style）
+### 函式檔案字串（Google Style）
 
 ```python
 def convert_pdf_to_images(
@@ -200,7 +200,7 @@ def convert_pdf_to_images(
     pass
 ```
 
-### 類別文件字串
+### 類別檔案字串
 
 ```python
 class PDFGenerator:
@@ -333,7 +333,7 @@ except Exception:
 with open(file_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
-# ✅ 正確：PDF 文件也要正確關閉
+# ✅ 正確：PDF 檔案也要正確關閉
 doc = fitz.open(pdf_path)
 try:
     # 處理 PDF
@@ -368,7 +368,7 @@ x = x + 1  # x 加 1
 new_function()
 
 # ✅ 如果需要說明為何註解，使用 FIXME 或 TODO
-# TODO: 實作更高效的演算法
+# TODO: 實作更高效的演演算法
 # FIXME: 這個方法在空列表時會出錯
 ```
 
@@ -376,7 +376,7 @@ new_function()
 
 ## 程式碼組織
 
-### 函數長度
+### 函式長度
 
 - 建議：< 50 行
 - 極限：< 100 行
@@ -414,7 +414,7 @@ class TestPDFGenerator:
         pass
     
     def test_add_page_raises_error_when_image_not_found(self):
-        """測試圖片不存在時拋出錯誤"""
+        """測試圖片不存在時丟擲錯誤"""
         with pytest.raises(FileNotFoundError):
             generator.add_page("nonexistent.png", [])
 ```
@@ -423,7 +423,7 @@ class TestPDFGenerator:
 
 ```python
 def test_process_text(self):
-    """測試文字處理"""
+    """測試文書處理"""
     # Arrange（準備）
     input_text = "HelloWorld"
     expected = "Hello World"
@@ -444,7 +444,7 @@ def test_process_text(self):
 - **Black**：自動格式化（行長 120）
 - **isort**：自動排序 import
 - **flake8**：程式碼檢查
-- **mypy**：類型檢查
+- **mypy**：型別檢查
 
 ### 設定範例（pyproject.toml）
 
@@ -469,14 +469,14 @@ warn_unused_configs = true
 
 新程式碼提交前檢查：
 
-- [ ] 所有函數都有類型提示
+- [ ] 所有函式都有型別提示
 - [ ] 所有公開 API 都有 docstrings
 - [ ] 使用 `logging` 而非 `print()`
 - [ ] 異常處理明確且完整
 - [ ] import 順序正確
 - [ ] 遵循命名規範
 - [ ] 行長 < 120 字元
-- [ ] 函數長度合理（< 100 行）
+- [ ] 函式長度合理（< 100 行）
 
 ---
 

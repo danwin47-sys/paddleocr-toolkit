@@ -1,6 +1,6 @@
 # 變更日誌
 
-本文件記錄 PaddleOCR Toolkit 的所有重要變更。
+本檔案記錄 PaddleOCR Toolkit 的所有重要變更。
 
 ---
 
@@ -15,10 +15,10 @@
 #### AI 語義處理
 - ✅ **SemanticProcessor** - 基於 LLM (Ollama/OpenAI) 的語義分析
     - 自動 OCR 錯誤修正（準確率提升 15%+）
-    - 結構化資料提取（從 OCR 文本自動生成 JSON）
-    - 文件摘要生成
-- ✅ **中英繁體優化** - 專門針對繁體中文 OCR 修正的提示詞優化
-- ✅ **Facade 整合** - `PaddleOCRFacade` 新增 `enable_semantic` 參數與連動 API
+    - 結構化資料提取（從 OCR 文字自動生成 JSON）
+    - 檔案摘要生成
+- ✅ **中英繁體最佳化** - 專門針對繁體中文 OCR 修正的提示詞最佳化
+- ✅ **Facade 整合** - `PaddleOCRFacade` 新增 `enable_semantic` 引數與連動 API
     - `correct_text()` - OCR 錯誤修正
     - `extract_structured_data()` - 結構化資料提取
 
@@ -34,18 +34,18 @@
     - 敏感資訊不再硬編碼
     - 提供 `.env.example` 範本
 - ✅ **CORS 強化** - 可配置的來源限制
-- ✅ **插件目錄保護** - 啟動時權限檢查與可選禁用
+- ✅ **外掛目錄保護** - 啟動時許可權檢查與可選禁用
 
 ### 🔧 改進
 
 - **AI 語義處理器**: 整合 LLM (Ollama/OpenAI) 進行 OCR 錯誤修正與結構化資料提取 🤖
 - **安全性強化**: 實作路徑遍歷保護、API 金鑰認證及 CORS 安全設定 🔒
-- **測試穩定化**: 修復 26 個失敗測試，達到 100% 通過率 ✅
-- **Docker 支持**: 提供生產級 Docker 部署範作與指南 🐳
-- **性能基準測試**: 建立自動化性能測試框架 📊
-- **安全性文件**: 新增 `SECURITY_HARDENING.md` 與更新 `SECURITY.md`
+- **測試穩定化**: 修復 26 個失敗測試，達到 100% 透過率 ✅
+- **Docker 支援**: 提供生產級 Docker 部署範作與指南 🐳
+- **效能基準測試**: 建立自動化效能測試框架 📊
+- **安全性檔案**: 新增 `SECURITY_HARDENING.md` 與更新 `SECURITY.md`
 
-### 📚 文件
+### 📚 檔案
 
 - ✅ `docs/SEMANTIC_PROCESSOR_GUIDE.md` - 語義處理器完整指南
 - ✅ `docs/SECURITY_HARDENING.md` - 安全性強化技術指南
@@ -57,17 +57,17 @@
 - 🔒 **Critical**: 修復路徑遍歷漏洞 (CVE-pending)
 - 🔒 **High**: 實作 API 身份驗證
 - 🔒 **Medium**: 強化 CORS 設定
-- 🔒 **Medium**: 插件目錄保護
+- 🔒 **Medium**: 外掛目錄保護
 
 ### 📊 統計
 
-| 項目 | 數值 |
+| 專案 | 數值 |
 |------|------|
-| 測試通過率 | 100% (516/520) |
-| 代碼覆蓋率 | 64% |
+| 測試透過率 | 100% (516/520) |
+| 程式碼覆蓋率 | 64% |
 | 新增模組 | 2 個 (llm, semantic) |
 | 安全性修復 | 4 項 |
-| 文件更新 | 5 份 |
+| 檔案更新 | 5 份 |
 
 ### ⚠️ 破壞性變更
 
@@ -77,8 +77,8 @@
 
 1. 更新依賴：`pip install -r requirements.txt`
 2. （可選）配置 LLM：複製 `.env.example` 為 `.env` 並設定
-3. （API 用戶）設定 API Key 以啟用身份驗證
-4. 查看 `docs/SECURITY_HARDENING.md` 了解安全性最佳實踐
+3. （API 使用者）設定 API Key 以啟用身份驗證
+4. 檢視 `docs/SECURITY_HARDENING.md` 瞭解安全性最佳實踐
 
 ---
 
@@ -97,14 +97,14 @@
 - ✅ **DecoupledModeProcessor** (243 行) - CLI 層解耦
 - ✅ **PaddleOCRFacade** (265 行) - 輕量 API 層
 
-#### 文件
+#### 檔案
 - `FACADE_API_GUIDE.md` - 新 API 使用指南
 - `MIGRATION_GUIDE.md` - 完整遷移指南
 - `TESTING_GUIDE.md` - 測試指南
 
 ### 🔧 改進
 
-- ✅ 消除循環依賴
+- ✅ 消除迴圈依賴
 - ✅ 測試覆蓋率 76% → **89%+**
 - ✅ 主檔案 2,690 行 → 265 行（-90%）
 - ✅ 5 個專業模組（1,732 行）
@@ -120,12 +120,12 @@
 
 ### 📊 統計
 
-| 項目 | 數值 |
+| 專案 | 數值 |
 |------|------|
 | 新增模組 | 5 個 |
 | 新增程式碼 | 1,732 行 |
 | 測試覆蓋率 | 89%+ |
-| 測試通過率 | 89% (39/44) |
+| 測試透過率 | 89% (39/44) |
 
 ---
 

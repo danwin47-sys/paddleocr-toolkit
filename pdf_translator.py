@@ -204,7 +204,7 @@ class OllamaTranslator(TranslationEngine):
         if not text or not text.strip():
             return text
 
-        # 找出文本中存在的專業術語（用於提示詞注入）
+        # 找出文字中存在的專業術語（用於提示詞注入）
         found_preserve_terms = []
         found_translations = {}
 
@@ -216,7 +216,7 @@ class OllamaTranslator(TranslationEngine):
             if term in text:
                 found_translations[term] = translation
 
-        # 語言代碼轉換為自然語言描述
+        # 語言程式碼轉換為自然語言描述
         lang_names = {
             "auto": "自動偵測",
             "zh": "中文",
@@ -237,7 +237,7 @@ class OllamaTranslator(TranslationEngine):
             if found_preserve_terms:
                 hints.append(
                     f"保留原文不翻譯：{', '.join(found_preserve_terms[:10])}"
-                )  # 限制數量避免提示詞過長
+                )  # 限制數量避擴音示詞過長
             if found_translations:
                 trans_hints = [
                     f"{k}→{v}" for k, v in list(found_translations.items())[:10]
@@ -336,7 +336,7 @@ class OllamaTranslator(TranslationEngine):
                 "【規則】",
                 "只輸出",
                 "不要輸出",
-                "不要添加",
+                "不要新增",
                 "絕對不要",
                 "直接保留",
             ]
@@ -387,7 +387,7 @@ class OllamaTranslator(TranslationEngine):
             # 檢測 CJK 統一漢字
             if "\u4e00" <= char <= "\u9fff":
                 chinese_count += 1
-            # 擴展 CJK
+            # 擴充套件 CJK
             elif "\u3400" <= char <= "\u4dbf":
                 chinese_count += 1
             elif "\u20000" <= char <= "\u2a6df":
@@ -446,20 +446,20 @@ class TextRenderer:
         self._font_cache = {}
 
     def _get_font(self, size: int) -> ImageFont.FreeTypeFont:
-        """獲取字體，支援快取"""
+        """獲取字型，支援快取"""
         if size in self._font_cache:
             return self._font_cache[size]
 
         font = None
 
-        # 嘗試自訂字體
+        # 嘗試自訂字型
         if self.font_path and os.path.exists(self.font_path):
             try:
                 font = ImageFont.truetype(self.font_path, size)
             except Exception as e:
-                logging.warning(f"載入自訂字體失敗: {e}")
+                logging.warning(f"載入自訂字型失敗: {e}")
 
-        # 嘗試系統中文字體
+        # 嘗試系統中文字型
         if font is None:
             chinese_fonts = [
                 # Windows
@@ -483,7 +483,7 @@ class TextRenderer:
                     except Exception:
                         continue
 
-        # 使用預設字體
+        # 使用預設字型
         if font is None:
             try:
                 font = ImageFont.load_default()
@@ -505,7 +505,7 @@ class TextRenderer:
         pil_image = Image.fromarray(image)
         draw = ImageDraw.Draw(pil_image)
 
-        # 根據區域高度計算字體大小
+        # 根據區域高度計算字型大小
         font_size = max(12, int(block.height * 0.8))
         font = self._get_font(font_size)
 
@@ -586,7 +586,7 @@ class MonolingualPDFGenerator:
         self.pages = []
 
     def add_page(self, image: np.ndarray):
-        """添加一頁"""
+        """新增一頁"""
         self.pages.append(image.copy())
 
     def save(self, output_path: str) -> bool:
@@ -603,7 +603,7 @@ class MonolingualPDFGenerator:
                 pil_image.save(img_bytes, format="PNG")
                 img_bytes.seek(0)
 
-                # 創建頁面
+                # 建立頁面
                 img_rect = fitz.Rect(0, 0, pil_image.width, pil_image.height)
                 page = self.doc.new_page(width=img_rect.width, height=img_rect.height)
                 page.insert_image(img_rect, stream=img_bytes.read())
@@ -617,7 +617,7 @@ class MonolingualPDFGenerator:
             return False
 
     def close(self):
-        """關閉文件"""
+        """關閉檔案"""
         if self.doc:
             self.doc.close()
 
@@ -639,7 +639,7 @@ class BilingualPDFGenerator:
         self.page_pairs = []  # [(original, translated), ...]
 
     def add_bilingual_page(self, original: np.ndarray, translated: np.ndarray):
-        """添加一對原文/譯文頁面"""
+        """新增一對原文/譯文頁面"""
         self.page_pairs.append((original.copy(), translated.copy()))
 
     def save(self, output_path: str) -> bool:
@@ -705,6 +705,6 @@ class BilingualPDFGenerator:
             return False
 
     def close(self):
-        """關閉文件"""
+        """關閉檔案"""
         if self.doc:
             self.doc.close()

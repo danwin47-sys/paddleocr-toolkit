@@ -61,10 +61,10 @@ class PaddleOCRFacade:
 
         Args:
             mode: OCR 模式 ('basic', 'structure', 'vl', 'hybrid', 'formula')
-            use_orientation_classify: 是否啟用文件方向自動校正
-            use_doc_unwarping: 是否啟用文件彎曲校正
+            use_orientation_classify: 是否啟用檔案方向自動校正
+            use_doc_unwarping: 是否啟用檔案彎曲校正
             use_textline_orientation: 是否啟用文字行方向偵測
-            device: 運算設備 ('gpu' 或 'cpu')
+            device: 運算裝置 ('gpu' 或 'cpu')
             debug_mode: DEBUG 模式（顯示粉紅色文字層）
             compress_images: 啟用 JPEG 壓縮以減少 PDF 檔案大小
             jpeg_quality: JPEG 壓縮品質（0-100）
@@ -140,7 +140,7 @@ class PaddleOCRFacade:
             )
             logging.info("BasicProcessor 初始化完成")
 
-        # 可以在這裡添加其他模式的 Processor
+        # 可以在這裡新增其他模式的 Processor
         # elif self.mode == "structure":
         #     self.structure_processor = StructureProcessor(self.engine_manager)
 
@@ -156,7 +156,7 @@ class PaddleOCRFacade:
         Args:
             input_path: 輸入檔案路徑
             output_path: 輸出檔案路徑（可選）
-            **kwargs: 其他參數
+            **kwargs: 其他引數
 
         Returns:
             Dict[str, Any]: 處理結果
@@ -228,7 +228,7 @@ class PaddleOCRFacade:
         Args:
             input_path: 輸入檔案路徑
             output_path: 輸出路徑
-            **kwargs: 其他參數
+            **kwargs: 其他引數
 
         Returns:
             Dict[str, Any]: 處理結果
@@ -247,7 +247,7 @@ class PaddleOCRFacade:
         Args:
             input_path: 輸入檔案路徑
             output_path: 輸出路徑
-            **kwargs: 其他參數
+            **kwargs: 其他引數
 
         Returns:
             Dict[str, Any]: 處理結果
@@ -266,7 +266,7 @@ class PaddleOCRFacade:
         Args:
             input_path: 輸入檔案路徑
             output_path: 輸出路徑
-            **kwargs: 其他參數
+            **kwargs: 其他引數
 
         Returns:
             Dict[str, Any]: 處理結果
@@ -338,7 +338,7 @@ class PaddleOCRFacade:
         獲取底層 OCR 引擎（用於向後相容）
 
         Returns:
-            OCR 引擎實例
+            OCR 引擎例項
         """
         return self.engine_manager.get_engine()
 

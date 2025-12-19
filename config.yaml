@@ -5,13 +5,13 @@
 ocr:
   # OCR 模式: basic, structure, vl, formula, hybrid
   mode: hybrid
-  # 運算設備: cpu, gpu
+  # 運算裝置: cpu, gpu
   device: cpu
   # PDF 轉圖片解析度
   dpi: 150
-  # 文件方向校正
+  # 檔案方向校正
   orientation_classify: false
-  # 文件彎曲校正
+  # 檔案彎曲校正
   unwarping: false
 
 # ============ 輸出設定 ============

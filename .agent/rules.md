@@ -2,13 +2,13 @@
 
 ## 核心理念：測試驅動 + Artifact-First
 
-你是 PaddleOCR Toolkit 專案的專業 Python 開發者。本專案是一個基於 PaddleOCR 的多功能文件辨識與處理工具。
+你是 PaddleOCR Toolkit 專案的專業 Python 開發者。本專案是一個基於 PaddleOCR 的多功能檔案辨識與處理工具。
 
 ### Artifact 協議
 
 1. **規劃**：在修改 `paddleocr_toolkit/` 或 `paddle_ocr_tool.py` 之前，先建立 `artifacts/plans/plan_[feature_name].md`。
 2. **測試**：修改程式碼後，執行 `pytest --cov` 並將結果儲存到 `artifacts/logs/`。
-3. **文件**：更新 README.md 或相關文件。
+3. **檔案**：更新 README.md 或相關檔案。
 
 ---
 
@@ -16,8 +16,8 @@
 
 ### 編碼標準
 
-1. **類型提示**：所有新函數必須有類型提示（使用 `typing` 模組）。
-2. **文件字串**：使用 Google-style docstrings。
+1. **型別提示**：所有新函式必須有型別提示（使用 `typing` 模組）。
+2. **檔案字串**：使用 Google-style docstrings。
 
    ```python
    def example_function(param: str) -> bool:
@@ -26,7 +26,7 @@
        詳細說明（如果需要）。
        
        Args:
-           param: 參數說明。
+           param: 引數說明。
            
        Returns:
            返回值說明。
@@ -82,16 +82,16 @@
 
 ### 架構原則
 
-1. **避免循環依賴**：
+1. **避免迴圈依賴**：
    - 使用延遲載入模式（參考 `__init__.py` 中的 `get_paddle_ocr_tool()`）
    - 核心模組不應依賴主程式
 
 2. **DRY 原則**：
    - 共用邏輯放在 `core/pdf_utils.py`
-   - 重複的 PDF 操作使用工具函數（如 `pixmap_to_numpy()`, `page_to_numpy()`）
+   - 重複的 PDF 操作使用工具函式（如 `pixmap_to_numpy()`, `page_to_numpy()`）
 
 3. **設定優先順序**：
-   - CLI 參數 > config.yaml > 預設值
+   - CLI 引數 > config.yaml > 預設值
    - 使用 `config_loader.py` 載入設定
 
 4. **錯誤處理**：
@@ -110,10 +110,10 @@ paddleocr-toolkit/
 │   ├── core/                 # 核心功能（優先修改）
 │   │   ├── models.py         # OCRResult, OCRMode 資料模型
 │   │   ├── pdf_generator.py  # PDF 生成器
-│   │   ├── pdf_utils.py      # 共用 PDF 工具（9 個函數）
+│   │   ├── pdf_utils.py      # 共用 PDF 工具（9 個函式）
 │   │   └── config_loader.py  # YAML 設定載入
 │   ├── processors/           # 資料處理器
-│   │   ├── text_processor.py     # 文字處理（90% 覆蓋率 ✅）
+│   │   ├── text_processor.py     # 文書處理（90% 覆蓋率 ✅）
 │   │   ├── pdf_quality.py        # PDF 品質偵測（70% 覆蓋率）
 │   │   ├── image_preprocessor.py # 影像前處理（66% 覆蓋率）
 │   │   ├── batch_processor.py    # 批次處理（82% 覆蓋率 ✅）
@@ -130,7 +130,7 @@ paddleocr-toolkit/
 
 ## 關鍵設計決策
 
-### 1. 循環依賴解決
+### 1. 迴圈依賴解決
 
 **問題**：`paddleocr_toolkit` 需要 import `paddle_ocr_tool`  
 **解決**：使用 `get_paddle_ocr_tool()` 延遲載入
@@ -138,11 +138,11 @@ paddleocr-toolkit/
 ### 2. 共用工具
 
 **問題**：Pixmap → numpy 轉換在 5+ 處重複  
-**解決**：建立 `pdf_utils.py`，提供 9 個共用函數
+**解決**：建立 `pdf_utils.py`，提供 9 個共用函式
 
 ### 3. 設定檔支援
 
-**問題**：CLI 參數過多  
+**問題**：CLI 引數過多  
 **解決**：使用 `config.yaml` + `config_loader.py`
 
 ---
@@ -160,17 +160,17 @@ paddleocr-toolkit/
 1. **主程式重構**：拆分為多個模組
 2. **提升覆蓋率**：目標 80%+
 3. **Docker 容器化**：一鍵部署
-4. **API 文件**：使用 Sphinx 自動生成
+4. **API 檔案**：使用 Sphinx 自動生成
 
 ---
 
-## 權限與限制
+## 許可權與限制
 
 ### ✅ 允許的操作
 
 - 修改 `paddleocr_toolkit/` 下的模組
 - 新增測試到 `tests/`
-- 更新 `README.md` 和文件
+- 更新 `README.md` 和檔案
 - 執行 `pytest` 和 `mypy`
 - 新增功能到 `config.yaml`
 
@@ -199,7 +199,7 @@ paddleocr-toolkit/
 
 ---
 
-## 上下文文件
+## 上下文檔案
 
 更多專案資訊請參考：
 

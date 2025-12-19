@@ -10,7 +10,7 @@ pdf/
 │   ├── core/              # 核心資料結構
 │   └── processors/        # 處理器模組
 ├── tests/                 # 測試
-└── README.md              # 文件
+└── README.md              # 檔案
 ```
 
 ---
@@ -113,7 +113,7 @@ class PDFGenerator:
 
 ### paddleocr_toolkit/processors/
 
-| 模組 | 類別/函數 | 功能 | 整合狀態 |
+| 模組 | 類別/函式 | 功能 | 整合狀態 |
 |------|----------|------|---------|
 | `text_processor.py` | `fix_english_spacing()` | 英文空格修復 | ✅ |
 | `pdf_quality.py` | `detect_pdf_quality()` | PDF 品質偵測 | ✅ |
@@ -185,17 +185,17 @@ flowchart TD
 
 ---
 
-## CLI 參數
+## CLI 引數
 
 ### OCR 模式
 
-| 參數 | 預設 | 說明 |
+| 引數 | 預設 | 說明 |
 |------|------|------|
 | `--mode` | basic | basic, structure, vl, formula, hybrid |
 
 ### 輸出選項
 
-| 參數 | 說明 |
+| 引數 | 說明 |
 |------|------|
 | `--searchable` | 生成可搜尋 PDF |
 | `--markdown-output` | Markdown 輸出 |
@@ -205,14 +205,14 @@ flowchart TD
 
 ### 壓縮選項
 
-| 參數 | 預設 | 說明 |
+| 引數 | 預設 | 說明 |
 |------|------|------|
 | `--no-compress` | False | 停用 JPEG 壓縮 |
 | `--jpeg-quality` | 85 | JPEG 品質 (0-100) |
 
 ### 翻譯選項
 
-| 參數 | 預設 | 說明 |
+| 引數 | 預設 | 說明 |
 |------|------|------|
 | `--translate` | False | 啟用翻譯 |
 | `--source-lang` | auto | 來源語言 |

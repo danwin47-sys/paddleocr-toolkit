@@ -7,8 +7,8 @@
 ## 專案概述
 
 **專案名稱**：PaddleOCR Toolkit  
-**類型**：Python CLI 工具 + 套件  
-**功能**：基於 PaddleOCR 的多功能文件辨識與處理工具  
+**型別**：Python CLI 工具 + 套件  
+**功能**：基於 PaddleOCR 的多功能檔案辨識與處理工具  
 **授權**：MIT
 
 ---
@@ -27,11 +27,11 @@ paddleocr-toolkit/
 │   │   ├── __init__.py
 │   │   ├── models.py          # OCRResult, OCRMode 資料模型
 │   │   ├── pdf_generator.py   # PDF 生成器（69% 覆蓋率）
-│   │   ├── pdf_utils.py       # 共用 PDF 工具（9 個函數，70% 覆蓋率）
+│   │   ├── pdf_utils.py       # 共用 PDF 工具（9 個函式，70% 覆蓋率）
 │   │   └── config_loader.py   # YAML 設定載入（80% 覆蓋率 ✅）
 │   ├── processors/            # 資料處理器
 │   │   ├── __init__.py
-│   │   ├── text_processor.py      # 文字處理（90% 覆蓋率 ✅）
+│   │   ├── text_processor.py      # 文書處理（90% 覆蓋率 ✅）
 │   │   ├── pdf_quality.py         # PDF 品質偵測（70% 覆蓋率）
 │   │   ├── image_preprocessor.py  # 影像前處理（66% 覆蓋率）
 │   │   ├── batch_processor.py     # 批次處理（82% 覆蓋率 ✅）
@@ -103,19 +103,19 @@ class PDFGenerator:
 
 #### `pdf_utils.py`
 
-**職責**：共用 PDF 工具函數
+**職責**：共用 PDF 工具函式
 
-**9 個工具函數**：
+**9 個工具函式**：
 
 1. `pixmap_to_numpy()` - Pixmap 轉 numpy 陣列
 2. `page_to_numpy()` - PDF 頁面轉 numpy 陣列
 3. `create_pdf_page()` - 建立 PDF 頁面
 4. `insert_image_to_page()` - 插入圖片到頁面
-5. `save_pdf_document()` - 儲存 PDF 文件
+5. `save_pdf_document()` - 儲存 PDF 檔案
 6. `get_page_pixmap()` - 取得頁面 Pixmap
-7. `open_pdf_document()` - 開啟 PDF 文件
+7. `open_pdf_document()` - 開啟 PDF 檔案
 8. `get_pdf_page_count()` - 取得 PDF 頁數
-9. `close_pdf_document()` - 關閉 PDF 文件
+9. `close_pdf_document()` - 關閉 PDF 檔案
 
 **設計理念**：
 
@@ -133,8 +133,8 @@ class PDFGenerator:
 1. 預設設定
 2. 使用者家目錄 `~/.paddleocr_toolkit/config.yaml`
 3. 當前目錄 `config.yaml`
-4. CLI 參數指定的檔案 `--config path/to/config.yaml`
-5. 其他 CLI 參數（優先級最高）
+4. CLI 引數指定的檔案 `--config path/to/config.yaml`
+5. 其他 CLI 引數（優先順序最高）
 
 ---
 
@@ -190,7 +190,7 @@ class PDFGenerator:
 **主要功能**：
 
 - `pdf_to_images_parallel()` - 多執行緒 PDF 轉圖片
-- 支援進度回調
+- 支援進度回撥
 
 **覆蓋率**：82% ✅
 
@@ -212,7 +212,7 @@ class PDFGenerator:
 
 ## 關鍵設計決策
 
-### 1. 循環依賴解決
+### 1. 迴圈依賴解決
 
 **問題**：
 
@@ -224,7 +224,7 @@ class PDFGenerator:
 ```python
 # paddleocr_toolkit/__init__.py
 def get_paddle_ocr_tool():
-    """延遲載入 paddle_ocr_tool，避免循環依賴"""
+    """延遲載入 paddle_ocr_tool，避免迴圈依賴"""
     global paddle_ocr_tool
     if paddle_ocr_tool is None:
         import paddle_ocr_tool as tool
@@ -252,13 +252,13 @@ def pixmap_to_numpy(pixmap) -> np.ndarray:
 
 ### 3. 設定檔支援
 
-**問題**：CLI 參數過多，使用不便
+**問題**：CLI 引數過多，使用不便
 
 **解決方案**：`config.yaml` + `config_loader.py`
 
 - 提供範本設定檔
 - 支援多層級設定載入
-- CLI 參數可覆蓋設定檔
+- CLI 引數可覆蓋設定檔
 
 ---
 
@@ -322,7 +322,7 @@ graph TD
 #### 長期（3+ 個月）
 
 - [ ] Docker 容器化
-- [ ] API 文件（Sphinx）
+- [ ] API 檔案（Sphinx）
 - [ ] Web UI
 - [ ] 多語言支援
 
@@ -359,4 +359,4 @@ graph TD
 
 ---
 
-*架構文件版本：v1.0*
+*架構檔案版本：v1.0*

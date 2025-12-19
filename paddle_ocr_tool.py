@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PaddleOCR 工具 - 多功能文件辨識與處理器
+PaddleOCR 工具 - 多功能檔案辨識與處理器
 
 本工具使用 PaddleOCR 3.x 進行文字識別，支援多種 OCR 模式：
 - basic: PP-OCRv5 基本文字識別
-- structure: PP-StructureV3 結構化文件解析（保留排版）
+- structure: PP-StructureV3 結構化檔案解析（保留排版）
 - vl: PaddleOCR-VL 視覺語言模型（支援 109 種語言）
 
 使用方法:
@@ -21,7 +21,7 @@ PaddleOCR 工具 - 多功能文件辨識與處理器
     # PaddleOCR-VL 模式（輸出 JSON）
     python paddle_ocr_tool.py input.pdf --mode vl --json-output result.json
     
-    # 啟用文件方向校正
+    # 啟用檔案方向校正
     python paddle_ocr_tool.py input.pdf --orientation-classify --text-output result.txt
     
     # 批次處理目錄
@@ -46,7 +46,7 @@ from typing import Any, Dict, List, Optional, Tuple
 os.environ["DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
 # ===== 設定 Poppler 路徑 =====
-# 設定 Poppler 的二進位檔案路徑，確保 pdftoppm, pdfimages 等工具可被調用
+# 設定 Poppler 的二進位檔案路徑，確保 pdftoppm, pdfimages 等工具可被呼叫
 poppler_bin = Path(__file__).parent / "Release-25.07.0-0" / "poppler-25.07.0" / "Library" / "bin"
 if poppler_bin.exists():
     os.environ["PATH"] = str(poppler_bin) + os.pathsep + os.environ["PATH"]
@@ -104,14 +104,14 @@ def setup_logging(log_file: Optional[str] = None):
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
 
-    # 創建檔案 handler
+    # 建立檔案 handler
     file_handler = logging.FileHandler(log_file, encoding="utf-8", mode="w")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     )
 
-    # 創建控制台 handler
+    # 建立控制檯 handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(
@@ -139,7 +139,7 @@ def setup_logging(log_file: Optional[str] = None):
 try:
     from paddleocr import PaddleOCR
 
-    # 嘗試導入進階模組（可選）
+    # 嘗試匯入進階模組（可選）
     try:
         from paddleocr import PPStructureV3
 
@@ -216,7 +216,7 @@ except ImportError:
     logging.warning("翻譯模組 (pdf_translator) 未安裝，翻譯功能不可用")
 
 
-# OCR 模式枚舉
+# OCR 模式列舉
 
 
 # 支援的檔案格式
@@ -224,7 +224,7 @@ SUPPORTED_IMAGE_FORMATS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".w
 SUPPORTED_PDF_FORMAT = ".pdf"
 
 # 圖片大小限制 (避免 OCR 記憶體不足)
-MAX_IMAGE_SIDE = 2500  # 像素
+MAX_IMAGE_SIDE = 2500  # 畫素
 
 
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> Tuple[str, bool]:
@@ -276,7 +276,7 @@ class PaddleOCRTool:
     提供 OCR 文字辨識和可搜尋 PDF 生成功能。
     支援多種 OCR 模式：
     - basic: PP-OCRv5 基本文字識別
-    - structure: PP-StructureV3 結構化文件解析
+    - structure: PP-StructureV3 結構化檔案解析
     - vl: PaddleOCR-VL 視覺語言模型
 
     相容 PaddleOCR 3.x 新版 API。
@@ -298,10 +298,10 @@ class PaddleOCRTool:
 
         Args:
             mode: OCR 模式 ('basic', 'structure', 'vl')
-            use_orientation_classify: 是否啟用文件方向自動校正
-            use_doc_unwarping: 是否啟用文件彎曲校正
+            use_orientation_classify: 是否啟用檔案方向自動校正
+            use_doc_unwarping: 是否啟用檔案彎曲校正
             use_textline_orientation: 是否啟用文字行方向偵測
-            device: 運算設備 ('gpu' 或 'cpu')
+            device: 運算裝置 ('gpu' 或 'cpu')
             debug_mode: DEBUG 模式，將隱形文字改為粉紅色可見文字
             compress_images: 啟用 JPEG 壓縮以減少 PDF 檔案大小
             jpeg_quality: JPEG 壓縮品質（0-100）
@@ -337,7 +337,7 @@ class PaddleOCRTool:
                     debug_mode=debug_mode,
                 )
 
-                # 為了向後兼容，設置 self.ocr
+                # 為了向後相容，設定 self.ocr
                 self.ocr = self.engine_manager.get_engine()
 
                 # 標記使用新架構
@@ -389,7 +389,7 @@ class PaddleOCRTool:
                     use_textline_orientation=use_textline_orientation,
                     device=device,
                 )
-                print("[OK] PP-StructureV3 初始化完成（結構化文件解析模式）")
+                print("[OK] PP-StructureV3 初始化完成（結構化檔案解析模式）")
 
             elif mode == "vl":
                 if not HAS_VL:
@@ -719,7 +719,7 @@ class PaddleOCRTool:
         html_output: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        使用 PP-StructureV3 或 PaddleOCR-VL 處理文件
+        使用 PP-StructureV3 或 PaddleOCR-VL 處理檔案
 
         適用於 structure 和 vl 模式，直接輸出 Markdown/JSON/Excel/HTML 格式
 
@@ -754,22 +754,22 @@ class PaddleOCRTool:
             # 使用 predict() 方法處理
             output = self.ocr.predict(input=input_path)
 
-            # 獲取腳本所在目錄作為預設輸出目錄
+            # 獲取指令碼所在目錄作為預設輸出目錄
             # 處理每個結果cript_dir = Path(__file__).parent.resolve()
 
-            # 设定输出路径
+            # 設定輸出路徑
             md_path, json_path = self._setup_structured_output_paths(
                 markdown_output, json_output, script_dir
             )
 
-            # 处理每个结果
+            # 處理每個結果
             page_count = 0
             all_markdown_content = []
 
             for res in output:
                 page_count += 1
 
-                # 保存单页的各种输出
+                # 儲存單頁的各種輸出
                 self._save_structured_page_outputs(
                     res,
                     page_count,
@@ -808,7 +808,7 @@ class PaddleOCRTool:
             result_summary["error"] = str(e)
             return result_summary
 
-    # ========== PDF 处理辅助方法 ==========
+    # ========== PDF 處理輔助方法 ==========
 
     def _setup_pdf_generator(
         self, pdf_path: str, output_path: Optional[str], searchable: bool
@@ -895,8 +895,8 @@ class PaddleOCRTool:
         all_results = []
 
         try:
-            # 打開 PDF
-            logging.info(f"打開 PDF: {pdf_path}")
+            # 開啟 PDF
+            logging.info(f"開啟 PDF: {pdf_path}")
             pdf_doc = fitz.open(pdf_path)
             total_pages = len(pdf_doc)
             print(f"正在處理 PDF: {pdf_path} ({total_pages} 頁)")
@@ -1096,7 +1096,7 @@ class PaddleOCRTool:
                 with open(latex_output, "w", encoding="utf-8") as f:
                     f.write("% 公式識別結果\n")
                     f.write("% 由 PaddleOCR 工具生成\n")
-                    f.write(f"% 來源文件: {input_path}\n\n")
+                    f.write(f"% 來原始檔: {input_path}\n\n")
 
                     for i, latex in enumerate(all_latex, 1):
                         f.write(f"% 公式 {i}\n")
@@ -1173,7 +1173,7 @@ class PaddleOCRTool:
             print(f"正在處理（混合模式）: {input_path}")
             logging.info(f"開始混合模式處理: {input_path}")
 
-            # 判斷輸入類型
+            # 判斷輸入型別
             if input_path_obj.suffix.lower() == ".pdf":
                 # 自動偵測 PDF 品質並調整 DPI
                 quality = detect_pdf_quality(input_path)
@@ -1361,7 +1361,7 @@ class PaddleOCRTool:
         matrix = fitz.Matrix(zoom, zoom)
         pixmap = page.get_pixmap(matrix=matrix, alpha=False)
 
-        # 使用共用工具函數轉換為 numpy 陣列
+        # 使用共用工具函式轉換為 numpy 陣列
         img_array = pixmap_to_numpy(pixmap)
 
         # 步驟 1：版面分析
@@ -1440,7 +1440,7 @@ class PaddleOCRTool:
         pdf_path: str,
         result_summary: Dict[str, Any],
     ) -> None:
-        """儲存 JSON 輸出項目"""
+        """儲存 JSON 輸出專案"""
         try:
             import json
 
@@ -1583,10 +1583,10 @@ class PaddleOCRTool:
         pdf_doc = fitz.open(pdf_path)
         total_pages = len(pdf_doc)
 
-        print(f"PDF 共 {total_pages} 页")
-        logging.info(f"PDF 共 {total_pages} 页")
+        print(f"PDF 共 {total_pages} 頁")
+        logging.info(f"PDF 共 {total_pages} 頁")
 
-        # 设定生成器
+        # 設定生成器
         pdf_gen, erased_gen, inpainter, erased_path = self._setup_hybrid_generators(
             output_path
         )
@@ -1594,17 +1594,17 @@ class PaddleOCRTool:
         # 初始化收集器
         all_markdown = []
         all_text = []
-        all_ocr_results = []  # 收集每页 OCR 结果，用于翻译
+        all_ocr_results = []  # 收集每頁 OCR 結果，用於翻譯
 
-        # 初始化统计收集器
+        # 初始化統計收集器
         stats_collector = StatsCollector(
             input_file=pdf_path, mode="hybrid", total_pages=total_pages
         )
 
-        # === 2. 处理所有页面 ===
+        # === 2. 處理所有頁面 ===
         page_iterator = range(total_pages)
         if show_progress and HAS_TQDM:
-            page_iterator = tqdm(page_iterator, desc="混合模式处理中", unit="页", ncols=80)
+            page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁", ncols=80)
             page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁", ncols=80)
 
         for page_num in page_iterator:
@@ -1753,7 +1753,7 @@ class PaddleOCRTool:
                 elif isinstance(res, dict):
                     md_content = res.get("markdown", None)
 
-                # 確保只添加字串類型
+                # 確保只新增字串型別
                 if md_content is not None:
                     if isinstance(md_content, str):
                         markdown_parts.append(md_content)
@@ -1765,7 +1765,7 @@ class PaddleOCRTool:
                         if text and isinstance(text, str):
                             markdown_parts.append(text)
                     elif isinstance(md_content, list):
-                        # 如果是 list，連接所有字串元素
+                        # 如果是 list，連線所有字串元素
                         for item in md_content:
                             if isinstance(item, str):
                                 markdown_parts.append(item)
@@ -2057,10 +2057,10 @@ class PaddleOCRTool:
         )
         renderer = TextRenderer(font_path=translate_config.get("font_path"))
 
-        # 打開 PDF
+        # 開啟 PDF
         pdf_doc = fitz.open(erased_pdf_path)
 
-        # 打開原始 hybrid PDF（用於雙語）
+        # 開啟原始 hybrid PDF（用於雙語）
         hybrid_pdf_path = erased_pdf_path.replace("_erased.pdf", "_hybrid.pdf")
         hybrid_doc = None
         if not translate_config["no_dual"] and os.path.exists(hybrid_pdf_path):
@@ -2108,8 +2108,8 @@ class PaddleOCRTool:
         """取得擦除版和原始版頁面圖片
 
         Args:
-            pdf_doc: 擦除版 PDF 文件
-            hybrid_doc: 原始 hybrid PDF 文件
+            pdf_doc: 擦除版 PDF 檔案
+            hybrid_doc: 原始 hybrid PDF 檔案
             page_num: 頁碼（0-based）
             dpi: 解析度
 
@@ -2255,8 +2255,8 @@ class PaddleOCRTool:
         Args:
             page_num: 頁碼（0-based）
             ocr_results_per_page: 每頁的 OCR 結果
-            pdf_doc: 擦除版 PDF 文件
-            hybrid_doc: 原始 hybrid PDF 文件
+            pdf_doc: 擦除版 PDF 檔案
+            hybrid_doc: 原始 hybrid PDF 檔案
             translator: 翻譯器物件
             renderer: TextRenderer 物件
             mono_generator: 單語 PDF 生成器
@@ -2361,7 +2361,7 @@ class PaddleOCRTool:
             return []
 
         # 按 Y 座標分組（同一行）
-        line_threshold = 10  # 像素閾值
+        line_threshold = 10  # 畫素閾值
         lines = []
 
         sorted_by_y = sorted(ocr_results, key=lambda r: r.y)
@@ -2398,7 +2398,7 @@ class PaddleOCRTool:
         """在擦除版 PDF 基礎上進行翻譯處理
 
         流程：
-        1. 打開 *_erased.pdf（已擦除）
+        1. 開啟 *_erased.pdf（已擦除）
         2. 翻譯文字
         3. 在擦除後的圖片上繪製翻譯文字
 
@@ -2493,7 +2493,7 @@ class PaddleOCRTool:
         ocr_workaround: bool = False,
     ) -> Dict[str, Any]:
         """
-        翻譯 PDF 並生成多種輸出（簡化版，調用 process_hybrid）
+        翻譯 PDF 並生成多種輸出（簡化版，呼叫 process_hybrid）
 
         輸出檔案：
         - *_hybrid.pdf：可搜尋 PDF（原文）
@@ -2514,7 +2514,7 @@ class PaddleOCRTool:
             no_dual: 不輸出雙語對照 PDF
             dual_mode: 雙語模式（alternating 或 side-by-side）
             dual_translate_first: 雙語模式中譯文在前
-            font_path: 自訂字體路徑（目前未使用）
+            font_path: 自訂字型路徑（目前未使用）
             dpi: PDF 轉圖片解析度
             show_progress: 是否顯示進度條
             json_output: JSON 輸出路徑（可選）
@@ -2549,8 +2549,8 @@ class PaddleOCRTool:
             "ocr_workaround": ocr_workaround,
         }
 
-        # 直接調用 process_hybrid，傳入翻譯配置
-        # process_hybrid 會在生成可搜尋 PDF 後自動調用 _process_translation_on_pdf
+        # 直接呼叫 process_hybrid，傳入翻譯配置
+        # process_hybrid 會在生成可搜尋 PDF 後自動呼叫 _process_translation_on_pdf
         result = self.process_hybrid(
             input_path=input_path,
             output_path=output_path,
@@ -2571,7 +2571,7 @@ class PaddleOCRTool:
 
 def main():
     """命令列入口點"""
-    # === 1. 導入 CLI 模組 ===
+    # === 1. 匯入 CLI 模組 ===
     from paddleocr_toolkit.cli import (
         ModeProcessor,
         OutputPathManager,
@@ -2579,7 +2579,7 @@ def main():
         process_args_overrides,
     )
 
-    # === 2. 參數解析 ===
+    # === 2. 引數解析 ===
     parser = create_argument_parser()
     args = parser.parse_args()
 
@@ -2597,7 +2597,7 @@ def main():
     logging.info(f"輸入路徑: {input_path}")
     logging.info(f"OCR 模式: {args.mode}")
 
-    # === 5. 處理參數覆蓋 ===
+    # === 5. 處理引數覆蓋 ===
     args = process_args_overrides(args)
 
     # === 6. 設定輸出路徑 ===

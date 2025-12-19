@@ -5,7 +5,7 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-# 读取README
+# 讀取README
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
@@ -14,7 +14,7 @@ setup(
     version="1.0.0",
     author="Your Name",
     author_email="your.email@example.com",
-    description="专业级OCR文件辨识与处理工具",
+    description="專業級OCR檔案辨識與處理工具",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/danwin47-sys/paddleocr-toolkit",

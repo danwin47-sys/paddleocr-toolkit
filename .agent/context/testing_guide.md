@@ -72,7 +72,7 @@ def test_add_page_with_valid_image():
     pass
 
 def test_add_page_raises_error_when_file_not_found():
-    """測試檔案不存在時拋出錯誤"""
+    """測試檔案不存在時丟擲錯誤"""
     pass
 ```
 
@@ -178,7 +178,7 @@ def test_ocr_processing(monkeypatch):
 
 ---
 
-## 參數化測試
+## 引數化測試
 
 ### 使用 pytest.mark.parametrize
 
@@ -217,7 +217,7 @@ def test_bbox_dimensions(bbox, expected_width, expected_height):
 
 ```python
 def test_raises_value_error():
-    """測試拋出 ValueError"""
+    """測試丟擲 ValueError"""
     with pytest.raises(ValueError):
         process_data(None)
 
@@ -236,7 +236,7 @@ def test_raises_file_not_found():
 
 ## 測試覆蓋率
 
-### 執行測試並查看覆蓋率
+### 執行測試並檢視覆蓋率
 
 ```bash
 # 基本覆蓋率報告
@@ -254,7 +254,7 @@ pytest tests/test_pdf_generator.py --cov=paddleocr_toolkit.core.pdf_generator
 
 ### 覆蓋率目標
 
-| 模組類型 | 最低覆蓋率 | 目標覆蓋率 |
+| 模組型別 | 最低覆蓋率 | 目標覆蓋率 |
 |---------|-----------|-----------|
 | 核心模組 (core/)| 75% | 85%+ |
 | 處理器 (processors/) | 70% | 80%+ |
@@ -269,7 +269,7 @@ pytest tests/test_pdf_generator.py --cov=paddleocr_toolkit.core.pdf_generator
 
 ```python
 def test_text_processing():
-    """測試文字處理"""
+    """測試文書處理"""
     # Arrange（準備）
     input_text = "HelloWorld"
     expected_output = "Hello World"
@@ -426,7 +426,7 @@ pytest --ignore-xfail
 - [ ] Mock 了外部依賴
 - [ ] 清理了臨時資源
 - [ ] 覆蓋率有提升
-- [ ] 所有測試通過
+- [ ] 所有測試透過
 
 ---
 

@@ -1,5 +1,5 @@
-# CI/CD Testing Dependencies (不包含 paddlepaddle 以避免 CPU 兼容性問題)
-# GitHub Actions 測試環境專用 - 兼容 Python 3.8+
+# CI/CD Testing Dependencies (不包含 paddlepaddle 以避免 CPU 相容性問題)
+# GitHub Actions 測試環境專用 - 相容 Python 3.8+
 
 # ============ PDF Processing ============
 pymupdf>=1.23.0  # 降低版本以支援 Python 3.8
@@ -8,7 +8,7 @@ pillow>=9.0.0
 
 # ============ Image Processing ============
 opencv-python>=4.5.0
-numpy>=1.21.0,<2.0.0  # Python 3.8 兼容
+numpy>=1.21.0,<2.0.0  # Python 3.8 相容
 
 # ============ Translation ============
 ollama>=0.1.0; python_version >= "3.9"  # Python 3.9+
@@ -18,7 +18,7 @@ fastapi>=0.100.0
 uvicorn[standard]>=0.20.0
 python-multipart>=0.0.5
 websockets>=11.0
-pydantic>=1.10.0,<3.0.0  # 兼容範圍更廣
+pydantic>=1.10.0,<3.0.0  # 相容範圍更廣
 httpx>=0.24.0  # Required for starlette.testclient
 
 # ============ CLI Enhancement ============

@@ -60,7 +60,7 @@
 
 **編碼要求**：
 
-- ✅ 使用類型提示
+- ✅ 使用型別提示
 - ✅ 撰寫 Google-style docstrings
 - ✅ 遵循 PEP 8（行長 120 字元）
 - ✅ 使用 `logging` 而非 `print()`
@@ -114,7 +114,7 @@ import pytest
 from paddleocr_toolkit.core.new_module import process_data
 
 class TestProcessData:
-    """測試 process_data 函數"""
+    """測試 process_data 函式"""
     
     def test_normal_case(self):
         """測試正常情況"""
@@ -152,24 +152,24 @@ pytest tests/ --cov=paddleocr_toolkit --cov-report=html
 
 **檢查點**：
 
-- [ ] 所有測試通過
+- [ ] 所有測試透過
 - [ ] 整體覆蓋率 ≥ 76%
 - [ ] 新程式碼覆蓋率 ≥ 80%
 - [ ] 沒有 linting 錯誤
 
 ---
 
-### 5. 更新文件 📚
+### 5. 更新檔案 📚
 
 **必須更新**（如果適用）：
 
 1. **README.md**（如果是使用者可見功能）
    - 功能特色表格
    - 使用範例
-   - 命令列參數
+   - 命令列引數
 
 2. **config.yaml**（如果有新設定）
-   - 新增設定項目
+   - 新增設定專案
    - 註解說明
 
 3. **requirements.txt**（如果有新依賴）
@@ -202,7 +202,7 @@ git add -A
 git commit -m "feat: 新增 PDF 批次處理功能
 
 - 新增 BatchProcessor 類別支援多執行緒處理
-- 新增 pdf_to_images_parallel 函數
+- 新增 pdf_to_images_parallel 函式
 - 測試覆蓋率從 74% 提升至 76%
 
 Closes #42"
@@ -214,13 +214,13 @@ git push origin master
 
 ## 檢查清單 ✓
 
-在提交前，確認以下項目：
+在提交前，確認以下專案：
 
 - [ ] 已建立實作計畫（`artifacts/plans/plan_[name].md`）
-- [ ] 程式碼有類型提示和 docstrings
+- [ ] 程式碼有型別提示和 docstrings
 - [ ] 已撰寫測試且覆蓋率 > 76%
-- [ ] 所有測試通過
-- [ ] 已更新相關文件
+- [ ] 所有測試透過
+- [ ] 已更新相關檔案
 - [ ] 提交訊息清晰明確
 
 ---

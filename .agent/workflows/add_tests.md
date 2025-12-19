@@ -49,7 +49,7 @@ pytest tests/ --cov=paddleocr_toolkit --cov-report=html:artifacts/logs/coverage_
 
 ### 3. 分析缺失的測試 🔍
 
-**查看詳細報告**：
+**檢視詳細報告**：
 
 ```bash
 pytest tests/ --cov=paddleocr_toolkit --cov-report=term-missing | grep "TOTAL"
@@ -66,8 +66,8 @@ pytest tests/ --cov=paddleocr_toolkit --cov-report=term-missing | grep "TOTAL"
 - 缺失行：XX-YY, ZZ-AA
 
 ## 缺失測試
-- [ ] 函數 A 的錯誤處理
-- [ ] 函數 B 的邊界條件
+- [ ] 函式 A 的錯誤處理
+- [ ] 函式 B 的邊界條件
 - [ ] 類別 C 的初始化
 
 ## 預期提升
@@ -172,7 +172,7 @@ def test_file_operation(self):
 # 只測試新寫的測試
 pytest tests/test_new_module.py -v
 
-# 查看該模組的覆蓋率
+# 檢視該模組的覆蓋率
 pytest tests/test_new_module.py --cov=paddleocr_toolkit.core.new_module --cov-report=term-missing
 ```
 
@@ -239,7 +239,7 @@ def test_with_fixture(sample_ocr_result):
     assert sample_ocr_result.text == "Test"
 ```
 
-### 2. 參數化測試
+### 2. 引數化測試
 
 ```python
 @pytest.mark.parametrize("input,expected", [
@@ -267,9 +267,9 @@ def test_error_message(self):
 - [ ] 已執行覆蓋率檢查並記錄結果
 - [ ] 已識別低覆蓋模組
 - [ ] 已建立測試計畫（`artifacts/plans/`）
-- [ ] 已撰寫測試並通過
+- [ ] 已撰寫測試並透過
 - [ ] 覆蓋率有明顯提升
-- [ ] 所有測試通過
+- [ ] 所有測試透過
 - [ ] 已提交變更
 
 ---
