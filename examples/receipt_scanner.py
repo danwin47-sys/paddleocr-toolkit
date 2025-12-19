@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-📱 發票掃描器 - PaddleOCR Toolkit 示例項目
+📱 發票掃描器 - PaddleOCR Toolkit 示例專案
 自動從發票圖片中提取關鍵資訊：金額、日期、商家名稱
 
 使用方法:
@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# 導入PaddleOCR Toolkit
+# 匯入PaddleOCR Toolkit
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from paddle_ocr_tool import PaddleOCRTool
@@ -81,7 +81,7 @@ class ReceiptScanner:
                 except ValueError:
                     continue
 
-        # 備用：查找最大的數字
+        # 備用：查詢最大的數字
         numbers = re.findall(r"([\d,]+\.?\d*)", text)
         if numbers:
             amounts = []
@@ -123,7 +123,7 @@ class ReceiptScanner:
         return None
 
     def _extract_items(self, results: List) -> List[str]:
-        """提取商品項目"""
+        """提取商品專案"""
         items = []
         for result in results:
             text = result.text.strip()
@@ -153,7 +153,7 @@ class ReceiptScanner:
             print(f"💰 總金額: 未找到")
 
         if info.get("items"):
-            print(f"\n📦 商品項目 ({len(info['items'])} 項):")
+            print(f"\n📦 商品專案 ({len(info['items'])} 項):")
             for i, item in enumerate(info["items"][:5], 1):
                 print(f"   {i}. {item}")
 

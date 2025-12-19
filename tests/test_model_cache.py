@@ -36,7 +36,7 @@ class TestModelCache:
         # 清除之前的快取
         cache.clear_cache()
         
-        # 獲取模型（會使用占位符）
+        # 獲取模型（會使用佔位符）
         model = cache.get_model("basic")
         assert model is not None
 

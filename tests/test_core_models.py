@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.core.models import OCRMode, OCRResult
@@ -57,7 +57,7 @@ class TestOCRResult:
 
 
 class TestOCRMode:
-    """測試 OCRMode 枚舉"""
+    """測試 OCRMode 列舉"""
 
     def test_basic_mode(self):
         """測試 basic 模式"""

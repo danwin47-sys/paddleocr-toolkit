@@ -1,19 +1,19 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-测试Rich UI在Windows下的编码支持
+測試Rich UI在Windows下的編碼支援
 """
 
 import sys
 
 import pytest
 
-# 必须先导入rich_ui才能测试
+# 必須先匯入rich_ui才能測試
 from paddleocr_toolkit.cli import rich_ui
 
 
 def test_icons_defined():
-    """测试图标字典已定义"""
+    """測試圖示字典已定義"""
     assert hasattr(rich_ui, "ICONS")
     assert "success" in rich_ui.ICONS
     assert "error" in rich_ui.ICONS
@@ -22,7 +22,7 @@ def test_icons_defined():
 
 
 def test_windows_ascii_icons():
-    """测试Windows下使用ASCII图标"""
+    """測試Windows下使用ASCII圖示"""
     if sys.platform == "win32":
         assert rich_ui.ICONS["success"] == "[OK]"
         assert rich_ui.ICONS["error"] == "[X]"
@@ -34,28 +34,28 @@ def test_windows_ascii_icons():
 
 def test_print_functions_no_crash(capsys):
 
-    assert success, "print函数出现编码错误"
+    assert success, "print函式出現編碼錯誤"
 
 
 def test_utf8_output_enabled():
-    """测试UTF-8输出已启用"""
+    """測試UTF-8輸出已啟用"""
     if sys.platform == "win32":
         # Windows 下應該已經設定為 UTF-8
         assert sys.stdout.encoding.lower() in ["utf-8", "utf8"]
 
 
 def test_banner_display(capsys):
-    """测试banner显示"""
+    """測試banner顯示"""
     try:
         rich_ui.print_banner()
         captured = capsys.readouterr()
-        # 应该包含某些内容
+        # 應該包含某些內容
         assert len(captured.out) > 0 or rich_ui.HAS_RICH
         success = True
     except UnicodeEncodeError:
         success = False
 
-    assert success, "banner显示出现编码错误"
+    assert success, "banner顯示出現編碼錯誤"
 
 
 if __name__ == "__main__":

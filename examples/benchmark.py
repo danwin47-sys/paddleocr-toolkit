@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-⚡ PaddleOCR Toolkit 性能基準測試
+⚡ PaddleOCR Toolkit 效能基準測試
 測試不同PDF大小、DPI設定的處理速度和記憶體使用
 
 使用方法:
@@ -29,7 +29,7 @@ except ImportError:
 
 from paddle_ocr_tool import PaddleOCRTool
 
-# 嘗試導入rich用於漂亮輸出
+# 嘗試匯入rich用於漂亮輸出
 try:
     from rich import box
     from rich.console import Console
@@ -42,14 +42,14 @@ except ImportError:
 
 
 class BenchmarkRunner:
-    """性能基準測試執行器"""
+    """效能基準測試執行器"""
 
     def __init__(self):
         self.process = psutil.Process(os.getpid())
         self.results = []
 
     def create_test_pdf(self, num_pages: int) -> str:
-        """創建測試PDF"""
+        """建立測試PDF"""
         if not HAS_FITZ:
             raise ImportError("需要 PyMuPDF")
 
@@ -60,7 +60,7 @@ class BenchmarkRunner:
         doc = fitz.open()
         for i in range(num_pages):
             page = doc.new_page(width=595, height=842)  # A4
-            # 添加一些文字
+            # 新增一些文字
             text = f"測試頁面 {i+1}\n" * 20
             page.insert_text((50, 50), text, fontsize=12)
 
@@ -137,7 +137,7 @@ class BenchmarkRunner:
     def _print_rich_table(self):
         """使用rich列印漂亮的表格"""
         table = Table(
-            title="⚡ 性能基準測試結果",
+            title="⚡ 效能基準測試結果",
             box=box.ROUNDED,
             show_header=True,
             header_style="bold magenta",
@@ -167,7 +167,7 @@ class BenchmarkRunner:
     def _print_plain_table(self):
         """列印純文字表格"""
         print("\n" + "=" * 80)
-        print("性能基準測試結果")
+        print("效能基準測試結果")
         print("=" * 80)
         print(f"{'測試':<20} {'頁數':<8} {'總時間':<12} {'速度':<15} {'記憶體':<12} {'文字數':<8}")
         print("-" * 80)
@@ -184,7 +184,7 @@ class BenchmarkRunner:
 
 def main():
     """主程式"""
-    print("🚀 PaddleOCR Toolkit 性能基準測試")
+    print("🚀 PaddleOCR Toolkit 效能基準測試")
     print("=" * 50)
 
     if not HAS_FITZ:
@@ -213,7 +213,7 @@ def main():
             print(f"場景 {i}/{len(test_scenarios)}")
             print(f"{'='*50}")
 
-            # 創建或重用測試PDF
+            # 建立或重用測試PDF
             pdf_path = None
             for temp_pdf, temp_pages in temp_pdfs:
                 if temp_pages == pages:
@@ -221,7 +221,7 @@ def main():
                     break
 
             if not pdf_path:
-                print(f"📝 創建 {pages}頁 測試PDF...")
+                print(f"📝 建立 {pages}頁 測試PDF...")
                 pdf_path = runner.create_test_pdf(pages)
                 temp_pdfs.append((pdf_path, pages))
 

@@ -1,11 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PDF 處理器 - 專用於 PDF 文件的 OCR 處理
+PDF 處理器 - 專用於 PDF 檔案的 OCR 處理
 
 本模組負責：
-- PDF 文件處理
-- 可搜索 PDF 生成
-- PDF 轉圖像
+- PDF 檔案處理
+- 可搜尋 PDF 生成
+- PDF 轉影象
 - 批次處理
 """
 
@@ -33,7 +33,7 @@ try:
     from paddleocr_toolkit.core.pdf_generator import PDFGenerator
     from paddleocr_toolkit.core.pdf_utils import pixmap_to_numpy
 except ImportError:
-    # 降級導入
+    # 降級匯入
     from ..core.models import OCRResult
     from ..core.pdf_generator import PDFGenerator
     from ..core.pdf_utils import pixmap_to_numpy
@@ -43,9 +43,9 @@ class PDFProcessor:
     """
     PDF 專用處理器
 
-    提供 PDF 文件的 OCR 處理功能，包括：
+    提供 PDF 檔案的 OCR 處理功能，包括：
     - 逐頁 OCR 處理
-    - 可搜索 PDF 生成
+    - 可搜尋 PDF 生成
     - 進度報告
 
     Example:
@@ -67,8 +67,8 @@ class PDFProcessor:
         初始化 PDF 處理器
 
         Args:
-            ocr_func: OCR 處理函數（接受圖像，返回結果）
-            result_parser: 結果解析函數（可選）
+            ocr_func: OCR 處理函式（接受影象，返回結果）
+            result_parser: 結果解析函式（可選）
             debug_mode: DEBUG 模式
         """
         if not HAS_FITZ:
@@ -90,7 +90,7 @@ class PDFProcessor:
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> Tuple[List[List[OCRResult]], Optional[str]]:
         """
-        處理 PDF 文件進行 OCR
+        處理 PDF 檔案進行 OCR
 
         Args:
             pdf_path: PDF 檔案路徑
@@ -98,7 +98,7 @@ class PDFProcessor:
             searchable: 是否生成可搜尋 PDF
             dpi: PDF 轉圖片的解析度
             show_progress: 是否顯示進度
-            progress_callback: 進度回調函數 (current, total)
+            progress_callback: 進度回撥函式 (current, total)
 
         Returns:
             Tuple[List[List[OCRResult]], Optional[str]]:
@@ -107,8 +107,8 @@ class PDFProcessor:
         all_results = []
 
         try:
-            # 打開 PDF
-            logging.info(f"打開 PDF: {pdf_path}")
+            # 開啟 PDF
+            logging.info(f"開啟 PDF: {pdf_path}")
             pdf_doc = fitz.open(pdf_path)
             total_pages = len(pdf_doc)
             print(f"正在處理 PDF: {pdf_path} ({total_pages} 頁)")
@@ -165,7 +165,7 @@ class PDFProcessor:
             pdf_file = Path(pdf_path)
             output_path = str(pdf_file.parent / f"{pdf_file.stem}_searchable.pdf")
 
-        # 創建 PDF 生成器
+        # 建立 PDF 生成器
         pdf_generator = PDFGenerator(
             output_path=output_path, debug_mode=self.debug_mode
         )
@@ -206,7 +206,7 @@ class PDFProcessor:
                 [p[0] * scale_factor, p[1] * scale_factor] for p in result.bbox
             ]
 
-        # 添加到可搜索 PDF
+        # 新增到可搜尋 PDF
         if pdf_generator:
             original_pixmap = page.get_pixmap()
             pdf_generator.add_page_from_pixmap(original_pixmap, page_results)

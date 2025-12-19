@@ -22,7 +22,7 @@ from .pdf_utils import (
     pixmap_to_numpy,
 )
 
-# 性能優化工具（可選）
+# 效能最佳化工具（可選）
 try:
     pass
 
@@ -37,7 +37,7 @@ __all__ = [
     "PDFGenerator",
     "SUPPORTED_IMAGE_FORMATS",
     "SUPPORTED_PDF_FORMAT",
-    # PDF 工具函數
+    # PDF 工具函式
     "pixmap_to_numpy",
     "page_to_numpy",
     "numpy_to_pdf_bytes",
@@ -55,7 +55,7 @@ __all__ = [
     "DEFAULT_CONFIG",
 ]
 
-# 添加性能優化工具（如果可用）
+# 新增效能最佳化工具（如果可用）
 if HAS_PERF_TOOLS:
     __all__.extend(
         [

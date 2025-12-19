@@ -1,4 +1,4 @@
-# CLI 命令文件
+# CLI 命令檔案
 
 ## 可用命令
 
@@ -16,7 +16,7 @@ PaddleOCR Toolkit v1.2.0 提供以下 CLI 命令：
 paddleocr init [directory]
 ```
 
-### 參數
+### 引數
 
 - `directory`: 專案目錄（可選，預設為當前目錄）
 
@@ -85,7 +85,7 @@ paddleocr config --show config/default.yaml
 paddleocr process INPUT [options]
 ```
 
-### 參數
+### 引數
 
 - `INPUT`: 輸入檔案或目錄
 
@@ -120,7 +120,7 @@ paddleocr process documents/ --format json
 paddleocr benchmark PDF [--output REPORT]
 ```
 
-### 參數
+### 引數
 
 - `PDF`: 測試 PDF 檔案
 
@@ -164,7 +164,7 @@ paddleocr benchmark test.pdf --output benchmark_report.json
 paddleocr validate OCR_RESULTS GROUND_TRUTH
 ```
 
-### 參數
+### 引數
 
 - `OCR_RESULTS`: OCR 結果 JSON 檔案
 - `GROUND_TRUTH`: 真實文字 TXT 檔案
@@ -219,7 +219,7 @@ paddleocr config
 cp ~/document.pdf input/
 paddleocr process input/document.pdf
 
-# 查看結果
+# 檢視結果
 cat output/document.md
 ```
 
@@ -229,7 +229,7 @@ cat output/document.md
 # 測試效能
 paddleocr benchmark test.pdf --output report.json
 
-# 查看報告
+# 檢視報告
 cat report.json
 ```
 
@@ -294,4 +294,4 @@ A: md, json, html, txt, xlsx
 
 ---
 
-**更多資訊**: [完整文件](https://github.com/danwin47-sys/paddleocr-toolkit)
+**更多資訊**: [完整檔案](https://github.com/danwin47-sys/paddleocr-toolkit)

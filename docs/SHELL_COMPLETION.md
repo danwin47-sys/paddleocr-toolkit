@@ -122,7 +122,7 @@ file.pdf    image.png    document.docx
 
 ### 新增自訂模式
 
-編輯補全腳本，在 `modes` 陣列中新增：
+編輯補全指令碼，在 `modes` 陣列中新增：
 
 ```bash
 local modes="basic hybrid structure custom_mode"
@@ -130,7 +130,7 @@ local modes="basic hybrid structure custom_mode"
 
 ### 新增自訂格式
 
-編輯補全腳本，在 `formats` 中新增：
+編輯補全指令碼，在 `formats` 中新增：
 
 ```bash
 local formats="md json html txt xlsx csv xml"
@@ -185,4 +185,4 @@ local formats="md json html txt xlsx csv xml"
 
 ---
 
-**更多資訊**: [CLI 命令文件](CLI_COMMANDS.md)
+**更多資訊**: [CLI 命令檔案](CLI_COMMANDS.md)

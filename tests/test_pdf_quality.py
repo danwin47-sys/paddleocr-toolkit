@@ -9,7 +9,7 @@ import tempfile
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:

@@ -9,7 +9,7 @@
 專案採用 **Facade 模式** 與 **Processor 模式** 的組合，實現了高度解耦的模組化架構：
 1. **Facade 層**：提供單一且向後相容的入口點。
 2. **Processor 層**：將不同 OCR 模式的複雜邏輯封裝在專業的處理器中。
-3. **Core 層**：提供底層引擎管理、PDF 處理與結果解析的基礎組件。
+3. **Core 層**：提供底層引擎管理、PDF 處理與結果解析的基礎元件。
 
 ---
 
@@ -106,7 +106,7 @@ sequenceDiagram
 - **HybridPDFProcessor**: 處理版面分析與精確 OCR 的混合模式。
 - **TranslationProcessor**: 處理翻譯流程與雙語 PDF 生成。
 - **BasicProcessor**: 處理高效率的基本文字識別。
-- **StructureProcessor**: 處理表格識別與文件結構解析。
+- **StructureProcessor**: 處理表格識別與檔案結構解析。
 - **FormulaProcessor**: 處理數學公式識別。
 
 ### 3. Core 層 (`paddleocr_toolkit/core/`)

@@ -8,7 +8,7 @@
 
 ### 1.1 測試套件概覽
 
-| 測試檔案 | 測試對象 | 測試數量 | 狀態 |
+| 測試檔案 | 測試物件 | 測試數量 | 狀態 |
 |---------|---------|---------|------|
 | test_hybrid_processor.py | HybridPDFProcessor | 10 | ✅ 9/10 |
 | test_translation_processor.py | TranslationProcessor | 10 | ✅ 10/10 |
@@ -52,13 +52,13 @@ python -m pytest tests/test_hybrid_processor.py::TestHybridPDFProcessor::test_in
 
 ### 3.1 當前狀態（最新）
 
-✅ **Facade 測試：100% 通過**
+✅ **Facade 測試：100% 透過**
 - 所有 mock 路徑問題已修正
-- 10/10 測試通過
+- 10/10 測試透過
 
-✅ **整體狀態：89% 通過率**
+✅ **整體狀態：89% 透過率**
 - 總計：44 個測試
-- 通過：39 個
+- 透過：39 個
 - 失敗：5 個（BasicProcessor 的 mock 問題）
 
 ---

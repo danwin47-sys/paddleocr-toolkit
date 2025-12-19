@@ -35,7 +35,7 @@ class TestOCREngineManager:
         assert manager.config["use_doc_unwarping"] is True
 
     def test_init_with_enum_mode(self):
-        """測試使用枚舉模式初始化"""
+        """測試使用列舉模式初始化"""
         manager = OCREngineManager(mode=OCRMode.STRUCTURE)
         assert manager.mode == OCRMode.STRUCTURE
 
@@ -107,7 +107,7 @@ class TestOCREngineManager:
         # 第二次初始化應該跳過
         manager.init_engine()
 
-        # 只應該被調用一次
+        # 只應該被呼叫一次
         assert mock_ocr.call_count == 1
 
     @patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR")
@@ -236,7 +236,7 @@ class TestOCREngineManager:
 
 
 class TestOCRMode:
-    """測試 OCRMode 枚舉"""
+    """測試 OCRMode 列舉"""
 
     def test_mode_values(self):
         """測試模式值"""
@@ -247,7 +247,7 @@ class TestOCRMode:
         assert OCRMode.HYBRID.value == "hybrid"
 
     def test_mode_from_string(self):
-        """測試從字串創建模式"""
+        """測試從字串建立模式"""
         mode = OCRMode("basic")
         assert mode == OCRMode.BASIC
 

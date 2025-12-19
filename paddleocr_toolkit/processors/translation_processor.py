@@ -80,7 +80,7 @@ class EnhancedTranslationProcessor:
         在擦除版 PDF 基礎上進行翻譯處理
 
         流程：
-        1. 打開 *_erased.pdf（已擦除）
+        1. 開啟 *_erased.pdf（已擦除）
         2. 翻譯文字
         3. 在擦除後的圖片上繪製翻譯文字
 
@@ -204,7 +204,7 @@ class EnhancedTranslationProcessor:
             或 None（如果設定失敗）
         """
         try:
-            # 動態導入翻譯模組
+            # 動態匯入翻譯模組
             from pdf_translator import (  # noqa: F811
                 BilingualPDFGenerator,
                 MonolingualPDFGenerator,
@@ -219,10 +219,10 @@ class EnhancedTranslationProcessor:
             )
             renderer = TextRenderer(font_path=translate_config.get("font_path"))
 
-            # 打開 PDF
+            # 開啟 PDF
             pdf_doc = fitz.open(erased_pdf_path)
 
-            # 打開原始 hybrid PDF（用於雙語）
+            # 開啟原始 hybrid PDF（用於雙語）
             hybrid_pdf_path = erased_pdf_path.replace("_erased.pdf", "_hybrid.pdf")
             hybrid_doc = None
             if not translate_config["no_dual"] and os.path.exists(hybrid_pdf_path):
@@ -268,7 +268,7 @@ class EnhancedTranslationProcessor:
             )
 
         except ImportError as e:
-            logging.error(f"翻譯模組導入失敗: {e}")
+            logging.error(f"翻譯模組匯入失敗: {e}")
             return None
         except Exception as e:
             logging.error(f"翻譯工具設定失敗: {e}")
@@ -299,7 +299,7 @@ class EnhancedTranslationProcessor:
         try:
             from pdf_translator import TranslatedBlock  # noqa: F811
         except ImportError:
-            logging.error("TranslatedBlock 類別導入失敗")
+            logging.error("TranslatedBlock 類別匯入失敗")
             return []
 
         # 收集需要翻譯的文字

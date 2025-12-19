@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-性能優化測試 - 驗證記憶體和 I/O 優化效果
+效能最佳化測試 - 驗證記憶體和 I/O 最佳化效果
 """
 
 import os
@@ -171,7 +171,7 @@ class TestBufferedWriter:
 
 
 class TestMemoryOptimization:
-    """測試記憶體優化效果"""
+    """測試記憶體最佳化效果"""
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_memory_usage_streaming(self):
@@ -208,7 +208,7 @@ class TestMemoryOptimization:
 
 
 class TestIOOptimization:
-    """測試 I/O 優化效果"""
+    """測試 I/O 最佳化效果"""
 
     def test_buffered_write_speed(self, tmp_path):
         """測試緩衝寫入速度"""

@@ -79,7 +79,7 @@ binary_img = preprocessor.binarize(clean_img)
 
 ### Q: GPU 加速無法運作?
 
-**A**: 檢查以下項目：
+**A**: 檢查以下專案：
 
 1. **確認 GPU 可用**:
 
@@ -104,7 +104,7 @@ nvidia-smi
 
 ### Q: 記憶體不足怎麼辦?
 
-**A**: 嘗試以下優化：
+**A**: 嘗試以下最佳化：
 
 1. **降低 DPI**:
 
@@ -203,7 +203,7 @@ class MyOutputManager(OutputManager):
 
 ### Q: 處理速度太慢?
 
-**A**: 優化建議：
+**A**: 最佳化建議：
 
 1. **使用 GPU**:
 
@@ -217,7 +217,7 @@ ocr_tool = PaddleOCRTool(device="gpu")
 ocr_tool.process_pdf("doc.pdf", dpi=150)
 ```
 
-3. **使用 basic 模式** (純文字文件):
+3. **使用 basic 模式** (純文字檔案):
 
 ```python
 ocr_tool = PaddleOCRTool(mode="basic")
@@ -225,7 +225,7 @@ ocr_tool = PaddleOCRTool(mode="basic")
 
 ---
 
-### Q: 如何批次處理多個文件?
+### Q: 如何批次處理多個檔案?
 
 **A**: 使用 BatchProcessor：
 
@@ -244,7 +244,7 @@ for pdf_file in pdf_files:
 
 ## 🔧 技術相關
 
-### Q: 如何處理傾斜的文件?
+### Q: 如何處理傾斜的檔案?
 
 **A**: 使用角度分類：
 
@@ -447,7 +447,7 @@ def check_quality(results):
 
 **A**: 遵循最佳實踐：
 
-1. **使用設定檔** - 不要硬編碼參數
+1. **使用設定檔** - 不要硬編碼引數
 2. **錯誤處理** - 完整的 try-except
 3. **日誌記錄** - 記錄所有重要操作
 4. **資源管理** - 適當的 context manager
@@ -476,7 +476,7 @@ def check_quality(results):
 - [API 指南](API_GUIDE.md)
 - [最佳實踐](BEST_PRACTICES.md)
 - [故障排除](TROUBLESHOOTING.md)
-- [範例項目](../examples/README.md)
+- [範例專案](../examples/README.md)
 
 ---
 
@@ -484,7 +484,7 @@ def check_quality(results):
 
 - 📧 提交 Issue: [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
 - 💬 討論區: [GitHub Discussions](https://github.com/danwin47-sys/paddleocr-toolkit/discussions)
-- 📖 文件: [完整文件](../README.md)
+- 📖 檔案: [完整檔案](../README.md)
 
 ---
 

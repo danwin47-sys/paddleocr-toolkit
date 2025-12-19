@@ -43,11 +43,11 @@ class DecoupledModeProcessor:
 
         Args:
             mode: OCR 模式
-            args: 命令列參數
+            args: 命令列引數
             input_path: 輸入檔案路徑
-            script_dir: 腳本所在目錄
-            device: 運算設備
-            **engine_kwargs: 引擎初始化參數
+            script_dir: 指令碼所在目錄
+            device: 運算裝置
+            **engine_kwargs: 引擎初始化引數
         """
         self.mode = mode
         self.args = args

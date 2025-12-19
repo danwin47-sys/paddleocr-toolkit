@@ -76,7 +76,7 @@ class OllamaClient(LLMClient):
         
         Args:
             prompt: 提示詞
-            **kwargs: 額外參數（temperature, max_tokens 等）
+            **kwargs: 額外引數（temperature, max_tokens 等）
         
         Returns:
             str: 生成的文字
@@ -191,14 +191,14 @@ def create_llm_client(
     **kwargs
 ) -> LLMClient:
     """
-    工廠函數：建立 LLM 客戶端
+    工廠函式：建立 LLM 客戶端
     
     Args:
         provider: 提供商 ("ollama", "openai")
-        **kwargs: 提供商特定參數
+        **kwargs: 提供商特定引數
     
     Returns:
-        LLMClient: LLM 客戶端實例
+        LLMClient: LLM 客戶端例項
     
     Example:
         >>> client = create_llm_client("ollama", model="qwen2.5:14b")

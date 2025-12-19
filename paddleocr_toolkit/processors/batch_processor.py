@@ -1,9 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - 批次處理優化
+PaddleOCR Toolkit - 批次處理最佳化
 
 提供多執行緒和批次處理功能以提升效能。
-支援串流處理模式以優化記憶體使用。
+支援串流處理模式以最佳化記憶體使用。
 """
 
 import logging
@@ -48,7 +48,7 @@ def pdf_to_images_parallel(
         dpi: 解析度（預設 150）
         max_workers: 最大執行緒數（預設 4）
         pages: 指定頁碼列表（None 表示全部）
-        progress_callback: 進度回調函數 (current, total)
+        progress_callback: 進度回撥函式 (current, total)
 
     Returns:
         List[(page_num, image_array)]: 頁碼和圖片陣列的列表
@@ -119,10 +119,10 @@ def batch_process_images(
 
     Args:
         images: 圖片陣列列表
-        process_func: 處理函數
+        process_func: 處理函式
         batch_size: 批次大小
         max_workers: 最大執行緒數
-        progress_callback: 進度回調
+        progress_callback: 進度回撥
 
     Returns:
         處理結果列表
@@ -175,7 +175,7 @@ class BatchProcessor:
         self._progress_callback = None
 
     def set_progress_callback(self, callback: Callable[[int, int, str], None]):
-        """設定進度回調函數 (current, total, message)"""
+        """設定進度回撥函式 (current, total, message)"""
         self._progress_callback = callback
 
     def _report_progress(self, current: int, total: int, message: str = ""):
@@ -224,10 +224,10 @@ class BatchProcessor:
         self, pdf_path: str, dpi: int = 150, pages: Optional[List[int]] = None
     ) -> Generator[Tuple[int, np.ndarray], None, None]:
         """
-        串流處理 PDF 頁面（記憶體優化）
+        串流處理 PDF 頁面（記憶體最佳化）
 
         使用生成器逐頁返回，記憶體使用恆定。
-        適合處理大文件（1000+ 頁）。
+        適合處理大檔案（1000+ 頁）。
 
         Args:
             pdf_path: PDF 檔案路徑
@@ -235,7 +235,7 @@ class BatchProcessor:
             pages: 指定頁碼列表
 
         Yields:
-            Tuple[int, np.ndarray]: (頁碼, 圖像)
+            Tuple[int, np.ndarray]: (頁碼, 影象)
 
         Example:
             processor = BatchProcessor()
@@ -260,7 +260,7 @@ class BatchProcessor:
         pages: Optional[List[int]] = None,
     ) -> Generator[List[Tuple[int, np.ndarray]], None, None]:
         """
-        批次串流處理 PDF（GPU 優化）
+        批次串流處理 PDF（GPU 最佳化）
 
         分批返回頁面，適合 GPU 批次處理。
 

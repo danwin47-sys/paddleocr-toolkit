@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-結構化處理器 - 專用於結構化文件分析
+結構化處理器 - 專用於結構化檔案分析
 
 本模組負責：
 - PP-StructureV3 處理
@@ -20,7 +20,7 @@ except ImportError:
 
 class StructureProcessor:
     """
-    結構化文件處理器
+    結構化檔案處理器
 
     使用 PP-StructureV3 進行版面分析和內容提取
 
@@ -44,7 +44,7 @@ class StructureProcessor:
         self, input_path: str, extract_tables: bool = True, extract_text: bool = True
     ) -> Dict[str, Any]:
         """
-        處理結構化文件
+        處理結構化檔案
 
         Args:
             input_path: 輸入檔案路徑

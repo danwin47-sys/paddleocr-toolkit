@@ -58,7 +58,7 @@ class OutputManager:
         self.writers = {}
 
     def add_format(self, format_name: str) -> None:
-        """添加輸出格式"""
+        """新增輸出格式"""
         self.formats.add(format_name.lower())
 
     def remove_format(self, format_name: str) -> None:
@@ -94,7 +94,7 @@ class OutputManager:
         寫入 JSON 格式
 
         Args:
-            data: JSON 數據
+            data: JSON 資料
             output_path: 輸出路徑（可選）
             indent: 縮排空格數
 
@@ -191,11 +191,11 @@ class OutputManager:
             content_dict: 內容字典，應包含：
                 - 'text': 純文字內容
                 - 'markdown': Markdown 內容（可選）
-                - 'json_data': JSON 數據（可選）
+                - 'json_data': JSON 資料（可選）
                 - 'html': HTML 內容（可選）
 
         Returns:
-            Dict[str, str]: 格式 -> 輸出路徑的映射
+            Dict[str, str]: 格式 -> 輸出路徑的對映
         """
         output_paths = {}
 

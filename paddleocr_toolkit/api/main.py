@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FastAPI后端 - Web界面
-v1.2.0新增 - REST API服务
+FastAPI後端 - Web介面
+v1.2.0新增 - REST API服務
 """
 
 import asyncio
@@ -71,9 +71,9 @@ WEB_DIR = Path(__file__).parent.parent.parent / "web"
 
 app = FastAPI(
     title="PaddleOCR Toolkit API", 
-    description="专业级OCR文件处理API", 
+    description="專業級OCR檔案處理API", 
     version="1.2.0",
-    docs_url="/docs",  # API 文件放在 /docs
+    docs_url="/docs",  # API 檔案放在 /docs
     redoc_url="/redoc"
 )
 
@@ -86,7 +86,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 任務存儲（生產環境應使用Redis等）
+# 任務儲存（生產環境應使用Redis等）
 tasks = {}
 results = {}
 
@@ -95,13 +95,13 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 
-# 初始化插件載入器（安全性：可透過環境變數禁用）
+# 初始化外掛載入器（安全性：可透過環境變數禁用）
 ENABLE_PLUGINS = os.getenv("ENABLE_PLUGINS", "true").lower() == "true"
 plugin_loader = PluginLoader(str(PLUGIN_DIR), enable_plugins=ENABLE_PLUGINS)
 plugin_loader.load_all_plugins()
 
 # 圖片大小限制 (避免 OCR 記憶體不足)
-MAX_IMAGE_SIDE = 2500  # 像素
+MAX_IMAGE_SIDE = 2500  # 畫素
 
 
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
@@ -150,7 +150,7 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> st
 
 
 class OCRRequest(BaseModel):
-    """OCR请求模型"""
+    """OCR請求模型"""
 
     mode: str = "hybrid"
     dpi: int = 200
@@ -177,7 +177,7 @@ class OCRResult(BaseModel):
 
 async def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
-    後台OCR處理任務 (Async)
+    後臺OCR處理任務 (Async)
 
     Args:
         task_id: 任務ID
@@ -198,14 +198,14 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
 
         def run_ocr():
-            # 在執行緒中運行阻塞的OCR操作
+            # 在執行緒中執行阻塞的OCR操作
             ocr_manager = OCREngineManager(
                 mode=mode, device="cpu", plugin_loader=plugin_loader
-            )  # 預設使用CPU以確保兼容性
+            )  # 預設使用CPU以確保相容性
             ocr_manager.init_engine()
             return ocr_manager
 
-        # 使用 asyncio.to_thread 運行阻塞代碼
+        # 使用 asyncio.to_thread 執行阻塞程式碼
         ocr_manager = await asyncio.to_thread(run_ocr)
 
         # 2. 執行預測
@@ -255,14 +255,14 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """提供用戶友好的 Web 介面"""
+    """提供使用者友好的 Web 介面"""
     index_file = WEB_DIR / "index.html"
     if index_file.exists():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
     return HTMLResponse(content="""
         <h1>PaddleOCR Toolkit API</h1>
         <p>Version: 1.2.0</p>
-        <p><a href="/docs">API 文件</a></p>
+        <p><a href="/docs">API 檔案</a></p>
     """)
 
 
@@ -278,7 +278,7 @@ async def upload_and_ocr(
 
     Args:
         file: 上傳的檔案
-        background_tasks: 後台任務
+        background_tasks: 後臺任務
         mode: OCR模式
 
     Returns:
@@ -294,7 +294,7 @@ async def upload_and_ocr(
         content = await file.read()
         f.write(content)
 
-    # 建立後台任務
+    # 建立後臺任務
     background_tasks.add_task(process_ocr_task, task_id, str(file_path), mode)
 
     # 初始化任務狀態
@@ -340,34 +340,34 @@ async def get_task_status(task_id: str):
 @app.get("/api/results/{task_id}")
 async def get_results(task_id: str):
     """
-    获取OCR结果
+    獲取OCR結果
 
     Args:
-        task_id: 任务ID
+        task_id: 任務ID
 
     Returns:
-        OCR结果
+        OCR結果
     """
     if task_id not in results:
-        raise HTTPException(status_code=404, detail="结果不存在")
+        raise HTTPException(status_code=404, detail="結果不存在")
 
     return results[task_id]
 
 
 @app.delete("/api/tasks/{task_id}")
 async def delete_task(task_id: str):
-    """删除任务"""
+    """刪除任務"""
     if task_id in tasks:
         del tasks[task_id]
     if task_id in results:
         del results[task_id]
 
-    return {"message": "任务已删除"}
+    return {"message": "任務已刪除"}
 
 
 @app.get("/api/stats")
 async def get_stats():
-    """获取系统统计"""
+    """獲取系統統計"""
     return {
         "total_tasks": len(tasks),
         "completed_tasks": sum(1 for t in tasks.values() if t["status"] == "completed"),
@@ -439,7 +439,7 @@ async def download_file(filename: str):
 
 @app.get("/api/plugins")
 async def list_plugins():
-    """列出所有插件"""
+    """列出所有外掛"""
     return plugin_loader.list_plugins()
 
 
@@ -476,8 +476,8 @@ if __name__ == "__main__":
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
     
-    启动服务器...
-    API文档: http://localhost:8000/docs
+    啟動伺服器...
+    API文件: http://localhost:8000/docs
     """
     )
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-插件系統測試
+外掛系統測試
 """
 
 import sys
@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-# 確保可以導入模組
+# 確保可以匯入模組
 sys.path.append(".")
 
 from paddleocr_toolkit.api.main import app, plugin_loader
@@ -38,7 +38,7 @@ def client():
 
 
 def test_plugin_loader():
-    """測試插件載入器"""
+    """測試外掛載入器"""
     loader = PluginLoader("paddleocr_toolkit/plugins")
     plugins = loader.discover_plugins()
     assert len(plugins) > 0  # 應該至少有 example_plugin.py
@@ -47,15 +47,15 @@ def test_plugin_loader():
     count = loader.load_all_plugins()
     assert count > 0
 
-    # 驗證 ResultStats 插件是否存在
+    # 驗證 ResultStats 外掛是否存在
     plugin = loader.get_plugin("ResultStats")
     assert plugin is not None
     assert plugin.version == "1.0.0"
 
 
 def test_ocr_engine_with_plugin():
-    """測試 OCR 引擎與插件整合"""
-    # 準備 Mock 插件
+    """測試 OCR 引擎與外掛整合"""
+    # 準備 Mock 外掛
     mock_plugin = MockPlugin()
     mock_plugin.initialize()
 
@@ -73,7 +73,7 @@ def test_ocr_engine_with_plugin():
         # 執行預測
         result = manager.predict("input_image")
 
-        # 驗證插件鉤子被調用
+        # 驗證外掛鉤子被呼叫
         # on_before_ocr 應該將 "input_image" 變為 "processed_image"
         engine_instance.predict.assert_called_with("processed_image")
 
@@ -82,7 +82,7 @@ def test_ocr_engine_with_plugin():
 
 
 def test_api_list_plugins(client):
-    """測試 API 列出插件"""
+    """測試 API 列出外掛"""
     response = client.get("/api/plugins")
     assert response.status_code == 200
     plugins = response.json()

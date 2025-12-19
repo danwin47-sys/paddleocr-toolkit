@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PDF Generator 單元測試（擴展版）
+PDF Generator 單元測試（擴充套件版）
 """
 
 import os
@@ -10,7 +10,7 @@ import tempfile
 import numpy as np
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -67,11 +67,11 @@ class TestPDFGeneratorInit:
 
 
 class TestPDFGeneratorAddPage:
-    """測試添加頁面"""
+    """測試新增頁面"""
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_page_from_pixmap(self):
-        """測試從 Pixmap 添加頁面"""
+        """測試從 Pixmap 新增頁面"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 
@@ -97,7 +97,7 @@ class TestPDFGeneratorAddPage:
         not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
     )
     def test_add_page_from_image_file(self):
-        """測試從圖片檔案添加頁面"""
+        """測試從圖片檔案新增頁面"""
         # 建立測試圖片
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             img_path = f.name
@@ -125,7 +125,7 @@ class TestPDFGeneratorAddPage:
         not HAS_FITZ or not HAS_PIL, reason="Dependencies not installed"
     )
     def test_add_page_with_compression(self):
-        """測試壓縮模式添加頁面"""
+        """測試壓縮模式新增頁面"""
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             img_path = f.name
 
@@ -148,7 +148,7 @@ class TestPDFGeneratorAddPage:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_page_nonexistent_file(self):
-        """測試添加不存在的檔案"""
+        """測試新增不存在的檔案"""
         gen = PDFGenerator("test.pdf")
 
         result = gen.add_page("nonexistent.png", [])
@@ -161,7 +161,7 @@ class TestPDFGeneratorWithOCR:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_page_with_ocr_results(self):
-        """測試添加帶 OCR 結果的頁面"""
+        """測試新增帶 OCR 結果的頁面"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 
@@ -266,7 +266,7 @@ class TestPDFGeneratorSave:
         try:
             gen = PDFGenerator(temp_path)
 
-            # 沒有添加頁面就儲存
+            # 沒有新增頁面就儲存
             result = gen.save()
 
             # 空 PDF 儲存應該回傳 False
@@ -285,7 +285,7 @@ class TestPDFGeneratorSave:
         try:
             gen = PDFGenerator(temp_path)
 
-            # 添加多頁
+            # 新增多頁
             for i in range(3):
                 doc = fitz.open()
                 page = doc.new_page(width=100, height=100)
@@ -336,7 +336,7 @@ class TestMissingDependencies:
     """測試缺少依賴時的行為"""
 
     def test_init_without_fitz(self, monkeypatch):
-        """測試缺少 PyMuPDF 時拋出錯誤"""
+        """測試缺少 PyMuPDF 時丟擲錯誤"""
         import paddleocr_toolkit.core.pdf_generator as module
 
         monkeypatch.setattr(module, "HAS_FITZ", False)

@@ -4,37 +4,37 @@ PaddleOCR Toolkit 的專業使用建議與最佳實踐。
 
 ---
 
-## 📊 效能優化
+## 📊 效能最佳化
 
 ### 選擇合適的模式
 
 ```python
-# 純文字文件 → basic (最快)
+# 純文字檔案 → basic (最快)
 ocr_tool = PaddleOCRTool(mode="basic")
 
 # 包含表格 → structure
 ocr_tool = PaddleOCRTool(mode="structure")
 
-# 複雜文件 → hybrid (推薦)
+# 複雜檔案 → hybrid (推薦)
 ocr_tool = PaddleOCRTool(mode="hybrid")
 ```
 
 ### DPI 設定建議
 
-| 文件類型 | 推薦 DPI | 說明 |
+| 檔案型別 | 推薦 DPI | 說明 |
 |----------|---------|------|
-| 掃描文件 | 200-300 | 高品質掃描 |
-| 拍照文件 | 150-200 | 清晰照片 |
-| 螢幕截圖 | 72-150 | 數位文件 |
-| 低品質掃描 | 300+ | 模糊文件 |
+| 掃描檔案 | 200-300 | 高品質掃描 |
+| 拍照檔案 | 150-200 | 清晰照片 |
+| 螢幕截圖 | 72-150 | 數位檔案 |
+| 低品質掃描 | 300+ | 模糊檔案 |
 
 ### GPU vs CPU
 
 ```python
-# 大量文件 → 使用 GPU
+# 大量檔案 → 使用 GPU
 ocr_tool = PaddleOCRTool(device="gpu")
 
-# 少量文件 → CPU 即可
+# 少量檔案 → CPU 即可
 ocr_tool = PaddleOCRTool(device="cpu")
 ```
 
@@ -62,13 +62,13 @@ deskewed = preprocessor.deskew(image)
 ### 2. 使用適當的語言模型
 
 ```python
-# 英文文件
+# 英文檔案
 ocr_tool = PaddleOCRTool(lang="en")
 
-# 中文文件
+# 中文檔案
 ocr_tool = PaddleOCRTool(lang="ch")
 
-# 多語言文件
+# 多語言檔案
 ocr_tool = PaddleOCRTool(lang="ch", use_angle_cls=True)
 ```
 
@@ -132,7 +132,7 @@ print(f"記憶體使用: {after - before:.1f} MB")
 
 ## 🚀 批次處理
 
-### 並行處理多個文件
+### 並行處理多個檔案
 
 ```python
 from concurrent.futures import ProcessPoolExecutor
@@ -392,7 +392,7 @@ def test_pdf_workflow():
 
 ---
 
-## 📚 文件建議
+## 📚 檔案建議
 
 ### 程式碼註解
 
@@ -400,12 +400,12 @@ def test_pdf_workflow():
 class MyOCRProcessor:
     """自定義 OCR 處理器
     
-    負責處理特定類型之文件，包括預處理、
+    負責處理特定型別之檔案，包括預處理、
     OCR 處理、後處理和結果驗證。
     
     Attributes:
-        ocr_tool: PaddleOCRTool 實例
-        preprocessor: 圖片預處理器
+        ocr_tool: PaddleOCRTool 例項
+        preprocessor: 圖片前處理器
         validator: 結果驗證器
         
     Example:
@@ -415,7 +415,7 @@ class MyOCRProcessor:
     """
     
     def process(self, pdf_path: str) -> List[List[OCRResult]]:
-        """處理 PDF 文件
+        """處理 PDF 檔案
         
         Args:
             pdf_path: PDF 檔案路徑
@@ -502,7 +502,7 @@ ocr_tool = PaddleOCRTool(
 - [快速開始](QUICK_START.md)
 - [API 指南](API_GUIDE.md)
 - [故障排除](TROUBLESHOOTING.md)
-- [範例項目](../examples/README.md)
+- [範例專案](../examples/README.md)
 
 ---
 

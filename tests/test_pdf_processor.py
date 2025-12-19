@@ -144,10 +144,10 @@ class TestExtractAllText:
 
 
 class TestSetupPDFGenerator:
-    """測試PDF生成器設置"""
+    """測試PDF生成器設定"""
 
     def test_setup_no_generator_when_not_searchable(self):
-        """測試非可搜索模式不創建生成器"""
+        """測試非可搜尋模式不建立生成器"""
         mock_ocr = Mock()
         processor = PDFProcessor(ocr_func=mock_ocr)
 
@@ -193,7 +193,7 @@ class TestProcessSinglePage:
     @patch("paddleocr_toolkit.processors.pdf_processor.fitz")
     def test_process_single_page_basic(self, mock_fitz, mock_pixmap_to_numpy):
         """測試基本單頁處理"""
-        # 設置mock
+        # 設定mock
         mock_page = Mock()
         mock_pixmap = Mock()
         mock_page.get_pixmap.return_value = mock_pixmap
@@ -288,14 +288,14 @@ class TestProcessPDF:
     @patch.object(PDFProcessor, "_process_single_page")
     def test_process_pdf_basic(self, mock_process_page, mock_setup, mock_fitz):
         """測試基本PDF處理"""
-        # 設置mock PDF
+        # 設定mock PDF
         mock_doc = MagicMock()
         mock_doc.__len__ = Mock(return_value=2)
         mock_doc.__getitem__.side_effect = [Mock(), Mock()]
         mock_doc.close = Mock()
         mock_fitz.open.return_value = mock_doc
 
-        # 設置處理結果
+        # 設定處理結果
         mock_setup.return_value = (None, None)
         mock_process_page.side_effect = [
             [OCRResult("Page1", 0.95, [[0, 0], [100, 0], [100, 50], [0, 50]])],
@@ -317,7 +317,7 @@ class TestProcessPDF:
     def test_process_pdf_with_progress_callback(
         self, mock_process_page, mock_setup, mock_fitz
     ):
-        """測試進度回調"""
+        """測試進度回撥"""
         mock_doc = MagicMock()
         mock_doc.__len__ = Mock(return_value=3)
         mock_doc.__getitem__.side_effect = [Mock(), Mock(), Mock()]
@@ -335,7 +335,7 @@ class TestProcessPDF:
             "test.pdf", progress_callback=callback, show_progress=False
         )
 
-        # 驗證回調被調用3次
+        # 驗證回撥被呼叫3次
         assert callback.call_count == 3
         callback.assert_has_calls([call(1, 3), call(2, 3), call(3, 3)])
 

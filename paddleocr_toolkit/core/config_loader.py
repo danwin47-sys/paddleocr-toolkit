@@ -2,7 +2,7 @@
 """
 設定檔載入器
 
-載入 YAML 設定檔，支援預設值和命令列參數覆蓋。
+載入 YAML 設定檔，支援預設值和命令列引數覆蓋。
 """
 
 import logging
@@ -129,9 +129,9 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 
 def apply_config_to_args(config: Dict[str, Any], args) -> None:
     """
-    將設定檔的值套用到 argparse 參數（作為預設值）
+    將設定檔的值套用到 argparse 引數（作為預設值）
 
-    命令列參數優先於設定檔。
+    命令列引數優先於設定檔。
 
     Args:
         config: 設定字典

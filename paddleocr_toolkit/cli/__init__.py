@@ -3,7 +3,7 @@
 PaddleOCR Toolkit - CLI 命令列介面模組
 
 此模組提供命令列介面相關功能：
-- argument_parser: 命令列參數解析
+- argument_parser: 命令列引數解析
 - output_manager: 輸出路徑管理
 - config_handler: 設定檔處理
 - mode_processor: 模式處理器

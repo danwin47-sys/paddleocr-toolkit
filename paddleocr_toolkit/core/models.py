@@ -11,10 +11,10 @@ from typing import List
 
 
 class OCRMode(Enum):
-    """OCR 模式枚舉"""
+    """OCR 模式列舉"""
 
     BASIC = "basic"  # PP-OCRv5 基本文字識別
-    STRUCTURE = "structure"  # PP-StructureV3 結構化文件解析
+    STRUCTURE = "structure"  # PP-StructureV3 結構化檔案解析
     VL = "vl"  # PaddleOCR-VL 視覺語言模型
     FORMULA = "formula"  # PP-FormulaNet 公式識別
     HYBRID = "hybrid"  # 混合模式：版面分析 + 精確 OCR

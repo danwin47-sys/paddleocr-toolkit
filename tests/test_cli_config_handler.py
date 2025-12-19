@@ -18,11 +18,11 @@ from paddleocr_toolkit.cli.config_handler import (
 
 
 class TestLoadAndMergeConfig:
-    """測試 load_and_merge_config 函數"""
+    """測試 load_and_merge_config 函式"""
 
     def test_basic_merge(self):
-        """測試基本的參數合併"""
-        # 創建測試參數
+        """測試基本的引數合併"""
+        # 建立測試引數
         args = argparse.Namespace(input="test.pdf", mode="basic", searchable=True)
 
         # 測試合併
@@ -43,7 +43,7 @@ class TestLoadAndMergeConfig:
         assert config["input"] == "test.pdf"
 
     def test_preserves_all_args(self):
-        """測試保留所有參數"""
+        """測試保留所有引數"""
         args = argparse.Namespace(
             input="test.pdf", mode="structure", dpi=200, device="cpu", verbose=True
         )
@@ -58,7 +58,7 @@ class TestLoadAndMergeConfig:
 
 
 class TestLoadConfigFile:
-    """測試 load_config_file 函數"""
+    """測試 load_config_file 函式"""
 
     def test_returns_empty_dict(self):
         """測試返回空字典（功能未實作）"""
@@ -68,7 +68,7 @@ class TestLoadConfigFile:
 
 
 class TestProcessArgsOverrides:
-    """測試 process_args_overrides 函數"""
+    """測試 process_args_overrides 函式"""
 
     def test_no_overrides(self):
         """測試無覆蓋選項時"""
@@ -105,7 +105,7 @@ class TestProcessArgsOverrides:
         assert result.searchable is False
 
     def test_with_all_flag_structure_mode(self):
-        """測試 --all 參數在 structure 模式"""
+        """測試 --all 引數在 structure 模式"""
         args = argparse.Namespace(
             mode="structure",
             all=True,
@@ -125,7 +125,7 @@ class TestProcessArgsOverrides:
         assert result.html_output == "AUTO"
 
     def test_with_all_flag_basic_mode(self):
-        """測試 --all 參數在 basic 模式（不應啟用）"""
+        """測試 --all 引數在 basic 模式（不應啟用）"""
         args = argparse.Namespace(
             mode="basic",
             all=True,
@@ -147,7 +147,7 @@ class TestProcessArgsOverrides:
 
 
 class TestProcessNoFlags:
-    """測試 _process_no_flags 函數"""
+    """測試 _process_no_flags 函式"""
 
     def test_all_no_flags(self):
         """測試所有 --no-* 選項"""
@@ -191,7 +191,7 @@ class TestProcessNoFlags:
 
 
 class TestProcessAllFlag:
-    """測試 _process_all_flag 函數"""
+    """測試 _process_all_flag 函式"""
 
     def test_all_flag_enabled_structure(self):
         """測試 --all 在 structure 模式啟用"""

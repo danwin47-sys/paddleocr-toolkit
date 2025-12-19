@@ -18,7 +18,7 @@ nano .env
 # 啟動所有服務
 docker-compose up -d
 
-# 查看日誌
+# 檢視日誌
 docker-compose logs -f
 ```
 
@@ -50,13 +50,13 @@ curl -X POST http://localhost:8000/api/ocr \
 ## 服務說明
 
 ### Ollama (LLM 服務)
-- **端口**: 11434
+- **埠**: 11434
 - **用途**: 提供本地 LLM 推理
-- **數據持久化**: `ollama_data` volume
+- **資料持久化**: `ollama_data` volume
 
 ### PaddleOCR API
-- **端口**: 8000
-- **API 文檔**: http://localhost:8000/docs
+- **埠**: 8000
+- **API 文件**: http://localhost:8000/docs
 - **上傳目錄**: `./uploads`
 - **輸出目錄**: `./output`
 
@@ -67,7 +67,7 @@ curl -X POST http://localhost:8000/api/ocr \
 | `API_KEY` | dev-key-change-in-production | API 認證金鑰 |
 | `ALLOWED_ORIGINS` | * | CORS 允許的來源 |
 | `OLLAMA_MODEL` | qwen2.5:7b | Ollama 模型名稱 |
-| `ENABLE_PLUGINS` | true | 是否啟用插件 |
+| `ENABLE_PLUGINS` | true | 是否啟用外掛 |
 
 ## 生產環境部署
 
@@ -84,7 +84,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))" > api_key.txt
 ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
 ```
 
-3. **禁用插件**（如不需要）:
+3. **禁用外掛**（如不需要）:
 ```env
 ENABLE_PLUGINS=false
 ```
@@ -111,7 +111,7 @@ server {
 
 ## 維護
 
-### 查看日誌
+### 檢視日誌
 ```bash
 # 所有服務
 docker-compose logs -f
@@ -132,7 +132,7 @@ docker-compose restart paddleocr-api
 
 ### 更新服務
 ```bash
-# 拉取最新代碼
+# 拉取最新程式碼
 git pull
 
 # 重新建構並啟動
@@ -144,13 +144,13 @@ docker-compose up -d --build
 # 停止並移除容器
 docker-compose down
 
-# 同時移除 volumes（會刪除數據！）
+# 同時移除 volumes（會刪除資料！）
 docker-compose down -v
 ```
 
 ## 故障排除
 
-### Ollama 無法連接
+### Ollama 無法連線
 ```bash
 # 檢查 Ollama 健康狀態
 docker exec paddleocr-ollama curl http://localhost:11434/api/tags
@@ -161,7 +161,7 @@ docker-compose restart ollama
 
 ### API 無法啟動
 ```bash
-# 查看詳細日誌
+# 檢視詳細日誌
 docker-compose logs paddleocr-api
 
 # 檢查環境變數
@@ -171,14 +171,14 @@ docker exec paddleocr-api env | grep -E "API_KEY|OLLAMA"
 ### 記憶體不足
 ```bash
 # 限制容器記憶體
-# 在 docker-compose.yml 中添加：
+# 在 docker-compose.yml 中新增：
 services:
   paddleocr-api:
     mem_limit: 4g
     memswap_limit: 4g
 ```
 
-## 性能優化
+## 效能最佳化
 
 ### GPU 支援
 
@@ -198,10 +198,10 @@ services:
       - PADDLEOCR_DEVICE=gpu
 ```
 
-### 擴展服務
+### 擴充套件服務
 
 ```bash
-# 運行多個 API 實例
+# 執行多個 API 例項
 docker-compose up -d --scale paddleocr-api=3
 ```
 
@@ -213,7 +213,7 @@ docker-compose up -d --scale paddleocr-api=3
 
 ## 支援
 
-如遇問題，請查看：
+如遇問題，請檢視：
 - [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
 - [安全性指南](docs/SECURITY_HARDENING.md)
-- [API 文檔](docs/FACADE_API_GUIDE.md)
+- [API 文件](docs/FACADE_API_GUIDE.md)

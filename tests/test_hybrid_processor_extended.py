@@ -20,7 +20,7 @@ class TestHybridProcessorLayoutAnalysis:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return HybridPDFProcessor(mock_engine)
@@ -28,20 +28,20 @@ class TestHybridProcessorLayoutAnalysis:
     def test_extract_markdown_from_structure_result(self, processor):
         """測試從結構化結果提取 Markdown"""
         mock_result = Mock()
-        mock_result.markdown = "## 章節標題\n\n- 項目 1\n- 項目 2"
+        mock_result.markdown = "## 章節標題\n\n- 專案 1\n- 專案 2"
         
         structure_output = [mock_result]
         
         processor.result_parser.parse_structure_result = Mock(return_value=[
             OCRResult(text="章節標題", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 20], [0, 20]]),
-            OCRResult(text="項目 1", confidence=0.9, bbox=[[0, 30], [100, 30], [100, 50], [0, 50]]),
+            OCRResult(text="專案 1", confidence=0.9, bbox=[[0, 30], [100, 30], [100, 50], [0, 50]]),
         ])
         
         ocr_results, markdown = processor._extract_and_merge_results(structure_output, 0)
         
         assert len(ocr_results) == 2
         assert "章節標題" in markdown
-        assert "項目 1" in markdown
+        assert "專案 1" in markdown
         assert "第 1 頁" in markdown
 
     def test_extract_markdown_from_result_helper(self, processor):
@@ -60,7 +60,7 @@ class TestHybridProcessorErrorHandling:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return HybridPDFProcessor(mock_engine)
@@ -72,7 +72,7 @@ class TestHybridProcessorErrorHandling:
         mock_pdf.__len__.return_value = 1
         mock_fitz.open.return_value = mock_pdf
         
-        # Mock OCR 引擎拋出錯誤
+        # Mock OCR 引擎丟擲錯誤
         processor.engine_manager.predict = Mock(side_effect=Exception("OCR 引擎錯誤"))
         
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:

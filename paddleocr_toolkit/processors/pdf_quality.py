@@ -17,7 +17,7 @@ except ImportError:
 
 def detect_pdf_quality(pdf_path: str) -> dict:
     """
-    偵測 PDF 品質，判斷是否為掃描件或模糊文件
+    偵測 PDF 品質，判斷是否為掃描件或模糊檔案
 
     Args:
         pdf_path: PDF 檔案路徑
@@ -91,7 +91,7 @@ def detect_pdf_quality(pdf_path: str) -> dict:
             result["is_scanned"] = True
             result["is_blurry"] = True
             result["recommended_dpi"] = 200
-            result["reason"] = f"偵測為部分掃描文件（平均每頁 {avg_text_per_page:.0f} 字元）"
+            result["reason"] = f"偵測為部分掃描檔案（平均每頁 {avg_text_per_page:.0f} 字元）"
 
         # 有足夠文字，是一般 PDF
         else:

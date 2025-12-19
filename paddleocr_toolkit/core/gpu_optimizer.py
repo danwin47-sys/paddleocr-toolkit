@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GPU批次处理优化器
-v1.2.0新增 - 提升GPU利用率和处理速度
+GPU批次處理最佳化器
+v1.2.0新增 - 提升GPU利用率和處理速度
 """
 
 import time
@@ -12,10 +12,10 @@ import numpy as np
 
 
 class GPUMemoryPool:
-    """GPU内存池管理"""
+    """GPU記憶體池管理"""
 
     def __init__(self):
-        """初始化内存池"""
+        """初始化記憶體池"""
         self.allocated_memory = []
         self.peak_usage = 0
 
@@ -46,9 +46,9 @@ class GPUMemoryPool:
 
 class GPUBatchProcessor:
     """
-    GPU批次處理優化器
+    GPU批次處理最佳化器
 
-    通過批次處理提升GPU利用率，預期2x性能提升
+    透過批次處理提升GPU利用率，預期2x效能提升
     """
 
     def __init__(self, batch_size: int = 16, enable_memory_pool: bool = True):
@@ -63,7 +63,7 @@ class GPUBatchProcessor:
         self.enable_memory_pool = enable_memory_pool
         self.memory_pool = GPUMemoryPool() if enable_memory_pool else None
 
-        # 性能統計
+        # 效能統計
         self.stats = {
             "total_images": 0,
             "total_batches": 0,
@@ -126,7 +126,7 @@ class GPUBatchProcessor:
 
         Args:
             batch_tensor: 批次tensor
-            ocr_engine: OCR引擎實例
+            ocr_engine: OCR引擎例項
 
         Returns:
             預測結果列表
@@ -137,7 +137,7 @@ class GPUBatchProcessor:
         if self.memory_pool:
             with self.memory_pool:
                 # 實際的批次預測
-                # 這裡應該調用法 PaddleOCR 的批次預測
+                # 這裡應該呼叫法 PaddleOCR 的批次預測
                 results = ocr_engine.ocr(batch_tensor, batch=True)
         else:
             results = ocr_engine.ocr(batch_tensor, batch=True)
@@ -147,18 +147,18 @@ class GPUBatchProcessor:
 
     def batch_predict(self, images: List[Any], ocr_engine: Any) -> List[Any]:
         """
-        批次預測主函數
+        批次預測主函式
 
         Args:
             images: 圖片列表
-            ocr_engine: OCR引擎實例
+            ocr_engine: OCR引擎例項
 
         Returns:
             所有結果列表
         """
         total_start = time.time()
 
-        # 創建批次
+        # 建立批次
         batches = self._create_batches(images, self.batch_size)
         self.stats["total_images"] = len(images)
         self.stats["total_batches"] = len(batches)
@@ -184,10 +184,10 @@ class GPUBatchProcessor:
 
     def get_performance_stats(self) -> dict:
         """
-        獲取性能統計
+        獲取效能統計
 
         Returns:
-            性能統計字典
+            效能統計字典
         """
         if self.stats["total_images"] == 0:
             return self.stats
@@ -220,11 +220,11 @@ class GPUBatchProcessor:
         }
 
     def print_performance_report(self):
-        """打印性能報告"""
+        """列印效能報告"""
         stats = self.get_performance_stats()
 
         print("\n" + "=" * 60)
-        print("GPU批次處理性能報告")
+        print("GPU批次處理效能報告")
         print("=" * 60)
         print(f"總圖片數: {stats['total_images']}")
         print(f"批次數: {stats['total_batches']}")
@@ -240,8 +240,8 @@ class GPUBatchProcessor:
 
 # 使用示例
 if __name__ == "__main__":
-    print("GPU批次处理优化器")
-    print("预期性能提升: 2x")
+    print("GPU批次處理最佳化器")
+    print("預期效能提升: 2x")
     print("\n使用方法:")
     print(
         """
@@ -250,10 +250,10 @@ from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
 # 初始化
 gpu_processor = GPUBatchProcessor(batch_size=16)
 
-# 批次处理
+# 批次處理
 results = gpu_processor.batch_predict(images, ocr_engine)
 
-# 查看性能
+# 檢視效能
 gpu_processor.print_performance_report()
 """
     )

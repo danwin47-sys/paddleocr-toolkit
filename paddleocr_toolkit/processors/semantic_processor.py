@@ -4,9 +4,9 @@ PaddleOCR Toolkit - 語義處理器
 
 使用 LLM 提升 OCR 結果的語義準確性：
 - 自動修正錯別字
-- 優化語句流暢度
+- 最佳化語句流暢度
 - 提取結構化資料
-- 文件分類與摘要
+- 檔案分類與摘要
 """
 
 import logging
@@ -35,7 +35,7 @@ class SemanticProcessor:
         >>> 
         >>> ocr_text = "這個文建可能有銷別字"
         >>> corrected = processor.correct_ocr_errors(ocr_text)
-        >>> print(corrected)  # "這個文件可能有錯別字"
+        >>> print(corrected)  # "這個檔案可能有錯別字"
     """
     
     def __init__(
@@ -50,7 +50,7 @@ class SemanticProcessor:
         Args:
             llm_provider: LLM 提供商 ("ollama", "openai")
             model: 模型名稱（可選，使用預設值）
-            **llm_kwargs: LLM 客戶端的額外參數
+            **llm_kwargs: LLM 客戶端的額外引數
         """
         # 設定預設模型
         if model is None:
@@ -127,9 +127,9 @@ class SemanticProcessor:
 
 **重要規則**：
 1. **必須使用繁體中文輸出**，不可轉換為簡體中文
-2. 只修正明顯的 OCR 錯誤（如：文建→文件、銷別字→錯別字、工見→工具）
+2. 只修正明顯的 OCR 錯誤（如：文建→檔案、銷別字→錯別字、工見→工具）
 3. 保持原文的格式、結構和換行
-4. 不要添加任何額外的說明或解釋
+4. 不要新增任何額外的說明或解釋
 5. 如果不確定是否為錯誤，保持原樣
 6. 保留所有專有名詞（如：PaddleOCR、Processor 等）
 
@@ -215,10 +215,10 @@ JSON Schema:
     
     def summarize_document(self, text: str, max_length: int = 200) -> str:
         """
-        生成文件摘要
+        生成檔案摘要
         
         Args:
-            text: 文件內容
+            text: 檔案內容
             max_length: 摘要最大長度
         
         Returns:

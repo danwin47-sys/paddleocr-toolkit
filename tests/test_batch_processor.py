@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Batch Processor 單元測試（擴展版）
+Batch Processor 單元測試（擴充套件版）
 """
 
 import os
@@ -11,7 +11,7 @@ import time
 import numpy as np
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -126,7 +126,7 @@ class TestBatchProcessor:
         assert all(r == (10, 10) for r in results)
 
     def test_process_with_args(self):
-        """測試帶參數的處理"""
+        """測試帶引數的處理"""
         processor = BatchProcessor(max_workers=2)
 
         images = [np.ones((5, 5), dtype=np.uint8) * i for i in range(3)]
@@ -208,7 +208,7 @@ class TestPdfToImagesParallel:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_with_progress_callback(self):
-        """測試進度回調"""
+        """測試進度回撥"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 

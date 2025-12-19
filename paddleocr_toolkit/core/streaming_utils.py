@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-串流處理工具 - 記憶體優化的核心
+串流處理工具 - 記憶體最佳化的核心
 
 提供生成器模式的 PDF 處理，避免一次載入所有頁面到記憶體。
 """
@@ -22,15 +22,15 @@ except ImportError:
 @contextmanager
 def open_pdf_context(pdf_path: str):
     """
-    PDF 文件 context manager
+    PDF 檔案 context manager
 
-    確保資源自動釋放，避免文件句柄洩漏。
+    確保資源自動釋放，避免檔案控制代碼洩漏。
 
     Args:
         pdf_path: PDF 檔案路徑
 
     Yields:
-        fitz.Document: PDF 文件物件
+        fitz.Document: PDF 檔案物件
 
     Example:
         with open_pdf_context('document.pdf') as pdf_doc:
@@ -54,11 +54,11 @@ def pdf_pages_generator(
     pdf_path: str, dpi: int = 150, pages: Optional[List[int]] = None
 ) -> Generator[Tuple[int, np.ndarray], None, None]:
     """
-    以生成器方式逐頁處理 PDF（記憶體優化）
+    以生成器方式逐頁處理 PDF（記憶體最佳化）
 
     優點：
     - 記憶體使用固定（僅 1 頁）
-    - 支援大文件處理（1000+ 頁）
+    - 支援大檔案處理（1000+ 頁）
     - 自動資源管理
 
     Args:
@@ -67,10 +67,10 @@ def pdf_pages_generator(
         pages: 指定頁碼列表（None 表示全部）
 
     Yields:
-        Tuple[int, np.ndarray]: (頁碼, 圖像陣列)
+        Tuple[int, np.ndarray]: (頁碼, 影象陣列)
 
     Example:
-        # 處理大文件，記憶體使用恆定
+        # 處理大檔案，記憶體使用恆定
         for page_num, image in pdf_pages_generator('large.pdf'):
             result = ocr_process(image)
             save_result(result)
@@ -93,7 +93,7 @@ def pdf_pages_generator(
             # 載入頁面
             page = pdf_doc[page_num]
 
-            # 轉換為圖像（不複製以節省記憶體）
+            # 轉換為影象（不複製以節省記憶體）
             pixmap = page.get_pixmap(matrix=matrix)
 
             # 轉換為 numpy 陣列
@@ -186,7 +186,7 @@ class StreamingPDFProcessor:
         逐頁處理（串流模式）
 
         Args:
-            process_func: 處理函數 (image) -> result
+            process_func: 處理函式 (image) -> result
             pages: 指定頁碼列表
             show_progress: 是否顯示進度
 

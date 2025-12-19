@@ -12,19 +12,19 @@ from typing import List
 
 def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
     """
-    ?算字符准确率
+    ?算字元準確率
 
     Args:
-        predicted: ??文本
-        ground_truth: 真?文本
+        predicted: ??文字
+        ground_truth: 真?文字
 
     Returns:
-        准确率 (0-1)
+        準確率 (0-1)
     """
     if not ground_truth:
         return 0.0
 
-    # 使用??距离
+    # 使用??距離
     distance = edit_distance(predicted, ground_truth)
     max_len = max(len(predicted), len(ground_truth))
 
@@ -36,7 +36,7 @@ def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
 
 
 def edit_distance(s1: str, s2: str) -> int:
-    """?算??距离 (Levenshtein distance)"""
+    """?算??距離 (Levenshtein distance)"""
     if len(s1) < len(s2):
         return edit_distance(s2, s1)
 
@@ -60,7 +60,7 @@ def edit_distance(s1: str, s2: str) -> int:
 def calculate_word_accuracy(
     predicted_words: List[str], ground_truth_words: List[str]
 ) -> float:
-    """?算?准确率"""
+    """?算?準確率"""
     if not ground_truth_words:
         return 0.0
 
@@ -73,8 +73,8 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     ??OCR?果
 
     Args:
-        ocr_results_file: OCR?果文件 (JSON)
-        ground_truth_file: 真?文本文件 (TXT)
+        ocr_results_file: OCR?果檔案 (JSON)
+        ground_truth_file: 真?文字檔案 (TXT)
     """
     print("\n" + "=" * 70)
     print(" PaddleOCR Toolkit ?果??")
@@ -84,13 +84,13 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     # ?取OCR?果
     ocr_path = Path(ocr_results_file)
     if not ocr_path.exists():
-        print(f"??: OCR?果文件不存在: {ocr_results_file}")
+        print(f"??: OCR?果檔案不存在: {ocr_results_file}")
         return
 
     with open(ocr_path, "r", encoding="utf-8") as f:
         ocr_data = json.load(f)
 
-    # 提取OCR文本
+    # 提取OCR文字
     if isinstance(ocr_data, list):
         # 假?是?面?果列表
         ocr_text = "\n".join(
@@ -103,10 +103,10 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     else:
         ocr_text = str(ocr_data)
 
-    # ?取真?文本
+    # ?取真?文字
     gt_path = Path(ground_truth_file)
     if not gt_path.exists():
-        print(f"??: 真?文本文件不存在: {ground_truth_file}")
+        print(f"??: 真?文字檔案不存在: {ground_truth_file}")
         return
 
     with open(gt_path, "r", encoding="utf-8") as f:
@@ -116,27 +116,27 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     print("?算??指?...")
     print()
 
-    # 1. 字符准确率
+    # 1. 字元準確率
     char_accuracy = calculate_character_accuracy(ocr_text, gt_text)
-    print(f"字符准确率: {char_accuracy:.2%}")
+    print(f"字元準確率: {char_accuracy:.2%}")
 
-    # 2. ?准确率
+    # 2. ?準確率
     ocr_words = ocr_text.split()
     gt_words = gt_text.split()
     word_accuracy = calculate_word_accuracy(ocr_words, gt_words)
-    print(f"?准确率: {word_accuracy:.2%}")
+    print(f"?準確率: {word_accuracy:.2%}")
 
-    # 3. ??距离
+    # 3. ??距離
     distance = edit_distance(ocr_text, gt_text)
-    print(f"??距离: {distance}")
+    print(f"??距離: {distance}")
 
     # 4. ?度??
-    print(f"\nOCR文本?度: {len(ocr_text)} 字符, {len(ocr_words)} ?")
-    print(f"真?文本?度: {len(gt_text)} 字符, {len(gt_words)} ?")
+    print(f"\nOCR文字?度: {len(ocr_text)} 字元, {len(ocr_words)} ?")
+    print(f"真?文字?度: {len(gt_text)} 字元, {len(gt_words)} ?")
 
-    # 5. 差异?比
+    # 5. 差異?比
     print("\n" + "─" * 70)
-    print(" 文本差异?比 (前300字符)")
+    print(" 文字差異?比 (前300字元)")
     print("─" * 70)
 
     diff = list(
@@ -146,7 +146,7 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     )
 
     if diff:
-        for line in diff[:20]:  # 只?示前20行差异
+        for line in diff[:20]:  # 只?示前20行差異
             if line.startswith("-"):
                 print(f"[真?] {line}")
             elif line.startswith("+"):
@@ -162,7 +162,7 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     overall_score = (char_accuracy + word_accuracy) / 2
 
     if overall_score >= 0.95:
-        grade = "优秀"
+        grade = "優秀"
         emoji = "+++"
     elif overall_score >= 0.85:
         grade = "良好"
@@ -174,7 +174,7 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
         grade = "需改?"
         emoji = "-"
 
-    print(f"\n?合准确率: {overall_score:.2%}")
+    print(f"\n?合準確率: {overall_score:.2%}")
     print(f"??: {emoji} {grade}")
 
     print("\n建?:")
@@ -183,7 +183,7 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
         print("  ‧ 使用hybrid或structure模式")
         print("  ‧ ?行?片??理 (降噪、二值化)")
     else:
-        print("  ‧ OCR准确率已?很高！")
+        print("  ‧ OCR準確率已?很高！")
 
     print()
 
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print("使用方法: python validate.py <OCR?果JSON> <真?文本TXT>")
-        print("范例: python validate.py output.json ground_truth.txt")
+        print("使用方法: python validate.py <OCR?果JSON> <真?文字TXT>")
+        print("範例: python validate.py output.json ground_truth.txt")
     else:
         validate_ocr_results(sys.argv[1], sys.argv[2])

@@ -47,7 +47,7 @@ class TestTranslationProcessorSetup:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return EnhancedTranslationProcessor(mock_engine)
@@ -75,7 +75,7 @@ class TestTranslationProcessorSetup:
             # 應該優雅地處理缺少依賴的情況
             try:
                 result = processor._setup_translation_tools()
-                # 可能返回 None 或拋出異常
+                # 可能返回 None 或丟擲異常
             except Exception as e:
                 assert "translator" in str(e).lower() or "依賴" in str(e)
 
@@ -85,7 +85,7 @@ class TestTranslationProcessorPageTranslation:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return EnhancedTranslationProcessor(mock_engine)
@@ -114,7 +114,7 @@ class TestTranslationProcessorPDFGeneration:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return EnhancedTranslationProcessor(mock_engine)
@@ -134,5 +134,5 @@ class TestTranslationProcessorPDFGeneration:
                 str(output_path)
             )
             
-            # 驗證生成器被調用
+            # 驗證生成器被呼叫
             assert mock_mono_gen.save.called or mock_bi_gen.save.called

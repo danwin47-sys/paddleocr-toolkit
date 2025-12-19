@@ -79,7 +79,7 @@ def demo_2_structured_extraction():
         for key, value in result.items():
             print(f"  {key}: {value}")
     else:
-        print("\n❌ 提取失敗（請確認 Ollama 服務運行中）")
+        print("\n❌ 提取失敗（請確認 Ollama 服務執行中）")
 
 
 def demo_3_without_semantic():
@@ -149,6 +149,6 @@ if __name__ == "__main__":
     print("=" * 70)
     print("\n💡 提示:")
     print("  - 使用 enable_semantic=True 啟用語義處理")
-    print("  - 需要 Ollama 服務運行：ollama serve")
+    print("  - 需要 Ollama 服務執行：ollama serve")
     print("  - 預設使用 qwen2.5:7b 模型")
     print("")

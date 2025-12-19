@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-并行PDF?理器
-v1.2.0新增 - 多?程加速大文件?理
+並行PDF?理器
+v1.2.0新增 - 多?程加速大檔案?理
 """
 
 import time
@@ -12,19 +12,19 @@ from typing import Any, List, Optional, Tuple
 
 class ParallelPDFProcessor:
     """
-    并行PDF?理器
+    並行PDF?理器
     使用多?程加速PDF?理，?期1.5-2x提升
     """
 
     def __init__(self, workers: Optional[int] = None):
         """
-        初始化并行?理器
+        初始化並行?理器
 
         Args:
             workers: 工作?程?，默??CPU核心?
         """
         self.workers = workers or max(1, cpu_count() - 1)  # 保留一?核心
-        print(f"初始化并行?理器: {self.workers} ?工作?程")
+        print(f"初始化並行?理器: {self.workers} ?工作?程")
 
     def _process_page(self, page_data: Tuple[int, Any]) -> Tuple[int, Any]:
         """
@@ -38,24 +38,24 @@ class ParallelPDFProcessor:
         """
         page_num, page_image = page_data
 
-        # ?里??是??的OCR?理
-        # ?了演示，使用占位符
+        # ?裡??是??的OCR?理
+        # ?了演示，使用佔位符
         result = f"Page {page_num} processed"
 
         return (page_num, result)
 
     def process_pdf_parallel(self, pdf_path: str, ocr_engine: Any = None) -> List[Any]:
         """
-        并行?理PDF
+        並行?理PDF
 
         Args:
-            pdf_path: PDF文件路?
+            pdf_path: PDF檔案路?
             ocr_engine: OCR引擎?例
 
         Returns:
             所有?面的?果列表
         """
-        print(f"\n并行?理PDF: {pdf_path}")
+        print(f"\n並行?理PDF: {pdf_path}")
         print(f"使用 {self.workers} ?工作?程")
 
         start_time = time.time()
@@ -65,7 +65,7 @@ class ParallelPDFProcessor:
         total_pages = len(pages)
         print(f"???: {total_pages}")
 
-        # 2. 并行?理
+        # 2. 並行?理
         with Pool(processes=self.workers) as pool:
             results = pool.map(self._process_page, enumerate(pages))
 
@@ -88,33 +88,33 @@ class ParallelPDFProcessor:
             ?面列表
         """
         # ????使用PyMuPDF等?
-        # ?里返回占位符
+        # ?裡返回佔位符
         return [f"page_{i}" for i in range(10)]  # 假?10?
 
     def benchmark_parallel_vs_serial(self, pdf_path: str):
         """
-        ?比并行vs串行性能
+        ?比並行vs序列效能
 
         Args:
             pdf_path: PDF路?
         """
         print("\n" + "=" * 70)
-        print("并行 vs 串行性能?比")
+        print("並行 vs 序列效能?比")
         print("=" * 70)
 
-        # 串行?理
-        print("\n[1/2] 串行?理...")
+        # 序列?理
+        print("\n[1/2] 序列?理...")
         start = time.time()
         serial_results = self._process_serial(pdf_path)
         serial_time = time.time() - start
-        print(f"串行??: {serial_time:.2f}s")
+        print(f"序列??: {serial_time:.2f}s")
 
-        # 并行?理
-        print("\n[2/2] 并行?理...")
+        # 並行?理
+        print("\n[2/2] 並行?理...")
         start = time.time()
         parallel_results = self.process_pdf_parallel(pdf_path)
         parallel_time = time.time() - start
-        print(f"并行??: {parallel_time:.2f}s")
+        print(f"並行??: {parallel_time:.2f}s")
 
         # ?比
         speedup = serial_time / parallel_time if parallel_time > 0 else 0
@@ -124,7 +124,7 @@ class ParallelPDFProcessor:
         print("=" * 70)
 
     def _process_serial(self, pdf_path: str) -> List[Any]:
-        """串行?理（用于?比）"""
+        """序列?理（用於?比）"""
         pages = self._split_pdf_pages(pdf_path)
         results = []
         for i, page in enumerate(pages):
@@ -135,7 +135,7 @@ class ParallelPDFProcessor:
 
 # 使用示例
 if __name__ == "__main__":
-    print("并行PDF?理器")
+    print("並行PDF?理器")
     print("?期加速: 1.5-2x")
     print(f"CPU核心?: {cpu_count()}")
 

@@ -1,8 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - 模式处理器
+PaddleOCR Toolkit - 模式處理器
 
-处理不同 OCR 模式的执行和结果显示。
+處理不同 OCR 模式的執行和結果顯示。
 """
 
 import argparse
@@ -13,15 +13,15 @@ from typing import TYPE_CHECKING, Any, Dict
 if TYPE_CHECKING:
     from paddle_ocr_tool import PaddleOCRTool
 
-# 需要从 paddle_ocr_tool.py 导入的常量
+# 需要從 paddle_ocr_tool.py 匯入的常量
 SUPPORTED_PDF_FORMAT = ".pdf"
 SUPPORTED_IMAGE_FORMATS = (".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp")
 
 
 class ModeProcessor:
-    """处理不同 OCR 模式的执行和结果显示
+    """處理不同 OCR 模式的執行和結果顯示
 
-    封装了 formula、structure、vl、hybrid、basic 五种模式的处理逻辑。
+    封裝了 formula、structure、vl、hybrid、basic 五種模式的處理邏輯。
     """
 
     def __init__(
@@ -31,13 +31,13 @@ class ModeProcessor:
         input_path: Path,
         script_dir: Path,
     ):
-        """初始化模式处理器
+        """初始化模式處理器
 
         Args:
-            tool: PaddleOCRTool 实例
-            args: 命令列参数
-            input_path: 输入文件路径
-            script_dir: 脚本所在目录
+            tool: PaddleOCRTool 例項
+            args: 命令列引數
+            input_path: 輸入檔案路徑
+            script_dir: 指令碼所在目錄
         """
         self.tool = tool
         self.args = args
@@ -46,10 +46,10 @@ class ModeProcessor:
         self.show_progress = not args.no_progress
 
     def process(self) -> Dict[str, Any]:
-        """根据模式执行处理
+        """根據模式執行處理
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
         if self.args.mode == "formula":
             return self._process_formula()
@@ -61,10 +61,10 @@ class ModeProcessor:
             return self._process_basic()
 
     def _process_formula(self) -> Dict[str, Any]:
-        """处理 formula 模式
+        """處理 formula 模式
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """處理 formula 模式
 
         Returns:
@@ -79,7 +79,7 @@ class ModeProcessor:
             return result # Keep original return behavior for error case
         print(f"\n[OK] 公式識別完成！共識別 {len(result['formulas'])} 個公式")
         if result.get("latex_file"):
-            print(f"  LaTeX 文件: {result['latex_file']}")
+            print(f"  LaTeX 檔案: {result['latex_file']}")
 
         return result
 
@@ -102,13 +102,13 @@ class ModeProcessor:
         else:
             print(f"\n[OK] 處理完成！共處理 {result['pages_processed']} 頁")
             if result.get("markdown_files"):
-                print(f"  Markdown 文件: {', '.join(result['markdown_files'])}")
+                print(f"  Markdown 檔案: {', '.join(result['markdown_files'])}")
             if result.get("json_files"):
-                print(f"  JSON 文件: {', '.join(result['json_files'])}")
+                print(f"  JSON 檔案: {', '.join(result['json_files'])}")
             if result.get("excel_files"):
-                print(f"  Excel 文件: {', '.join(result['excel_files'])}")
+                print(f"  Excel 檔案: {', '.join(result['excel_files'])}")
             if result.get("html_files"):
-                print(f"  HTML 文件: {', '.join(result['html_files'])}")
+                print(f"  HTML 檔案: {', '.join(result['html_files'])}")
 
         return result
 
@@ -209,7 +209,7 @@ class ModeProcessor:
             if result.get("searchable_pdf"):
                 print(f"  可搜尋 PDF: {result['searchable_pdf']}")
             if result.get("markdown_file"):
-                print(f"  Markdown 文件: {result['markdown_file']}")
+                print(f"  Markdown 檔案: {result['markdown_file']}")
 
         return result
 
@@ -272,14 +272,14 @@ class ModeProcessor:
                 all_text.append(text)
 
         else:
-            print(f"錯誤：不支持的文件格式: {self.input_path.suffix}")
+            print(f"錯誤：不支援的檔案格式: {self.input_path.suffix}")
             sys.exit(1)
 
         # 輸出結果
         combined_text = "\n\n".join(all_text)
 
         if self.args.text_output:
-            # 如果輸出路徑不是絕對路徑，則相對於腳本目錄
+            # 如果輸出路徑不是絕對路徑，則相對於指令碼目錄
             text_output_path = Path(self.args.text_output)
             if not text_output_path.is_absolute():
                 text_output_path = self.script_dir / text_output_path
@@ -296,6 +296,6 @@ class ModeProcessor:
             print("=" * 50)
             print(combined_text)
 
-        print("\n[OK] 处理完成！")
+        print("\n[OK] 處理完成！")
 
         return {"status": "success", "text": combined_text}

@@ -2,7 +2,7 @@
 """
 PaddleOCR Toolkit - 設定檔處理器
 
-處理設定檔載入和與 CLI 參數的合併。
+處理設定檔載入和與 CLI 引數的合併。
 """
 
 import argparse
@@ -13,17 +13,17 @@ from typing import Any, Dict, Optional
 def load_and_merge_config(
     cli_args: argparse.Namespace, config_path: Optional[str] = None
 ) -> Dict[str, Any]:
-    """載入設定檔並與 CLI 參數合併
+    """載入設定檔並與 CLI 引數合併
 
     Args:
-        cli_args: argparse.Namespace 物件（CLI 參數）
+        cli_args: argparse.Namespace 物件（CLI 引數）
         config_path: 設定檔路徑（可選，暫未實作）
 
     Returns:
         Dict[str, Any]: 合併後的設定字典
 
     Note:
-        目前版本直接使用 CLI 參數，未來可擴展支援 YAML/JSON 設定檔。
+        目前版本直接使用 CLI 引數，未來可擴充套件支援 YAML/JSON 設定檔。
     """
     # 將 Namespace 轉換為字典
     config = vars(cli_args).copy()
@@ -52,22 +52,22 @@ def load_config_file(config_path: str) -> Dict[str, Any]:
 
 
 def process_args_overrides(args: argparse.Namespace) -> argparse.Namespace:
-    """處理 CLI 參數的覆蓋邏輯
+    """處理 CLI 引數的覆蓋邏輯
 
     包含：
     1. 處理 --no-* 選項覆蓋
-    2. 處理 --all 參數啟用所有輸出
+    2. 處理 --all 引數啟用所有輸出
 
     Args:
-        args: 命令列參數
+        args: 命令列引數
 
     Returns:
-        argparse.Namespace: 處理後的參數
+        argparse.Namespace: 處理後的引數
     """
     # 處理 --no-* 選項來覆蓋預設值
     args = _process_no_flags(args)
 
-    # 處理 --all 參數：一次啟用所有輸出格式
+    # 處理 --all 引數：一次啟用所有輸出格式
     args = _process_all_flag(args)
 
     return args
@@ -77,10 +77,10 @@ def _process_no_flags(args: argparse.Namespace) -> argparse.Namespace:
     """處理 --no-* 覆蓋選項
 
     Args:
-        args: 命令列參數
+        args: 命令列引數
 
     Returns:
-        argparse.Namespace: 處理後的參數
+        argparse.Namespace: 處理後的引數
     """
     if args.no_searchable:
         args.searchable = False
@@ -95,13 +95,13 @@ def _process_no_flags(args: argparse.Namespace) -> argparse.Namespace:
 
 
 def _process_all_flag(args: argparse.Namespace) -> argparse.Namespace:
-    """處理 --all 參數
+    """處理 --all 引數
 
     Args:
-        args: 命令列參數
+        args: 命令列引數
 
     Returns:
-        argparse.Namespace: 處理後的參數
+        argparse.Namespace: 處理後的引數
     """
     if hasattr(args, "all") and args.all:
         if args.mode in ["structure", "vl", "hybrid"]:

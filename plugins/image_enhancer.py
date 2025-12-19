@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-圖片增強插件
-示例預處理插件：提升圖片質量
+圖片增強外掛
+示例預處理外掛：提升圖片質量
 """
 
 import numpy as np
@@ -12,7 +12,7 @@ from paddleocr_toolkit.plugins.base import PreprocessorPlugin
 
 class ImageEnhancerPlugin(PreprocessorPlugin):
     """
-    圖片增強插件
+    圖片增強外掛
 
     功能：
     - 對比度增強
@@ -26,7 +26,7 @@ class ImageEnhancerPlugin(PreprocessorPlugin):
     description = "增強圖片質量以提升OCR準確率"
 
     def on_init(self) -> bool:
-        """初始化插件"""
+        """初始化外掛"""
         self.enhance_contrast = self.config.get("enhance_contrast", True)
         self.sharpen = self.config.get("sharpen", True)
         self.denoise = self.config.get("denoise", False)

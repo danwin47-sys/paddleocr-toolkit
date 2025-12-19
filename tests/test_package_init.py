@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -40,7 +40,7 @@ class TestPackageInit:
         assert detect_pdf_quality is not None
 
     def test_get_paddle_ocr_tool_function(self):
-        """測試 get_paddle_ocr_tool 函數存在"""
+        """測試 get_paddle_ocr_tool 函式存在"""
         from paddleocr_toolkit import get_paddle_ocr_tool
 
         assert callable(get_paddle_ocr_tool)

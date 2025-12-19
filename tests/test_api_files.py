@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-# 確保可以導入模組
+# 確保可以匯入模組
 sys.path.append(".")
 
 from paddleocr_toolkit.api.main import UPLOAD_DIR, app

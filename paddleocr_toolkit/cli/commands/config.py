@@ -14,10 +14,10 @@ def prompt(
     question: str, default: Optional[str] = None, options: Optional[List[Any]] = None
 ) -> str:
     """
-    交互式提示
+    互動式提示
 
     Args:
-        question: ??文本
+        question: ??文字
         default: 默?值
         options: 可??列表
     """
@@ -49,11 +49,11 @@ def prompt(
 
 
 def config_wizard():
-    """交互式配置向?"""
+    """互動式配置向?"""
     print("\n" + "=" * 60)
     print(" PaddleOCR Toolkit 配置向?")
     print("=" * 60)
-    print("\n???助您?建自定?配置文件")
+    print("\n???助您?建自定?配置檔案")
     print("(直接按Enter使用默?值)\n")
 
     config = {}
@@ -89,8 +89,8 @@ def config_wizard():
 
     config["output"]["directory"] = prompt("?出目?", default="./output")
 
-    # 性能?置
-    print("\n??? 性能?置 ???")
+    # 效能?置
+    print("\n??? 效能?置 ???")
 
     config["performance"] = {}
     config["performance"]["batch_size"] = int(prompt("批次大小 (建?: 4-16)", default="8"))
@@ -100,8 +100,8 @@ def config_wizard():
     enable_cache = prompt("?用?存?", default="yes", options=["yes", "no"])
     config["performance"]["enable_cache"] = enable_cache == "yes"
 
-    # 日志?置
-    print("\n??? 日志?置 ???")
+    # 日誌?置
+    print("\n??? 日誌?置 ???")
 
     config["logging"] = {}
     config["logging"]["level"] = prompt(
@@ -113,7 +113,7 @@ def config_wizard():
     # 儲存配置
     print("\n📦 儲存配置 📦")
 
-    config_name = prompt("配置文件名", default="custom")
+    config_name = prompt("配置檔名", default="custom")
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
@@ -123,24 +123,24 @@ def config_wizard():
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-    print(f"\n? 配置已保存到: {config_path}")
+    print(f"\n? 配置已儲存到: {config_path}")
     print(f"\n使用方法:")
     print(f"  python -m paddleocr_toolkit input.pdf --config {config_path}")
     print()
 
 
 def show_config(config_file: str):
-    """?示配置文件?容"""
+    """?示配置檔案?容"""
     config_path = Path(config_file)
 
     if not config_path.exists():
-        print(f"??: 配置文件不存在: {config_file}")
+        print(f"??: 配置檔案不存在: {config_file}")
         return
 
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    print(f"\n配置文件: {config_file}")
+    print(f"\n配置檔案: {config_file}")
     print("=" * 60)
     print(yaml.dump(config, default_flow_style=False, allow_unicode=True))
 

@@ -14,7 +14,7 @@
 |------|------|----------|
 | **OCR 錯誤修正** | 自動修正錯別字、標點錯誤 | 準確率 +15% |
 | **結構化資料提取** | 從 OCR 文字提取 JSON 資料 | 效率 +50% |
-| **文件摘要** | 自動生成文件摘要 | 節省時間 80% |
+| **檔案摘要** | 自動生成檔案摘要 | 節省時間 80% |
 
 ---
 
@@ -38,7 +38,7 @@ facade = PaddleOCRFacade(
 # 修正 OCR 錯誤
 ocr_text = "這個文建包含銷多錯沒"
 corrected = facade.correct_text(ocr_text)
-print(corrected)  # "這個文件包含很多錯誤"
+print(corrected)  # "這個檔案包含很多錯誤"
 ```
 
 ### 方法 2：直接使用 SemanticProcessor
@@ -68,9 +68,9 @@ corrected = processor.correct_ocr_errors("文建有錯沒")
 
 ```python
 # 範例 1：錯別字修正
-text = "這個文件包含很多OCR錯別字"
+text = "這個檔案包含很多OCR錯別字"
 corrected = facade.correct_text(text)
-# 輸出：「這個文件包含很多OCR錯別字」
+# 輸出：「這個檔案包含很多OCR錯別字」
 
 # 範例 2：繁體中文保持
 text = "請注意檢查這份檔案"
@@ -114,12 +114,12 @@ data = facade.extract_structured_data(business_card, schema)
 # }
 ```
 
-### 3. 文件摘要
+### 3. 檔案摘要
 
-生成簡潔的文件摘要：
+生成簡潔的檔案摘要：
 
 ```python
-# 長文本
+# 長文字
 long_text = """
 PaddleOCR Toolkit 是一個功能強大的 OCR 工具包...
 （省略 500 字）
@@ -150,8 +150,8 @@ facade = PaddleOCRFacade(
 
 **優點**：
 - ✅ 免費
-- ✅ 隱私保護（本地運行）
-- ✅ 無網絡延遲
+- ✅ 隱私保護（本地執行）
+- ✅ 無網路延遲
 
 **前提**：
 ```bash
@@ -182,7 +182,7 @@ facade = PaddleOCRFacade(
 
 **缺點**：
 - ❌ 需要付費
-- ❌ 需要網路連接
+- ❌ 需要網路連線
 
 ---
 
@@ -265,17 +265,17 @@ except Exception as e:
 
 | 操作 | 處理時間 | 準確率提升 |
 |------|---------|-----------|
-| 短文本修正（<100字） | ~1-2秒 | +15% |
+| 短文字修正（<100字） | ~1-2秒 | +15% |
 | 結構化提取 | ~2-3秒 | +20% |
-| 文件摘要（500字） | ~3-5秒 | N/A |
+| 檔案摘要（500字） | ~3-5秒 | N/A |
 
 ---
 
 ## ❓ 常見問題
 
-### Q1: Ollama 服務無法連接？
+### Q1: Ollama 服務無法連線？
 
-**A**: 確保 Ollama 正在運行：
+**A**: 確保 Ollama 正在執行：
 ```bash
 # 檢查服務狀態
 curl http://localhost:11434/api/tags
@@ -286,26 +286,26 @@ ollama serve
 
 ### Q2: 為什麼輸出是簡體中文？
 
-**A**: v3.0 已優化提示詞，明確要求繁體輸出。如仍有問題：
+**A**: v3.0 已最佳化提示詞，明確要求繁體輸出。如仍有問題：
 - 確認使用最新版本
 - 嘗試更大的模型（qwen2.5:14b）
 
 ### Q3: 語義處理太慢？
 
-**A**: 優化建議：
+**A**: 最佳化建議：
 - 使用較小模型（qwen2.5:7b）
 - 縮短輸入文字長度
 - 考慮升級硬體或使用 GPU
 
 ### Q4: 可以離線使用嗎？
 
-**A**: 可以！使用 Ollama 本地部署即可完全離線運行。
+**A**: 可以！使用 Ollama 本地部署即可完全離線執行。
 
 ---
 
 ## 📝 完整示範
 
-查看 `examples/facade_semantic_demo.py` 獲取完整的實用範例。
+檢視 `examples/facade_semantic_demo.py` 獲取完整的實用範例。
 
 ---
 

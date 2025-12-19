@@ -1,59 +1,59 @@
-# Task 2.3: 重构 _process_translation_on_pdf() 实作计划
+# Task 2.3: 重構 _process_translation_on_pdf() 實作計劃
 
-> 建立时间：2024-12-14 07:26  
-> 状态：📋 计划中  
-> 风险等级：🔴 高  
-> 预计时间：1-1.5 小时
-
----
-
-## 🎯 目标
-
-重构 `_process_translation_on_pdf()` 方法（217 行，1761-1977），将其简化为 < 100 行。
-
-**当前状态**: 217 行  
-**目标**: < 100 行（减少约 120 行，55% reduction）
+> 建立時間：2024-12-14 07:26  
+> 狀態：📋 計劃中  
+> 風險等級：🔴 高  
+> 預計時間：1-1.5 小時
 
 ---
 
-## 📊 现状分析
+## 🎯 目標
 
-### `_process_translation_on_pdf()` 方法结构（1761-1977，217 行）
+重構 `_process_translation_on_pdf()` 方法（217 行，1761-1977），將其簡化為 < 100 行。
 
-#### 1. **初始化阶段**（~45 行，1785-1830）
+**當前狀態**: 217 行  
+**目標**: < 100 行（減少約 120 行，55% reduction）
 
-- 提取配置参数（source_lang, target_lang等）
+---
+
+## 📊 現狀分析
+
+### `_process_translation_on_pdf()` 方法結構（1761-1977，217 行）
+
+#### 1. **初始化階段**（~45 行，1785-1830）
+
+- 提取配置引數（source_lang, target_lang等）
 - 初始化 translator 和 renderer
-- 打开 PDF 文档
-- 创建输出路径
-- 创建 PDF 生成器
+- 開啟 PDF 檔案
+- 建立輸出路徑
+- 建立 PDF 生成器
 
-#### 2. **主处理循环**（~105 行，1837-1949）
+#### 2. **主處理迴圈**（~105 行，1837-1949）
 
-- 页面迭代 + 进度条
-- 单页处理逻辑：
-  - 获取 OCR 结果
-  - 转换为图片
-  - 翻译文字
-  - 绘制翻译文字（标准模式 vs OCR workaround）
-  - 添加到 PDF 生成器
-- 错误处理
+- 頁面迭代 + 進度條
+- 單頁處理邏輯：
+  - 獲取 OCR 結果
+  - 轉換為圖片
+  - 翻譯文字
+  - 繪製翻譯文字（標準模式 vs OCR workaround）
+  - 新增到 PDF 生成器
+- 錯誤處理
 
-#### 3. **保存输出阶段**（~20 行，1951-1970）
+#### 3. **儲存輸出階段**（~20 行，1951-1970）
 
-- 关闭PDF文档
-- 保存翻译版 PDF
-- 保存双语版 PDF
+- 關閉PDF檔案
+- 儲存翻譯版 PDF
+- 儲存雙語版 PDF
 
-#### 4. **错误处理**（~7 行，1971-1976）
+#### 4. **錯誤處理**（~7 行，1971-1976）
 
 ---
 
-## 📋 重构策略
+## 📋 重構策略
 
-### 策略：提取 6 个私有方法
+### 策略：提取 6 個私有方法
 
-#### 方法 1: `_setup_translation_tools()` - 初始化翻译工具
+#### 方法 1: `_setup_translation_tools()` - 初始化翻譯工具
 
 **提取**: 1806-1830 (25 行)  
 **新方法**: ~35 行
@@ -64,30 +64,30 @@ def _setup_translation_tools(
     erased_pdf_path: str,
     translate_config: Dict[str, Any]
 ) -> Tuple:
-    """设定翻译所需的工具和生成器
+    """設定翻譯所需的工具和生成器
     
     Returns:
         Tuple of (translator,  renderer, pdf_doc, hybrid_doc,
                   mono_generator, bilingual_generator, 
                   translated_path, bilingual_path)
     """
-    # 初始化翻译器和绘制器
+    # 初始化翻譯器和繪製器
     translator = OllamaTranslator(
         model=translate_config['ollama_model'],
         base_url=translate_config['ollama_url']
     )
     renderer = TextRenderer(font_path=translate_config.get('font_path'))
     
-    # 打开PDF
+    # 開啟PDF
     pdf_doc = fitz.open(erased_pdf_path)
     
-    # 打开原始hybrid PDF（用于双语）
+    # 開啟原始hybrid PDF（用於雙語）
     hybrid_pdf_path = erased_pdf_path.replace('_erased.pdf', '_hybrid.pdf')
     hybrid_doc = None
     if not translate_config['no_dual'] and os.path.exists(hybrid_pdf_path):
         hybrid_doc = fitz.open(hybrid_pdf_path)
     
-    # 创建输出路径
+    # 建立輸出路徑
     base_path = erased_pdf_path.replace('_erased.pdf', '')
     target_lang = translate_config['target_lang']
     translated_path = f"{base_path}_translated_{target_lang}.pdf" \
@@ -95,7 +95,7 @@ def _setup_translation_tools(
     bilingual_path = f"{base_path}_bilingual_{target_lang}.pdf" \
         if not translate_config['no_dual'] else None
     
-    # 创建生成器
+    # 建立生成器
     mono_generator = MonolingualPDFGenerator() if translated_path else None
     bilingual_generator = BilingualPDFGenerator(
         mode=translate_config['dual_mode'],
@@ -109,7 +109,7 @@ def _setup_translation_tools(
 
 ---
 
-#### 方法 2: `_get_page_images()` - 获取页面图片
+#### 方法 2: `_get_page_images()` - 獲取頁面圖片
 
 **提取**: 1846-1860 (15 行)  
 **新方法**: ~20 行
@@ -122,7 +122,7 @@ def _get_page_images(
     page_num: int,
     dpi: int
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """获取擦除版和原始版页面图片
+    """獲取擦除版和原始版頁面圖片
     
     Returns:
         Tuple of (erased_image, original_image)
@@ -130,12 +130,12 @@ def _get_page_images(
     zoom = dpi / 72.0
     matrix = fitz.Matrix(zoom, zoom)
     
-    # 获取擦除版图片
+    # 獲取擦除版圖片
     erased_page = pdf_doc[page_num]
     erased_pixmap = erased_page.get_pixmap(matrix=matrix)
     erased_image = pixmap_to_numpy(erased_pixmap, copy=True)
     
-    # 获取原始图片（用于双语）
+    # 獲取原始圖片（用於雙語）
     original_image = erased_image.copy()
     if hybrid_doc:
         hybrid_page = hybrid_doc[page_num]
@@ -147,7 +147,7 @@ def _get_page_images(
 
 ---
 
-#### 方法 3: `_translate_page_texts()` - 翻译页面文字
+#### 方法 3: `_translate_page_texts()` - 翻譯頁面文字
 
 **提取**: 1870-1901 (32 行)  
 **新方法**: ~25 行
@@ -161,12 +161,12 @@ def _translate_page_texts(
     target_lang: str,
     page_num: int
 ) -> List[TranslatedBlock]:
-    """翻译页面的所有文字
+    """翻譯頁面的所有文字
     
     Returns:
-        List[TranslatedBlock]: 翻译后的文字块列表
+        List[TranslatedBlock]: 翻譯後的文字塊列表
     """
-    # 收集需要翻译的文字
+    # 收集需要翻譯的文字
     texts_to_translate = []
     bboxes = []
     for result in page_ocr_results:
@@ -177,14 +177,14 @@ def _translate_page_texts(
     if not texts_to_translate:
         return []
     
-    logging.info(f"第 {page_num + 1} 页: 翻译 {len(texts_to_translate)} 个文字区块")
+    logging.info(f"第 {page_num + 1} 頁: 翻譯 {len(texts_to_translate)} 個文字區塊")
     
-    # 批次翻译
+    # 批次翻譯
     translated_texts = translator.translate_batch(
         texts_to_translate, source_lang, target_lang, show_progress=False
     )
     
-    # 创建 TranslatedBlock 列表
+    # 建立 TranslatedBlock 列表
     translated_blocks = []
     for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
         translated_blocks.append(TranslatedBlock(
@@ -198,7 +198,7 @@ def _translate_page_texts(
 
 ---
 
-#### 方法 4: `_render_translated_text()` - 绘制翻译文字
+#### 方法 4: `_render_translated_text()` - 繪製翻譯文字
 
 **提取**: 1903-1932 (30 行)  
 **新方法**: ~35 行
@@ -213,18 +213,18 @@ def _render_translated_text(
     use_ocr_workaround: bool,
     dpi: int
 ) -> np.ndarray:
-    """在擦除版图片上绘制翻译文字
+    """在擦除版圖片上繪製翻譯文字
     
     Returns:
-        np.ndarray: 绘制了翻译文字的图片
+        np.ndarray: 繪製了翻譯文字的圖片
     """
     if use_ocr_workaround:
-        # OCR 补救模式：直接在 PDF 页面上操作
-        logging.info("使用 OCR 补救模式绘制翻译文字")
+        # OCR 補救模式：直接在 PDF 頁面上操作
+        logging.info("使用 OCR 補救模式繪製翻譯文字")
         workaround = OCRWorkaround(margin=2.0, force_black=True)
         
         for block in translated_blocks:
-            # 计算坐标
+            # 計算座標
             x = min(p[0] for p in block.bbox)
             y = min(p[1] for p in block.bbox)
             width = max(p[0] for p in block.bbox) - x
@@ -236,13 +236,13 @@ def _render_translated_text(
             )
             workaround.add_text_with_mask(erased_page, text_block, block.translated_text)
         
-        # 从修改后的页面获取图片
+        # 從修改後的頁面獲取圖片
         zoom = dpi / 72.0
         matrix = fitz.Matrix(zoom, zoom)
         modified_pixmap = erased_page.get_pixmap(matrix=matrix)
         translated_image = pixmap_to_numpy(modified_pixmap, copy=True)
     else:
-        # 标准模式：使用 TextRenderer
+        # 標準模式：使用 TextRenderer
         translated_image = erased_image.copy()
         translated_image = renderer.render_multiple_texts(
             translated_image, translated_blocks
@@ -253,9 +253,9 @@ def _render_translated_text(
 
 ---
 
-#### 方法 5: `_process_single_translation_page()` - 处理单页翻译
+#### 方法 5: `_process_single_translation_page()` - 處理單頁翻譯
 
-**提取**: 1838-1944 (107 行主循环内容)  
+**提取**: 1838-1944 (107 行主迴圈內容)  
 **新方法**: ~45 行
 
 ```python
@@ -272,23 +272,23 @@ def _process_single_translation_page(
     translate_config: Dict[str, Any],
     dpi: int
 ) -> None:
-    """处理单页翻译
+    """處理單頁翻譯
     
-    完整流程：获取图片 → 翻译 → 绘制 → 添加到生成器
+    完整流程：獲取圖片 → 翻譯 → 繪製 → 新增到生成器
     """
-    # 检查 OCR 结果
+    # 檢查 OCR 結果
     if page_num >= len(ocr_results_per_page):
-        logging.warning(f"第 {page_num + 1} 页没有 OCR 结果")
+        logging.warning(f"第 {page_num + 1} 頁沒有 OCR 結果")
         return
     
     page_ocr_results = ocr_results_per_page[page_num]
     
-    # 获取页面图片
+    # 獲取頁面圖片
     erased_image, original_image = self._get_page_images(
         pdf_doc, hybrid_doc, page_num, dpi
     )
     
-    # 如果没有 OCR 结果，直接添加空白页
+    # 如果沒有 OCR 結果，直接新增空白頁
     if not page_ocr_results:
         if mono_generator:
             mono_generator.add_page(erased_image)
@@ -296,7 +296,7 @@ def _process_single_translation_page(
             bilingual_generator.add_bilingual_page(original_image, erased_image)
         return
     
-    # 翻译文字
+    # 翻譯文字
     translated_blocks = self._translate_page_texts(
         page_ocr_results, translator,
         translate_config['source_lang'],
@@ -304,7 +304,7 @@ def _process_single_translation_page(
         page_num
     )
     
-    # 如果没有需要翻译的文字
+    # 如果沒有需要翻譯的文字
     if not translated_blocks:
         if mono_generator:
             mono_generator.add_page(erased_image)
@@ -312,14 +312,14 @@ def _process_single_translation_page(
             bilingual_generator.add_bilingual_page(original_image, erased_image)
         return
     
-    # 绘制翻译文字
+    # 繪製翻譯文字
     erased_page = pdf_doc[page_num] if translate_config.get('ocr_workaround') else None
     translated_image = self._render_translated_text(
         erased_image, erased_page, translated_blocks,
         renderer, translate_config.get('ocr_workaround', False), dpi
     )
     
-    # 添加到生成器
+    # 新增到生成器
     if mono_generator:
         mono_generator.add_page(translated_image)
     if bilingual_generator:
@@ -331,7 +331,7 @@ def _process_single_translation_page(
 
 ---
 
-#### 方法 6: `_save_translation_pdfs()` - 保存翻译PDF
+#### 方法 6: `_save_translation_pdfs()` - 儲存翻譯PDF
 
 **提取**: 1955-1967 (13 行)  
 **新方法**: ~20 行
@@ -345,25 +345,25 @@ def _save_translation_pdfs(
     bilingual_path: Optional[str],
     result_summary: Dict[str, Any]
 ) -> None:
-    """保存翻译版和双语版 PDF"""
-    # 保存翻译版 PDF
+    """儲存翻譯版和雙語版 PDF"""
+    # 儲存翻譯版 PDF
     if mono_generator and translated_path:
         if mono_generator.save(translated_path):
             result_summary["translated_pdf"] = translated_path
-            print(f"[OK] 翻译 PDF 已保存：{translated_path}")
+            print(f"[OK] 翻譯 PDF 已儲存：{translated_path}")
         mono_generator.close()
     
-    # 保存双语版 PDF
+    # 儲存雙語版 PDF
     if bilingual_generator and bilingual_path:
         if bilingual_generator.save(bilingual_path):
             result_summary["bilingual_pdf"] = bilingual_path
-            print(f"[OK] 双语对照 PDF 已保存：{bilingual_path}")
+            print(f"[OK] 雙語對照 PDF 已儲存：{bilingual_path}")
         bilingual_generator.close()
 ```
 
 ---
 
-## 📊 重构后的 `_process_translation_on_pdf()`
+## 📊 重構後的 `_process_translation_on_pdf()`
 
 ```python
 def _process_translation_on_pdf(
@@ -374,11 +374,11 @@ def _process_translation_on_pdf(
     result_summary: Dict[str, Any],
     dpi: int = 150
 ) -> None:
-    """在擦除版 PDF 基础上进行翻译处理"""
+    """在擦除版 PDF 基礎上進行翻譯處理"""
     
-    print(f"\n[翻译] 开始翻译处理...")
-    print(f"   来源语言: {translate_config['source_lang']}")
-    print(f"   目标语言: {translate_config['target_lang']}")
+    print(f"\n[翻譯] 開始翻譯處理...")
+    print(f"   來源語言: {translate_config['source_lang']}")
+    print(f"   目標語言: {translate_config['target_lang']}")
     print(f"   Ollama 模型: {translate_config['ollama_model']}")
     
     try:
@@ -391,10 +391,10 @@ def _process_translation_on_pdf(
         
         total_pages = len(pdf_doc)
         
-        # === 2. 处理所有页面 ===
+        # === 2. 處理所有頁面 ===
         page_iter = range(total_pages)
         if HAS_TQDM:
-            page_iter = tqdm(page_iter, desc="翻译页面", unit="页", ncols=80)
+            page_iter = tqdm(page_iter, desc="翻譯頁面", unit="頁", ncols=80)
         
         for page_num in page_iter:
             try:
@@ -406,11 +406,11 @@ def _process_translation_on_pdf(
                     translate_config, dpi
                 )
             except Exception as page_err:
-                logging.error(f"翻译第 {page_num + 1} 页错误: {page_err}")
+                logging.error(f"翻譯第 {page_num + 1} 頁錯誤: {page_err}")
                 logging.error(traceback.format_exc())
                 continue
         
-        # === 3. 保存输出 ===
+        # === 3. 儲存輸出 ===
         pdf_doc.close()
         if hybrid_doc:
             hybrid_doc.close()
@@ -421,43 +421,43 @@ def _process_translation_on_pdf(
             result_summary
         )
         
-        print(f"[OK] 翻译处理完成")
+        print(f"[OK] 翻譯處理完成")
         
     except Exception as e:
-        error_msg = f"翻译处理失败: {str(e)}"
+        error_msg = f"翻譯處理失敗: {str(e)}"
         logging.error(error_msg)
         logging.error(traceback.format_exc())
-        print(f"错误：{error_msg}")
+        print(f"錯誤：{error_msg}")
         result_summary["translation_error"] = str(e)
 ```
 
-**重构后行数**: ~60 行
+**重構後行數**: ~60 行
 
 ---
 
-## 📊 预期成果
+## 📊 預期成果
 
-### 程式码行数变化
+### 程式碼行數變化
 
-| 项目 | 原始 | 重构后 | 减少 |
+| 專案 | 原始 | 重構後 | 減少 |
 |------|------|--------|------|
 | `_process_translation_on_pdf()` | 217 | **~60** | **-157** (-72%) |
 | 新增方法 | 0 | **~180** | +180 |
-| **净变化** | 217 | **240** | **+23** |
+| **淨變化** | 217 | **240** | **+23** |
 
-### 代码质量提升
+### 程式碼質量提升
 
-- ✅ **主方法简化**: 217 → 60 行 (72% reduction)
-- ✅ **职责分离**: 每个方法单一职责
-- ✅ **可测试性**: 每个子方法可独立测试
-- ✅ **可读性**: 清晰的3步骤结构
-- ✅ **可维护性**: 易于修改和扩展
+- ✅ **主方法簡化**: 217 → 60 行 (72% reduction)
+- ✅ **職責分離**: 每個方法單一職責
+- ✅ **可測試性**: 每個子方法可獨立測試
+- ✅ **可讀性**: 清晰的3步驟結構
+- ✅ **可維護性**: 易於修改和擴充套件
 
 ---
 
-## 📋 执行步骤
+## 📋 執行步驟
 
-### Step 1: 创建 6 个辅助方法
+### Step 1: 建立 6 個輔助方法
 
 1. `_setup_translation_tools()`
 2. `_get_page_images()`
@@ -466,47 +466,47 @@ def _process_translation_on_pdf(
 5. `_process_single_translation_page()`
 6. `_save_translation_pdfs()`
 
-### Step 2: 简化主方法
+### Step 2: 簡化主方法
 
-- 重写 `_process_translation_on_pdf()` 使用新方法
+- 重寫 `_process_translation_on_pdf()` 使用新方法
 
-### Step 3: 测试验证
+### Step 3: 測試驗證
 
-- 运行现有测试
-- 如果有翻译测试，验证功能
+- 執行現有測試
+- 如果有翻譯測試，驗證功能
 
 ### Step 4: 提交 Git
 
 ---
 
-## ⚠️ 注意事项
+## ⚠️ 注意事項
 
 ### 需要保持的功能
 
-1. ✅ 双模式翻译（标准 vs OCR workaround）
-2. ✅ 多种输出（单语、双语PDF）
-3. ✅ 进度条显示
-4. ✅ 内存管理
+1. ✅ 雙模式翻譯（標準 vs OCR workaround）
+2. ✅ 多種輸出（單語、雙語PDF）
+3. ✅ 進度條顯示
+4. ✅ 記憶體管理
 
-### 风险点
+### 風險點
 
-1. **翻译API调用**: 确保正确传递参数
-2. **PDF操作**: PyMuPDF对象正确管理
-3. **内存管理**: 及时释放pixmap
-4. **错误处理**: 保持健壮性
+1. **翻譯API呼叫**: 確保正確傳遞引數
+2. **PDF操作**: PyMuPDF物件正確管理
+3. **記憶體管理**: 及時釋放pixmap
+4. **錯誤處理**: 保持健壯性
 
 ---
 
-## 🎯 成功标准
+## 🎯 成功標準
 
 - ✅ `_process_translation_on_pdf()` < 100 行
-- ✅ 新增 6 个结构清晰的私有方法
-- ✅ 所有测试通过
-- ✅ 翻译功能完全保留
+- ✅ 新增 6 個結構清晰的私有方法
+- ✅ 所有測試透過
+- ✅ 翻譯功能完全保留
 
 ---
 
-*计划建立：2024-12-14 07:26*  
-*预计执行时间：1-1.5 小时*  
-*难度：🔴 高*  
-*优先级：🔴 最高*
+*計劃建立：2024-12-14 07:26*  
+*預計執行時間：1-1.5 小時*  
+*難度：🔴 高*  
+*優先順序：🔴 最高*

@@ -9,7 +9,7 @@
 
 ## 🎯 目標
 
-將 `main()` 函數中的參數處理邏輯（約 18 行，1960-1977）提取到 `config_handler.py`。
+將 `main()` 函式中的引數處理邏輯（約 18 行，1960-1977）提取到 `config_handler.py`。
 
 ---
 
@@ -23,7 +23,7 @@
    - `--no-markdown-output`
    - `--no-json-output`
 
-2. **`--all` 參數處理**（7 行）
+2. **`--all` 引數處理**（7 行）
    - 在 structure/vl/hybrid 模式啟用所有輸出格式
 
 ---
@@ -34,28 +34,28 @@
 
 **新增方法**：
 
-#### 1.1 `process_args_overrides()` - 處理參數覆蓋
+#### 1.1 `process_args_overrides()` - 處理引數覆蓋
 
 ```python
 import argparse
 
 def process_args_overrides(args: argparse.Namespace) -> argparse.Namespace:
-    """處理 CLI 參數的覆蓋邏輯
+    """處理 CLI 引數的覆蓋邏輯
     
     包含：
     1. 處理 --no-* 選項覆蓋
-    2. 處理 --all 參數啟用所有輸出
+    2. 處理 --all 引數啟用所有輸出
     
     Args:
-        args: 命令列參數
+        args: 命令列引數
     
     Returns:
-        argparse.Namespace: 處理後的參數
+        argparse.Namespace: 處理後的引數
     """
     # 處理 --no-* 選項來覆蓋預設值
     args = _process_no_flags(args)
     
-    # 處理 --all 參數：一次啟用所有輸出格式
+    # 處理 --all 引數：一次啟用所有輸出格式
     args = _process_all_flag(args)
     
     return args
@@ -74,7 +74,7 @@ def _process_no_flags(args: argparse.Namespace) -> argparse.Namespace:
     return args
 
 def _process_all_flag(args: argparse.Namespace) -> argparse.Namespace:
-    """處理 --all 參數"""
+    """處理 --all 引數"""
     if hasattr(args, 'all') and args.all:
         if args.mode in ['structure', 'vl', 'hybrid']:
             args.markdown_output = args.markdown_output or 'AUTO'
@@ -104,7 +104,7 @@ if args.no_markdown_output:
 if args.no_json_output:
     args.json_output = None
 
-# 處理 --all 參數：一次啟用所有輸出格式
+# 處理 --all 引數：一次啟用所有輸出格式
 if hasattr(args, 'all') and args.all:
     if args.mode in ['structure', 'vl', 'hybrid']:
         args.markdown_output = args.markdown_output or 'AUTO'
@@ -116,7 +116,7 @@ if hasattr(args, 'all') and args.all:
 **新程式碼**（3 行）：
 
 ```python
-# 處理參數覆蓋（--no-* 和 --all）
+# 處理引數覆蓋（--no-* 和 --all）
 from paddleocr_toolkit.cli import process_args_overrides
 args = process_args_overrides(args)
 ```
@@ -127,7 +127,7 @@ args = process_args_overrides(args)
 
 ### Step 3: 更新 `cli/__init__.py`
 
-確保新函數被正確匯出：
+確保新函式被正確匯出：
 
 ```python
 from .config_handler import (
@@ -156,7 +156,7 @@ __all__ = [
 python paddle_ocr_tool.py test.pdf --no-searchable
 python paddle_ocr_tool.py test.pdf --mode hybrid --no-markdown-output
 
-# 測試 --all 參數
+# 測試 --all 引數
 python paddle_ocr_tool.py test.pdf --mode hybrid --all
 ```
 
@@ -174,12 +174,12 @@ pytest tests/ -v
 
 | 檔案 | 變化 | 說明 |
 |------|------|------|
-| `paddle_ocr_tool.py` | **-15 行** | 移除參數處理邏輯 |
+| `paddle_ocr_tool.py` | **-15 行** | 移除引數處理邏輯 |
 | `cli/config_handler.py` | **+45 行** | 新增處理方法 |
-| `cli/__init__.py` | **+2 行** | 匯出新函數 |
+| `cli/__init__.py` | **+2 行** | 匯出新函式 |
 | **淨變化** | **+32 行** | 模組化開銷 |
 
-### `main()` 函數簡化
+### `main()` 函式簡化
 
 - **當前**: ~276 行
 - **目標**: ~261 行
@@ -198,16 +198,16 @@ pytest tests/ -v
 
 ### 需要處理的細節
 
-1. ✅ 保持參數處理順序
-2. ✅ `--all` 參數的 print 訊息保留
+1. ✅ 保持引數處理順序
+2. ✅ `--all` 引數的 print 訊息保留
 3. ✅ 正確處理 `hasattr()` 檢查
 4. ✅ 確保所有 `--no-*` 選項都被處理
 
 ### 測試重點
 
 1. `--no-*` 選項正確覆蓋預設值
-2. `--all` 參數只在支援的模式啟用
-3. 參數處理順序不影響結果
+2. `--all` 引數只在支援的模式啟用
+3. 引數處理順序不影響結果
 
 ---
 
@@ -216,7 +216,7 @@ pytest tests/ -v
 - ✅ `config_handler.py` 新增處理方法
 - ✅ `main()` 減少 ~15 行
 - ✅ `--no-*` 和 `--all` 功能正常
-- ✅ 測試全部通過
+- ✅ 測試全部透過
 - ✅ CLI 功能無破壞性變更
 
 ---

@@ -12,7 +12,7 @@
 
 | 模組類別 | 狀態 | 說明 |
 |---------|------|------|
-| **CLI 模組** | ✅ 100% | 所有函數都有完整 docstrings |
+| **CLI 模組** | ✅ 100% | 所有函式都有完整 docstrings |
 | **paddle_ocr_tool.py 輔助方法** | ✅ 100% | 所有方法都有 docstrings |
 | **核心模組** | ✅ 100% | 已有完整 docstrings |
 | **處理器模組** | ✅ 100% | 已有完整 docstrings |
@@ -50,11 +50,11 @@ def get_markdown_output_path(self, custom_output: Optional[str] = None) -> Optio
 
 ### 改進的方法清單
 
-1. ✅ `get_markdown_output_path()` - 添加 Args + Returns
-2. ✅ `get_json_output_path()` - 添加 Args + Returns
-3. ✅ `get_html_output_path()` - 添加 Args + Returns
-4. ✅ `get_excel_output_path()` - 添加 Args + Returns
-5. ✅ `get_latex_output_path()` - 添加 Args + Returns
+1. ✅ `get_markdown_output_path()` - 新增 Args + Returns
+2. ✅ `get_json_output_path()` - 新增 Args + Returns
+3. ✅ `get_html_output_path()` - 新增 Args + Returns
+4. ✅ `get_excel_output_path()` - 新增 Args + Returns
+5. ✅ `get_latex_output_path()` - 新增 Args + Returns
 
 ---
 
@@ -63,7 +63,7 @@ def get_markdown_output_path(self, custom_output: Optional[str] = None) -> Optio
 ### 測試狀態
 
 ```
-✅ 所有測試通過 (168/168)
+✅ 所有測試透過 (168/168)
 ✅ 無錯誤
 ✅ Git 提交成功
 ```
@@ -111,8 +111,8 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
     詳細描述（可選）
     
     Args:
-        param1: 參數 1 的說明
-        param2: 參數 2 的說明
+        param1: 引數 1 的說明
+        param2: 引數 2 的說明
     
     Returns:
         ReturnType: 返回值的說明
@@ -129,9 +129,9 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 ### 本次改進符合的規範
 
 - ✅ 簡短摘要（一行）
-- ✅ Args 區塊（完整參數說明）
+- ✅ Args 區塊（完整引數說明）
 - ✅ Returns 區塊（返回值說明）
-- ✅ 類型提示（與函數簽名一致）
+- ✅ 型別提示（與函式簽名一致）
 - ✅ 繁體中文說明
 
 ---
@@ -144,7 +144,7 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 |------|--------|--------|
 | Task 1.1 | 測試覆蓋率 66%→75% | ✅ 100% (達78%) |
 | Task 1.2 | 測試覆蓋率 69%→75% | ✅ 100% (達81%) |
-| Task 1.3 | 新增類型提示 | ✅ 100% |
+| Task 1.3 | 新增型別提示 | ✅ 100% |
 | Task 1.4 | **補充 docstrings** | ✅ **100%** |
 
 **Stage 1 總完成度**: **95% → 100%** ✅
@@ -153,23 +153,23 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 
 ## 🎯 效益
 
-### 1. 文檔完整度
+### 1. 檔案完整度
 
-- ✅ 所有公開函數都有完整說明
-- ✅ 參數和返回值清晰記錄
+- ✅ 所有公開函式都有完整說明
+- ✅ 引數和返回值清晰記錄
 - ✅ 符合 Google Style 規範
 
 ### 2. IDE 支援
 
-- ✅ 懸停提示顯示完整文檔
-- ✅ 參數提示更詳細
-- ✅ 自動完成更智能
+- ✅ 懸停提示顯示完整檔案
+- ✅ 引數提示更詳細
+- ✅ 自動完成更智慧
 
 ### 3. 開發體驗
 
 - ✅ 新手更容易上手
 - ✅ API 使用更清楚
-- ✅ 減少查看源碼需求
+- ✅ 減少檢視原始碼需求
 
 ---
 
@@ -184,19 +184,19 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 3. ✅ **核心模組** - 已有完整 docstrings
 4. ✅ **處理器模組** - 已有完整 docstrings
 
-**說明**: Stage 2 重構時已經為所有新增的輔助方法添加了完整的 docstrings！
+**說明**: Stage 2 重構時已經為所有新增的輔助方法新增了完整的 docstrings！
 
 ---
 
-## 📊 整體專案文檔質量
+## 📊 整體專案檔案質量
 
-### 文檔覆蓋率統計
+### 檔案覆蓋率統計
 
 | 類別 | 覆蓋率 | 品質 |
 |------|--------|------|
-| 類型提示 | **100%** | 🟢 優秀 |
+| 型別提示 | **100%** | 🟢 優秀 |
 | Docstrings | **100%** | 🟢 優秀 |
-| 模組文檔 | **100%** | 🟢 優秀 |
+| 模組檔案 | **100%** | 🟢 優秀 |
 | 測試覆蓋 | 60% (CLI未測) | 🟡 待改善 |
 
 ---
@@ -208,22 +208,22 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 **恭喜！Stage 1 的所有任務都已完成：**
 
 1. ✅ 測試覆蓋率提升 (40%→76%)
-2. ✅ 類型提示補充 (100%)
+2. ✅ 型別提示補充 (100%)
 3. ✅ Docstrings 補充 (100%)
 
-### 🔴 優先級 1: 補充 CLI 測試
+### 🔴 優先順序 1: 補充 CLI 測試
 
 **目標**: 恢復測試覆蓋率  
 **當前**: 60% (CLI 模組未測試)  
 **目標**: 75%+  
 **預估**: 3-4 小時
 
-### 🟡 優先級 2: 完成 Stage 2 剩餘
+### 🟡 優先順序 2: 完成 Stage 2 剩餘
 
 **Task 2.3**: 改善錯誤處理  
 **預估**: 2-3 小時
 
-### 🟢 優先級 3: 休息
+### 🟢 優先順序 3: 休息
 
 **成就**:
 
@@ -239,7 +239,7 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 **修改檔案**: 1 個  
 **新增行數**: +40  
 **刪除行數**: -5  
-**測試狀態**: 168/168 通過 ✅  
+**測試狀態**: 168/168 透過 ✅  
 
 **Stage 1 完成度**: **100%** ✅  
 **Docstrings 覆蓋率**: **100%** ✅

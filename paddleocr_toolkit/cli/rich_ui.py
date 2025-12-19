@@ -3,7 +3,7 @@
 """
 PaddleOCR Toolkit - CLI 美化模組 v1.2.0
 使用 rich 庫提供超炫的命令列介面
-支持跨平台（修复Windows????）
+支援跨平臺（修復Windows????）
 """
 
 import io
@@ -22,10 +22,10 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
             sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True
         )
     except Exception:
-        pass  # 如果失敗，繼續使用默認編碼
+        pass  # 如果失敗，繼續使用預設編碼
 
 # ═══════════════════════════════════════════════════════════
-# Rich庫導入
+# Rich庫匯入
 # ═══════════════════════════════════════════════════════════
 try:
     from rich import box
@@ -46,7 +46,7 @@ except ImportError:
     HAS_RICH = False
 
 # ═══════════════════════════════════════════════════════════
-# 跨平台圖標定義 (v1.2.0新增)
+# 跨平臺圖示定義 (v1.2.0新增)
 # ═══════════════════════════════════════════════════════════
 if sys.platform == "win32":
     # Windows ASCII 替代方案
@@ -91,7 +91,7 @@ else:
     console = None
 
 # ═══════════════════════════════════════════════════════════
-# 公共函數
+# 公共函式
 # ═══════════════════════════════════════════════════════════
 
 
@@ -106,8 +106,8 @@ def print_banner():
     ║                                                       ║
     ║     {ICONS['logo']}  PaddleOCR Toolkit  {ICONS['logo']}                         ║
     ║                                                       ║
-    ║     專業級 OCR 文件辨識與處理工具                      ║
-    ║     v1.2.0 | 測試覆蓋率: 84% | 391個測試通過          ║
+    ║     專業級 OCR 檔案辨識與處理工具                      ║
+    ║     v1.2.0 | 測試覆蓋率: 84% | 391個測試透過          ║
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
     """
@@ -157,7 +157,7 @@ def print_info(message: str):
 
 def create_results_table(results_data: list):
     """
-    創建OCR結果表格
+    建立OCR結果表格
 
     Args:
         results_data: [(頁數, 文字數, 平均信心度), ...]
@@ -193,10 +193,10 @@ def create_results_table(results_data: list):
 
 def create_progress_bar(total: int, description: str = "處理中"):
     """
-    創建進度條
+    建立進度條
 
     Args:
-        total: 總項目數
+        total: 總專案數
         description: 描述文字
     """
     if not HAS_RICH:
@@ -217,7 +217,7 @@ def create_progress_bar(total: int, description: str = "處理中"):
 
 def print_performance_summary(stats: dict):
     """
-    顯示性能摘要
+    顯示效能摘要
 
     Args:
         stats: {
@@ -229,7 +229,7 @@ def print_performance_summary(stats: dict):
         }
     """
     if not HAS_RICH:
-        print("\n=== 性能摘要 ===")
+        print("\n=== 效能摘要 ===")
         for key, value in stats.items():
             print(f"{key}: {value}")
         return
@@ -244,7 +244,7 @@ def print_performance_summary(stats: dict):
 
     panel = Panel(
         panel_content,
-        title=f"{ICONS['confidence']} 性能摘要",
+        title=f"{ICONS['confidence']} 效能摘要",
         border_style="bold green",
         box=box.DOUBLE,
     )
@@ -279,7 +279,7 @@ if __name__ == "__main__":
         print_banner()
 
         print_success("模組載入成功！")
-        print_info("開始處理 PDF 文件...")
+        print_info("開始處理 PDF 檔案...")
         print_warning("DPI 設定較低，可能影響識別率")
 
         # 示例結果表格
@@ -292,7 +292,7 @@ if __name__ == "__main__":
         table = create_results_table(results)
         console.print(table)
 
-        # 示例性能摘要
+        # 示例效能摘要
         stats = {
             "total_pages": 3,
             "total_time": 12.5,

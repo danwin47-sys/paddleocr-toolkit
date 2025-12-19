@@ -34,7 +34,7 @@ from paddleocr_toolkit.core.result_parser import OCRResultParser
 from paddleocr_toolkit.processors.pdf_quality import detect_pdf_quality
 from paddleocr_toolkit.processors.stats_collector import StatsCollector
 
-# 條件導入翻譯相關模組
+# 條件匯入翻譯相關模組
 try:
     from pdf_translator import TextInpainter
 

@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Result Parser 擴展測試 - v1.1.0
+Result Parser 擴充套件測試 - v1.1.0
 補充測試以達到 90% 覆蓋率
 """
 
@@ -20,7 +20,7 @@ class TestResultParserStrictMode:
         """測試嚴格模式下的基本解析錯誤"""
         parser = OCRResultParser(strict_mode=True)
 
-        # 傳入無法迭代的對象
+        # 傳入無法迭代的物件
         with pytest.raises(ValueError, match="解析基本 OCR 結果失敗"):
             parser.parse_basic_result(None)
 
@@ -46,7 +46,7 @@ class TestResultParserErrorHandling:
         """測試處理無效polygon"""
         parser = OCRResultParser()
 
-        # _create_ocr_result 是私有方法，通過parse_basic_result測試
+        # _create_ocr_result 是私有方法，透過parse_basic_result測試
         mock_result = Mock()
         mock_result.rec_texts = ["Test"]
         mock_result.rec_scores = [0.9]
@@ -72,7 +72,7 @@ class TestResultParserErrorHandling:
         """測試parsing_list中的無效block"""
         parser = OCRResultParser()
 
-        # 創建有效和無效的blocks混合
+        # 建立有效和無效的blocks混合
         valid_block = Mock()
         valid_block.bbox = [10, 20, 100, 80]
         valid_block.content = "Valid"

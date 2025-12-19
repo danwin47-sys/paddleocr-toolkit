@@ -46,7 +46,7 @@ async def list_files(directory: str = "uploads"):
     列出檔案
 
     Args:
-        directory: 目錄類型 (uploads/output)
+        directory: 目錄型別 (uploads/output)
 
     Returns:
         檔案列表
@@ -56,7 +56,7 @@ async def list_files(directory: str = "uploads"):
     elif directory == "output":
         target_dir = OUTPUT_DIR
     else:
-        raise HTTPException(status_code=400, detail="無效的目錄類型")
+        raise HTTPException(status_code=400, detail="無效的目錄型別")
 
     if not target_dir.exists():
         return FileListResponse(files=[], total=0)
@@ -88,7 +88,7 @@ async def download_file(filename: str, directory: str = "output"):
 
     Args:
         filename: 檔案名稱
-        directory: 目錄類型
+        directory: 目錄型別
 
     Returns:
         檔案回應
@@ -98,7 +98,7 @@ async def download_file(filename: str, directory: str = "output"):
     elif directory == "output":
         target_dir = OUTPUT_DIR
     else:
-        raise HTTPException(status_code=400, detail="無效的目錄類型")
+        raise HTTPException(status_code=400, detail="無效的目錄型別")
 
     file_path = target_dir / filename
 
@@ -120,7 +120,7 @@ async def delete_file(filename: str, directory: str = "uploads"):
 
     Args:
         filename: 檔案名稱
-        directory: 目錄類型
+        directory: 目錄型別
 
     Returns:
         刪除結果
@@ -130,7 +130,7 @@ async def delete_file(filename: str, directory: str = "uploads"):
     elif directory == "output":
         target_dir = OUTPUT_DIR
     else:
-        raise HTTPException(status_code=400, detail="無效的目錄類型")
+        raise HTTPException(status_code=400, detail="無效的目錄型別")
 
     file_path = target_dir / filename
 

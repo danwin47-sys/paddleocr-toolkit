@@ -1,4 +1,4 @@
-# 階段 2 重構計畫：過長函數與重複邏輯
+# 階段 2 重構計畫：過長函式與重複邏輯
 
 > 建立時間：2024-12-13 23:30  
 > 狀態：📋 規劃中  
@@ -8,9 +8,9 @@
 
 ## 📊 分析結果
 
-### 發現的過長函數
+### 發現的過長函式
 
-| 函數 | 行數 | 位置 | 優先級 | 複雜度 |
+| 函式 | 行數 | 位置 | 優先順序 | 複雜度 |
 |------|------|------|--------|--------|
 | `main()` | **635** | 1933-2567 | 🔴 最高 | 極高 |
 | `_process_hybrid_pdf()` | **329** | 975-1303 | 🔴 高 | 高 |
@@ -18,7 +18,7 @@
 | `process_structured()` | **166** | 429-594 | 🟡 中 | 中 |
 | `process_pdf()` | **122** | 596-717 | 🟢 低 | 中 |
 
-**總計**：5 個函數超過 100 行，佔專案 **1,468 行**（56% 的程式碼！）
+**總計**：5 個函式超過 100 行，佔專案 **1,468 行**（56% 的程式碼！）
 
 ---
 
@@ -26,27 +26,27 @@
 
 ### 主要目標
 
-1. **`main()` 函數**：635 行 → **< 100 行**
+1. **`main()` 函式**：635 行 → **< 100 行**
 2. **`_process_hybrid_pdf()`**：329 行 → **< 150 行**
-3. **其他過長函數**：各自 < 100 行
+3. **其他過長函式**：各自 < 100 行
 
 ### 成功指標
 
-- ✅ 所有函數 < 100 行（`main` 除外，目標 < 100 行）
-- ✅ 平均函數長度 < 50 行
+- ✅ 所有函式 < 100 行（`main` 除外，目標 < 100 行）
+- ✅ 平均函式長度 < 50 行
 - ✅ 測試覆蓋率不降低（維持 80%）
-- ✅ 所有現有測試通過
+- ✅ 所有現有測試透過
 
 ---
 
-## 📋 Task 2.1: 重構 `main()` 函數
+## 📋 Task 2.1: 重構 `main()` 函式
 
 ### 當前問題
 
-**`main()` 函數（635 行）包含**：
+**`main()` 函式（635 行）包含**：
 
 1. ArgumentParser 設定（~200 行）
-2. 參數驗證和設定（~100 行）
+2. 引數驗證和設定（~100 行）
 3. 模式分發邏輯（~150 行）
 4. 輸出路徑處理（~100 行）
 5. 錯誤處理（~85 行）
@@ -72,20 +72,20 @@ paddleocr_toolkit/
 # paddleocr_toolkit/cli/argument_parser.py
 
 def create_argument_parser() -> argparse.ArgumentParser:
-    """建立命令列參數解析器
+    """建立命令列引數解析器
     
     Returns:
-        argparse.ArgumentParser: 設定好的參數解析器
+        argparse.ArgumentParser: 設定好的引數解析器
     """
     parser = argparse.ArgumentParser(...)
     
-    # 基本參數
+    # 基本引數
     parser.add_argument("input", ...)
     
     # OCR 模式
     parser.add_argument("--mode", ...)
     
-    # ... 所有參數設定
+    # ... 所有引數設定
     
     return parser
 ```
@@ -135,10 +135,10 @@ def load_and_merge_config(
     args: argparse.Namespace,
     config_path: Optional[str] = None
 ) -> Dict[str, Any]:
-    """載入設定檔並與 CLI 參數合併
+    """載入設定檔並與 CLI 引數合併
     
     Args:
-        args: 命令列參數
+        args: 命令列引數
         config_path: 設定檔路徑（可選）
     
     Returns:
@@ -149,7 +149,7 @@ def load_and_merge_config(
     if config_path:
         config = load_config(config_path)
     
-    # CLI 參數覆蓋設定檔
+    # CLI 引數覆蓋設定檔
     if args.mode:
         config['mode'] = args.mode
     
@@ -180,7 +180,7 @@ class ModeDispatcher:
         Args:
             mode: OCR 模式
             input_path: 輸入檔案路徑
-            **kwargs: 其他參數
+            **kwargs: 其他引數
         
         Returns:
             Dict[str, Any]: 處理結果
@@ -206,14 +206,14 @@ class ModeDispatcher:
 
 ---
 
-**Step 5: 簡化後的 `main()` 函數**
+**Step 5: 簡化後的 `main()` 函式**
 
 ```python
 # paddle_ocr_tool.py
 
 def main():
     """命令列入口點"""
-    # 解析參數
+    # 解析引數
     parser = create_argument_parser()
     args = parser.parse_args()
     
@@ -228,7 +228,7 @@ def main():
     # 初始化工具
     tool = PaddleOCRTool(
         mode=config.get('mode', 'basic'),
-        # ... 其他參數
+        # ... 其他引數
     )
     
     # 建立輸出管理器
@@ -254,11 +254,11 @@ def main():
 
 ### 當前問題
 
-**`_process_hybrid_pdf()` 函數（329 行）包含**：
+**`_process_hybrid_pdf()` 函式（329 行）包含**：
 
 1. PDF 初始化（~30 行）
 2. 準備生成器和工具（~40 行）
-3. 主處理循環（~200 行）
+3. 主處理迴圈（~200 行）
    - 版面分析
    - OCR 提取
    - PDF 生成
@@ -534,7 +534,7 @@ def get_output_path(
     
     Args:
         input_path: 輸入檔案路徑
-        suffix: 後綴（如 '_ocr.txt'）
+        suffix: 字尾（如 '_ocr.txt'）
         custom_output: 自訂輸出路徑（可選）
     
     Returns:
@@ -594,7 +594,7 @@ def handle_file_error(file_path: str, error: Exception) -> None:
 
 #### 3. 進度顯示重複
 
-**出現位置**：多個處理函數  
+**出現位置**：多個處理函式  
 **問題**：相同的 tqdm 初始化邏輯
 
 ```python
@@ -666,7 +666,7 @@ def create_progress_bar(
 ### 每個任務開始前
 
 - [ ] 建立詳細實作計畫
-- [ ] 確認所有測試通過
+- [ ] 確認所有測試透過
 - [ ] 記錄當前覆蓋率（80%）
 
 ### 執行中
@@ -674,11 +674,11 @@ def create_progress_bar(
 - [ ] 遵循 Artifact-First 原則
 - [ ] 小步提交（每個子任務一次提交）
 - [ ] 保持測試綠燈
-- [ ] 更新相關文件
+- [ ] 更新相關檔案
 
 ### 完成後
 
-- [ ] 所有測試通過
+- [ ] 所有測試透過
 - [ ] 覆蓋率 ≥ 80%
 - [ ] 更新 `architecture.md`
 - [ ] 更新 `README.md`（如有 API 變更）
@@ -691,7 +691,7 @@ def create_progress_bar(
 
 - ✅ `main()`: 635 行 → **< 100 行**
 - ✅ `_process_hybrid_pdf()`: 329 行 → **< 150 行**
-- ✅ 平均函數長度 < 50 行
+- ✅ 平均函式長度 < 50 行
 - ✅ 測試覆蓋率維持 80%
 
 ### 質化指標
@@ -699,10 +699,10 @@ def create_progress_bar(
 - ✅ 程式碼更模組化
 - ✅ 更易於測試
 - ✅ 更易於維護
-- ✅ 更易於擴展新功能
+- ✅ 更易於擴充套件新功能
 
 ---
 
 *計畫建立：2024-12-13 23:30*  
-*預計開始：待用戶確認*  
+*預計開始：待使用者確認*  
 *預計完成：5-7 天*

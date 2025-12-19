@@ -35,7 +35,7 @@ class TestOllamaClientExtended:
     @patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True)
     @patch("paddleocr_toolkit.llm.llm_client.requests")
     def test_ollama_generate_with_custom_parameters(self, mock_requests):
-        """測試使用自訂參數生成"""
+        """測試使用自訂引數生成"""
         from paddleocr_toolkit.llm import OllamaClient
         
         mock_response = Mock()
@@ -47,7 +47,7 @@ class TestOllamaClientExtended:
         result = client.generate("Test prompt", temperature=0.7, max_tokens=1000)
         
         assert result == "Generated text"
-        # 驗證參數被傳遞
+        # 驗證引數被傳遞
         call_args = mock_requests.post.call_args
         assert call_args[1]["json"]["options"]["temperature"] == 0.7
 
@@ -110,7 +110,7 @@ class TestOpenAIClientExtended:
 
 
 class TestLLMClientFactory:
-    """測試 LLM 客戶端工廠函數"""
+    """測試 LLM 客戶端工廠函式"""
 
     @patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True)
     def test_create_ollama_client(self):

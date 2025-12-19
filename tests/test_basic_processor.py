@@ -31,7 +31,7 @@ class TestBasicProcessorInitialization:
         assert processor.jpeg_quality == 85
 
     def test_init_with_non_basic_engine_raises_error(self):
-        """測試使用非 basic 引擎初始化時拋出錯誤"""
+        """測試使用非 basic 引擎初始化時丟擲錯誤"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
 
@@ -57,7 +57,7 @@ class TestBasicProcessorProcessImage:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.BASIC
         return BasicProcessor(mock_engine)
@@ -123,7 +123,7 @@ class TestBasicProcessorProcessBatch:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.BASIC
         return BasicProcessor(mock_engine)
@@ -146,7 +146,7 @@ class TestBasicProcessorProcessPDF:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.BASIC
         return BasicProcessor(mock_engine)
@@ -195,7 +195,7 @@ class TestBasicProcessorUtilityMethods:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.BASIC
         return BasicProcessor(mock_engine)

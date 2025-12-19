@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-端到端整合测试
-测试完整的OCR工作流程
+端到端整合測試
+測試完整的OCR工作流程
 """
 
 import os
@@ -23,19 +23,19 @@ from paddle_ocr_tool import PaddleOCRTool
 
 @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
 class TestEndToEndWorkflow:
-    """端到端工作流程测试"""
+    """端到端工作流程測試"""
 
     def test_complete_pdf_workflow(self):
-        """测试完整PDF处理流程"""
-        # 创建测试PDF
+        """測試完整PDF處理流程"""
+        # 建立測試PDF
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_pdf = f.name
 
         try:
-            # 1. 创建测试PDF
+            # 1. 建立測試PDF
             doc = fitz.open()
             page = doc.new_page(width=595, height=842)
-            page.insert_text((50, 50), "测试文字\nTest Text")
+            page.insert_text((50, 50), "測試文字\nTest Text")
             doc.save(temp_pdf)
             doc.close()
 
@@ -47,7 +47,7 @@ class TestEndToEndWorkflow:
 
             # 4. 驗證結果
             assert len(all_results) >= 1
-            # 驗證至少有一些結果（可能為空因為是簡單測試文本）
+            # 驗證至少有一些結果（可能為空因為是簡單測試文字）
 
             # 5. 提取文字（使用正確的方法）
             full_text = []
@@ -64,23 +64,23 @@ class TestEndToEndWorkflow:
                 os.remove(temp_pdf)
 
     def test_searchable_pdf_generation(self):
-        """测试PDF处理（简化版本）"""
+        """測試PDF處理（簡化版本）"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             input_pdf = f.name
 
         try:
-            # 创建输入PDF
+            # 建立輸入PDF
             doc = fitz.open()
             page = doc.new_page(width=595, height=842)
             page.insert_text((50, 50), "Searchable Text")
             doc.save(input_pdf)
             doc.close()
 
-            # 處理 PDF（不生成可搜尋 PDF，因為 API 參數不同）
+            # 處理 PDF（不生成可搜尋 PDF，因為 API 引數不同）
             ocr_tool = PaddleOCRTool(mode="basic")
             results, _ = ocr_tool.process_pdf(input_pdf)
 
-            # 验证处理完成
+            # 驗證處理完成
             assert results is not None
             assert len(results) >= 1
 
@@ -89,11 +89,11 @@ class TestEndToEndWorkflow:
                 os.remove(input_pdf)
 
     def test_batch_processing(self):
-        """测试批次处理"""
+        """測試批次處理"""
         temp_files = []
 
         try:
-            # 创建多个测试PDF
+            # 建立多個測試PDF
             for i in range(3):
                 with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
                     temp_pdf = f.name
@@ -105,7 +105,7 @@ class TestEndToEndWorkflow:
                 doc.save(temp_pdf)
                 doc.close()
 
-            # 批次处理
+            # 批次處理
             ocr_tool = PaddleOCRTool(mode="basic")
 
             all_results = []
@@ -113,7 +113,7 @@ class TestEndToEndWorkflow:
                 results, _ = ocr_tool.process_pdf(pdf_file, show_progress=False)
                 all_results.append(results)
 
-            # 验证结果
+            # 驗證結果
             assert len(all_results) == 3
             assert all(len(r) > 0 for r in all_results)
 

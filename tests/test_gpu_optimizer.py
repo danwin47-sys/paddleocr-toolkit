@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-GPU 優化器測試
+GPU 最佳化器測試
 測試 paddleocr_toolkit/core/gpu_optimizer.py
 """
 
@@ -102,7 +102,7 @@ class TestGPUBatchProcessor:
         assert processor.memory_pool is None
 
     def test_batch_processor_create_batches(self):
-        """測試創建批次"""
+        """測試建立批次"""
         from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
 
         processor = GPUBatchProcessor(batch_size=3)

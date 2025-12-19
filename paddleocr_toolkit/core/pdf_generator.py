@@ -45,7 +45,7 @@ class PDFGenerator:
 
         Args:
             output_path: 輸出 PDF 的檔案路徑
-            debug_mode: 如果為 True，文字會顯示為粉紅色（方便調試）
+            debug_mode: 如果為 True，文字會顯示為粉紅色（方便除錯）
             compress_images: 如果為 True，使用 JPEG 壓縮圖片以減少檔案大小
             jpeg_quality: JPEG 壓縮品質（0-100，預設 85）
         """
@@ -190,27 +190,27 @@ class PDFGenerator:
             height = result.height
             text = result.text
 
-            # 選擇最佳字體
+            # 選擇最佳字型
             fonts_to_try = ["helv", "china-s", "cour"]
             best_font = "helv"
             best_font_size = height * 0.6  # 預設值
 
             for fontname in fonts_to_try:
                 try:
-                    # 先用高度估算初始字體大小
+                    # 先用高度估算初始字型大小
                     initial_size = height * 0.7
                     if initial_size < 4:
                         initial_size = 4
                     if initial_size > 100:
                         initial_size = 100
 
-                    # 計算文字在此字體大小下的寬度
+                    # 計算文字在此字型大小下的寬度
                     text_width = fitz.get_text_length(
                         text, fontname=fontname, fontsize=initial_size
                     )
 
                     if text_width > 0 and width > 0:
-                        # 計算寬度比例並調整字體大小
+                        # 計算寬度比例並調整字型大小
                         width_ratio = width / text_width
                         adjusted_size = initial_size * width_ratio
 
@@ -219,7 +219,7 @@ class PDFGenerator:
                         if adjusted_size > max_by_height:
                             adjusted_size = max_by_height
 
-                        # 限制字體大小範圍
+                        # 限制字型大小範圍
                         if adjusted_size < 4:
                             adjusted_size = 4
                         if adjusted_size > 100:
@@ -264,7 +264,7 @@ class PDFGenerator:
                     color=text_color,
                 )
             except Exception as e:
-                # 嘗試其他字體
+                # 嘗試其他字型
                 for fontname in fonts_to_try:
                     if fontname != best_font:
                         try:

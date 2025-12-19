@@ -39,7 +39,7 @@ except ImportError:
 
 
 class OCRMode(Enum):
-    """OCR 模式枚舉"""
+    """OCR 模式列舉"""
 
     BASIC = "basic"
     STRUCTURE = "structure"
@@ -56,9 +56,9 @@ class OCREngineManager:
 
     Attributes:
         mode: OCR 模式
-        device: 運算設備 ('gpu' 或 'cpu')
+        device: 運算裝置 ('gpu' 或 'cpu')
         config: 引擎配置
-        engine: OCR 引擎實例
+        engine: OCR 引擎例項
         structure_engine: 結構化引擎（hybrid 模式用）
 
     Example:
@@ -87,11 +87,11 @@ class OCREngineManager:
 
         Args:
             mode: OCR 模式 ('basic', 'structure', 'vl', 'formula', 'hybrid')
-            device: 運算設備 ('gpu' 或 'cpu')
-            use_orientation_classify: 是否啟用文件方向自動校正
-            use_doc_unwarping: 是否啟用文件彎曲校正
+            device: 運算裝置 ('gpu' 或 'cpu')
+            use_orientation_classify: 是否啟用檔案方向自動校正
+            use_doc_unwarping: 是否啟用檔案彎曲校正
             use_textline_orientation: 是否啟用文字行方向偵測
-            **kwargs: 其他引擎參數
+            **kwargs: 其他引擎引數
         """
         self.mode = OCRMode(mode) if isinstance(mode, str) else mode
         self.device = device
@@ -164,7 +164,7 @@ class OCREngineManager:
             use_textline_orientation=self.config["use_textline_orientation"],
             device=self.device,
         )
-        print("[OK] PP-StructureV3 初始化完成（結構化文件解析模式）")
+        print("[OK] PP-StructureV3 初始化完成（結構化檔案解析模式）")
 
     def _init_vl_engine(self) -> None:
         """初始化視覺語言模型引擎"""
@@ -211,8 +211,8 @@ class OCREngineManager:
         執行 OCR 預測
 
         Args:
-            input_data: 輸入數據（圖像路徑或 numpy 陣列）
-            **kwargs: 預測參數
+            input_data: 輸入資料（影象路徑或 numpy 陣列）
+            **kwargs: 預測引數
 
         Returns:
             OCR 預測結果
@@ -221,19 +221,19 @@ class OCREngineManager:
             RuntimeError: 當引擎未初始化時
         """
         if not self._is_initialized or self.engine is None:
-            raise RuntimeError("引擎未初始化，請先調用 init_engine()")
+            raise RuntimeError("引擎未初始化，請先呼叫 init_engine()")
 
-        # 1. 插件前處理
+        # 1. 外掛前處理
         if self.plugin_loader:
-            # 注意：這裡假設 input_data 是可以被插件處理的格式（如 numpy array 或路徑）
-            # 實際實作可能需要更複雜的類型檢查
+            # 注意：這裡假設 input_data 是可以被外掛處理的格式（如 numpy array 或路徑）
+            # 實際實作可能需要更複雜的型別檢查
             for plugin in self.plugin_loader.get_all_plugins().values():
                 input_data = plugin.process_before_ocr(input_data)
 
         # 2. 執行預測
         results = self.engine.predict(input_data, **kwargs)
 
-        # 3. 插件後處理
+        # 3. 外掛後處理
         if self.plugin_loader:
             for plugin in self.plugin_loader.get_all_plugins().values():
                 results = plugin.process_after_ocr(results)
@@ -260,10 +260,10 @@ class OCREngineManager:
 
     def get_engine(self):
         """
-        獲取原始引擎實例
+        獲取原始引擎例項
 
         Returns:
-            OCR 引擎實例
+            OCR 引擎例項
 
         Raises:
             RuntimeError: 當引擎未初始化時

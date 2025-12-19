@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-性能模組測試
-測試GPU優化器、快取系統和並行處理器
+效能模組測試
+測試GPU最佳化器、快取系統和並行處理器
 """
 
 import tempfile
@@ -12,7 +12,7 @@ import pytest
 
 
 def test_gpu_optimizer_import():
-    """測試GPU優化器匯入"""
+    """測試GPU最佳化器匯入"""
     from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
 
     processor = GPUBatchProcessor(batch_size=8)
@@ -27,7 +27,7 @@ def test_model_cache_singleton():
     cache1 = ModelCache()
     cache2 = ModelCache()
 
-    # 應該是同一個實例
+    # 應該是同一個例項
     assert cache1 is cache2
 
 

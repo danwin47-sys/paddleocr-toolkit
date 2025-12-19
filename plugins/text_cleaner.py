@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-文字後處理插件
-示例後處理插件：清理和格式化OCR結果
+文字後處理外掛
+示例後處理外掛：清理和格式化OCR結果
 """
 
 import re
@@ -12,7 +12,7 @@ from paddleocr_toolkit.plugins.base import PostprocessorPlugin
 
 class TextCleanerPlugin(PostprocessorPlugin):
     """
-    文字清理插件
+    文字清理外掛
 
     功能：
     - 移除特殊字元
@@ -26,7 +26,7 @@ class TextCleanerPlugin(PostprocessorPlugin):
     description = "清理和格式化OCR識別結果"
 
     def on_init(self) -> bool:
-        """初始化插件"""
+        """初始化外掛"""
         self.remove_special_chars = self.config.get("remove_special_chars", True)
         self.fix_common_errors = self.config.get("fix_common_errors", True)
         self.normalize_spaces = self.config.get("normalize_spaces", True)
@@ -38,7 +38,7 @@ class TextCleanerPlugin(PostprocessorPlugin):
             # 更多修正規則...
         }
 
-        self.logger.info("文字清理插件已初始化")
+        self.logger.info("文字清理外掛已初始化")
         return True
 
     def on_after_ocr(self, results):

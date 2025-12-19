@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PDF 工具函數 - 共用的 PDF 處理邏輯
+PDF 工具函式 - 共用的 PDF 處理邏輯
 
 本模組提供重複使用的 PDF 處理功能，包括：
 - Pixmap ↔ numpy 轉換
@@ -109,7 +109,7 @@ def add_image_page(
     jpeg_quality: int = 85,
 ) -> "fitz.Page":
     """
-    將 numpy 陣列添加為 PDF 的新頁面
+    將 numpy 陣列新增為 PDF 的新頁面
 
     Args:
         doc: PyMuPDF Document 物件
@@ -164,7 +164,7 @@ def open_pdf(pdf_path: str) -> "fitz.Document":
         pdf_path: PDF 檔案路徑
 
     Returns:
-        fitz.Document: PDF 文件物件
+        fitz.Document: PDF 檔案物件
     """
     if not HAS_FITZ:
         raise ImportError("PyMuPDF 未安裝")
@@ -177,7 +177,7 @@ def create_pdf() -> "fitz.Document":
     建立新的空白 PDF
 
     Returns:
-        fitz.Document: 空白 PDF 文件物件
+        fitz.Document: 空白 PDF 檔案物件
     """
     if not HAS_FITZ:
         raise ImportError("PyMuPDF 未安裝")
@@ -203,11 +203,11 @@ def copy_page(
     src_doc: "fitz.Document", dst_doc: "fitz.Document", page_num: int
 ) -> "fitz.Page":
     """
-    複製頁面到另一個文件
+    複製頁面到另一個檔案
 
     Args:
-        src_doc: 來源文件
-        dst_doc: 目標文件
+        src_doc: 來原始檔
+        dst_doc: 目標檔案
         page_num: 頁碼（0-indexed）
 
     Returns:

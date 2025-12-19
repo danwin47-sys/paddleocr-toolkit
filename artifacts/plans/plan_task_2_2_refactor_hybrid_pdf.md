@@ -1,64 +1,64 @@
-# Task 2.2: 重构 `_process_hybrid_pdf()` 实作计划
+# Task 2.2: 重構 `_process_hybrid_pdf()` 實作計劃
 
-> 建立时间：2024-12-14 07:05  
-> 状态：📋 计划中  
-> 风险等级：🟡 中等  
-> 预计时间：1-1.5 小时
-
----
-
-## 🎯 目标
-
-重构 `_process_hybrid_pdf()` 方法（329 行，975-1303），将其简化为 < 150 行。
-
-**当前状态**: 329 行  
-**目标**: < 150 行（减少约 180 行，55% reduction）
+> 建立時間：2024-12-14 07:05  
+> 狀態：📋 計劃中  
+> 風險等級：🟡 中等  
+> 預計時間：1-1.5 小時
 
 ---
 
-## 📊 现状分析
+## 🎯 目標
 
-### `_process_hybrid_pdf()` 方法结构（975-1303，329 行）
+重構 `_process_hybrid_pdf()` 方法（329 行，975-1303），將其簡化為 < 150 行。
 
-#### 1. **初始化阶段**（~30 行）
+**當前狀態**: 329 行  
+**目標**: < 150 行（減少約 180 行，55% reduction）
 
-- 打开 PDF（1000-1004）
-- 设定输出路径（1006-1007）
-- 准备 PDF 生成器（1009-1027）
-- 初始化变量和统计（1029-1043）
+---
 
-#### 2. **主处理循环**（~120 行，1045-1170）
+## 📊 現狀分析
 
-- 页面迭代 + 进度条（1045）
-- 单页处理逻辑：
-  - 转换为图片（1052-1058）
+### `_process_hybrid_pdf()` 方法結構（975-1303，329 行）
+
+#### 1. **初始化階段**（~30 行）
+
+- 開啟 PDF（1000-1004）
+- 設定輸出路徑（1006-1007）
+- 準備 PDF 生成器（1009-1027）
+- 初始化變數和統計（1029-1043）
+
+#### 2. **主處理迴圈**（~120 行，1045-1170）
+
+- 頁面迭代 + 進度條（1045）
+- 單頁處理邏輯：
+  - 轉換為圖片（1052-1058）
   - 版面分析（1060-1103）
-  - 提取 OCR 坐标（1105-1113）
-  - 生成双 PDF（1115-1145）
-  - 收集结果（1147-1160）
-  - 内存清理（1162-1164）
-- 错误处理（1166-1169）
+  - 提取 OCR 座標（1105-1113）
+  - 生成雙 PDF（1115-1145）
+  - 收集結果（1147-1160）
+  - 記憶體清理（1162-1164）
+- 錯誤處理（1166-1169）
 
-#### 3. **输出保存阶段**（~100 行，1171-1278）
+#### 3. **輸出儲存階段**（~100 行，1171-1278）
 
-- 关闭 PDF（1171）
-- 保存可搜索 PDF（1173-1176）
-- 保存擦除版 PDF（1178-1181）
-- 保存 Markdown（1183-1190）
-- 保存 JSON（1192-1219，28 行）
-- 保存 HTML（1221-1277，57 行）
+- 關閉 PDF（1171）
+- 儲存可搜尋 PDF（1173-1176）
+- 儲存擦除版 PDF（1178-1181）
+- 儲存 Markdown（1183-1190）
+- 儲存 JSON（1192-1219，28 行）
+- 儲存 HTML（1221-1277，57 行）
 
-#### 4. **后处理阶段**（~20 行，1279-1303）
+#### 4. **後處理階段**（~20 行，1279-1303）
 
-- 翻译处理（1281-1294）
-- 统计汇总（1296-1301）
-- 返回结果（1303）
+- 翻譯處理（1281-1294）
+- 統計彙總（1296-1301）
+- 返回結果（1303）
 
 ---
 
-## 📋 重构策略
+## 📋 重構策略
 
-### 策略：提取 4 个私有方法
+### 策略：提取 4 個私有方法
 
 #### 方法 1: `_setup_hybrid_generators()` - 初始化生成器
 
@@ -70,14 +70,14 @@ def _setup_hybrid_generators(
     self,
     output_path: str
 ) -> Tuple[PDFGenerator, PDFGenerator, Optional[TextInpainter], str]:
-    """设定混合模式所需的生成器
+    """設定混合模式所需的生成器
     
     Returns:
         Tuple of (pdf_generator, erased_generator, inpainter, erased_path)
     """
     erased_output_path = output_path.replace('_hybrid.pdf', '_erased.pdf')
     
-    # 原文可搜索 PDF
+    # 原文可搜尋 PDF
     pdf_generator = PDFGenerator(
         output_path,
         debug_mode=self.debug_mode,
@@ -103,9 +103,9 @@ def _setup_hybrid_generators(
 
 ---
 
-#### 方法 2: `_process_single_hybrid_page()` - 处理单页
+#### 方法 2: `_process_single_hybrid_page()` - 處理單頁
 
-**提取**: 1050-1160 (110 行主循环内容)  
+**提取**: 1050-1160 (110 行主迴圈內容)  
 **新方法**: ~60 行
 
 ```python
@@ -118,12 +118,12 @@ def _process_single_hybrid_page(
     erased_generator: PDFGenerator,
     inpainter: Optional[TextInpainter]
 ) -> Tuple[str, str, List[OCRResult]]:
-    """处理单一页面（混合模式）
+    """處理單一頁面（混合模式）
     
     Returns:
         Tuple of (page_markdown, page_text, ocr_results)
     """
-    # 转换为图片
+    # 轉換為圖片
     zoom = dpi / 72.0
     matrix = fitz.Matrix(zoom, zoom)
     pixmap = page.get_pixmap(matrix=matrix, alpha=False)
@@ -137,12 +137,12 @@ def _process_single_hybrid_page(
         structure_output, page_num
     )
     
-    # 提取 OCR 坐标
+    # 提取 OCR 座標
     sorted_results = self._extract_ocr_from_structure(
         structure_output, markdown_text=page_markdown
     )
     
-    # 生成双 PDF
+    # 生成雙 PDF
     if sorted_results:
         self._generate_dual_pdfs(
             pixmap, img_array, sorted_results,
@@ -161,7 +161,7 @@ def _process_single_hybrid_page(
 
 ---
 
-#### 方法 3: `_save_hybrid_outputs()` - 保存输出文件
+#### 方法 3: `_save_hybrid_outputs()` - 儲存輸出檔案
 
 **提取**: 1183-1278 (96 行)  
 **新方法**: ~50 行
@@ -177,17 +177,17 @@ def _save_hybrid_outputs(
     pdf_path: str,
     result_summary: Dict[str, Any]
 ) -> None:
-    """保存混合模式的各种输出文件"""
+    """儲存混合模式的各種輸出檔案"""
     
-    # 保存 Markdown
+    # 儲存 Markdown
     if markdown_output and all_markdown:
         self._save_markdown_output(all_markdown, markdown_output, result_summary)
     
-    # 保存 JSON
+    # 儲存 JSON
     if json_output:
         self._save_json_output(all_ocr_results, json_output, pdf_path, result_summary)
     
-    # 保存 HTML
+    # 儲存 HTML
     if html_output:
         self._save_html_output(all_markdown, html_output, pdf_path, result_summary)
 ```
@@ -205,12 +205,12 @@ def _extract_markdown_from_structure_output(
     structure_output,
     page_num: int
 ) -> str:
-    """从 PP-StructureV3 输出提取 Markdown
+    """從 PP-StructureV3 輸出提取 Markdown
     
     Returns:
-        str: 页面的 Markdown 文本
+        str: 頁面的 Markdown 文字
     """
-    page_markdown = f"## 第 {page_num + 1} 页\n\n"
+    page_markdown = f"## 第 {page_num + 1} 頁\n\n"
     
     for res in structure_output:
         temp_md_dir = tempfile.mkdtemp()
@@ -222,7 +222,7 @@ def _extract_markdown_from_structure_output(
                         page_markdown += f.read()
                     break
         except Exception as md_err:
-            logging.warning(f"save_to_markdown 失败: {md_err}")
+            logging.warning(f"save_to_markdown 失敗: {md_err}")
             if hasattr(res, 'markdown') and isinstance(res.markdown, str):
                 page_markdown += res.markdown
         finally:
@@ -233,7 +233,7 @@ def _extract_markdown_from_structure_output(
 
 ---
 
-#### 方法 5: `_generate_dual_pdfs()` - 生成双 PDF
+#### 方法 5: `_generate_dual_pdfs()` - 生成雙 PDF
 
 **提取**: 1116-1145 (30 行)  
 **新方法**: ~35 行
@@ -252,7 +252,7 @@ def _generate_dual_pdfs(
     
     img_array_copy = img_array.copy()
     
-    # 1. 原文可搜索 PDF
+    # 1. 原文可搜尋 PDF
     pdf_generator.add_page_from_pixmap(pixmap, sorted_results)
     
     # 2. 擦除版 PDF
@@ -270,7 +270,7 @@ def _generate_dual_pdfs(
         else:
             erased_image = img_array_copy
         
-        # 保存到临时文件并添加
+        # 儲存到臨時檔案並新增
         tmp_erased_path = tempfile.mktemp(suffix='.png')
         try:
             Image.fromarray(erased_image).save(tmp_erased_path)
@@ -282,9 +282,9 @@ def _generate_dual_pdfs(
 
 ---
 
-### 额外方法（输出保存辅助）
+### 額外方法（輸出儲存輔助）
 
-#### 方法 6: `_save_markdown_output()` - 保存 Markdown
+#### 方法 6: `_save_markdown_output()` - 儲存 Markdown
 
 ```python
 def _save_markdown_output(
@@ -293,15 +293,15 @@ def _save_markdown_output(
     markdown_output: str,
     result_summary: Dict[str, Any]
 ) -> None:
-    """保存 Markdown 输出"""
+    """儲存 Markdown 輸出"""
     fixed_markdown = [fix_english_spacing(md) for md in all_markdown]
     with open(markdown_output, 'w', encoding='utf-8') as f:
         f.write("\n\n---\n\n".join(fixed_markdown))
     result_summary["markdown_file"] = markdown_output
-    print(f"[OK] Markdown 已保存：{markdown_output}")
+    print(f"[OK] Markdown 已儲存：{markdown_output}")
 ```
 
-#### 方法 7: `_save_json_output()` - 保存 JSON
+#### 方法 7: `_save_json_output()` - 儲存 JSON
 
 ```python
 def _save_json_output(
@@ -311,11 +311,11 @@ def _save_json_output(
     pdf_path: str,
     result_summary: Dict[str, Any]
 ) -> None:
-    """保存 JSON 输出"""
-    # JSON 序列化逻辑（28 行）
+    """儲存 JSON 輸出"""
+    # JSON 序列化邏輯（28 行）
 ```
 
-#### 方法 8: `_save_html_output()` - 保存 HTML
+#### 方法 8: `_save_html_output()` - 儲存 HTML
 
 ```python
 def _save_html_output(
@@ -325,13 +325,13 @@ def _save_html_output(
     pdf_path: str,
     result_summary: Dict[str, Any]
 ) -> None:
-    """保存 HTML 输出"""
-    # HTML 生成逻辑（57 行）
+    """儲存 HTML 輸出"""
+    # HTML 生成邏輯（57 行）
 ```
 
 ---
 
-## 📊 重构后的 `_process_hybrid_pdf()`
+## 📊 重構後的 `_process_hybrid_pdf()`
 
 ```python
 def _process_hybrid_pdf(
@@ -346,36 +346,36 @@ def _process_hybrid_pdf(
     result_summary: Dict[str, Any],
     translate_config: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """处理 PDF 的混合模式"""
+    """處理 PDF 的混合模式"""
     
     # === 1. 初始化 ===
     pdf_doc = fitz.open(pdf_path)
     total_pages = len(pdf_doc)
-    print(f"PDF 共 {total_pages} 页")
+    print(f"PDF 共 {total_pages} 頁")
     
-    # 设定生成器
+    # 設定生成器
     pdf_gen, erased_gen, inpainter, erased_path = self._setup_hybrid_generators(output_path)
     
     # 初始化收集器
     all_markdown, all_text, all_ocr_results = [], [], []
     stats = StatsCollector(pdf_path, "hybrid", total_pages)
     
-    # === 2. 处理所有页面 ===
+    # === 2. 處理所有頁面 ===
     page_iterator = range(total_pages)
     if show_progress and HAS_TQDM:
-        page_iterator = tqdm(page_iterator, desc="混合模式处理中", unit="页")
+        page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁")
     
     for page_num in page_iterator:
         try:
             stats.start_page(page_num)
             page = pdf_doc[page_num]
             
-            # 处理单页
+            # 處理單頁
             page_md, page_txt, ocr_res = self._process_single_hybrid_page(
                 page, page_num, dpi, pdf_gen, erased_gen, inpainter
             )
             
-            # 收集结果
+            # 收集結果
             all_markdown.append(page_md)
             all_text.append(page_txt)
             all_ocr_results.append(ocr_res)
@@ -384,21 +384,21 @@ def _process_hybrid_pdf(
             stats.finish_page(page_num, page_txt, ocr_res)
             
         except Exception as e:
-            logging.error(f"处理第 {page_num + 1} 页错误: {e}")
+            logging.error(f"處理第 {page_num + 1} 頁錯誤: {e}")
             continue
     
     pdf_doc.close()
     
-    # === 3. 保存 PDF ===
+    # === 3. 儲存 PDF ===
     if pdf_gen.save():
         result_summary["searchable_pdf"] = output_path
-        print(f"[OK] 可搜索 PDF 已保存：{output_path}")
+        print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
     
     if erased_gen.save():
         result_summary["erased_pdf"] = erased_path
-        print(f"[OK] 擦除版 PDF 已保存：{erased_path}")
+        print(f"[OK] 擦除版 PDF 已儲存：{erased_path}")
     
-    # === 4. 保存其他输出 ===
+    # === 4. 儲存其他輸出 ===
     self._save_hybrid_outputs(
         all_markdown, all_ocr_results,
         markdown_output, json_output, html_output,
@@ -407,15 +407,15 @@ def _process_hybrid_pdf(
     
     result_summary["text_content"] = all_text
     
-    # === 5. 翻译处理 ===
+    # === 5. 翻譯處理 ===
     if translate_config and HAS_TRANSLATOR and not self.debug_mode:
         self._process_translation_on_pdf(
             erased_path, all_ocr_results, translate_config,
             result_summary, dpi
         )
     
-    # === 6. 完成统计 ===
-    print(f"[OK] 混合模式处理完成：{result_summary['pages_processed']} 页")
+    # === 6. 完成統計 ===
+    print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
     final_stats = stats.finish()
     final_stats.print_summary()
     result_summary["stats"] = final_stats.to_dict()
@@ -423,108 +423,108 @@ def _process_hybrid_pdf(
     return result_summary
 ```
 
-**重构后行数**: ~80 行
+**重構後行數**: ~80 行
 
 ---
 
-## 📊 预期成果
+## 📊 預期成果
 
-### 程式码行数变化
+### 程式碼行數變化
 
-| 项目 | 原始 | 重构后 | 减少 |
+| 專案 | 原始 | 重構後 | 減少 |
 |------|------|--------|------|
 | `_process_hybrid_pdf()` | 329 | **~80** | **-249** (-76%) |
 | 新增方法 | 0 | **~260** | +260 |
-| **净变化** | 329 | **340** | **+11** |
+| **淨變化** | 329 | **340** | **+11** |
 
-### 代码质量提升
+### 程式碼質量提升
 
-- ✅ **主方法简化**: 329 → 80 行 (76% reduction)
-- ✅ **职责分离**: 每个方法单一职责
-- ✅ **可测试性**: 每个子方法可独立测试
-- ✅ **可读性**: 清晰的步骤结构
-- ✅ **可维护性**: 易于修改和扩展
-
----
-
-## 📋 执行步骤
-
-### Step 1: 提取初始化和生成器设定
-
-- 创建 `_setup_hybrid_generators()`
-- 创建 `_extract_markdown_from_structure_output()`
-- 创建 `_generate_dual_pdfs()`
-
-### Step 2: 提取单页处理逻辑
-
-- 创建 `_process_single_hybrid_page()`
-
-### Step 3: 提取输出保存逻辑
-
-- 创建 `_save_markdown_output()`
-- 创建 `_save_json_output()`
-- 创建 `_save_html_output()`
-- 创建 `_save_hybrid_outputs()`（统筹方法）
-
-### Step 4: 简化主方法
-
-- 重写 `_process_hybrid_pdf()` 使用新方法
-
-### Step 5: 测试验证
-
-- 运行现有测试
-- 测试各种模式
+- ✅ **主方法簡化**: 329 → 80 行 (76% reduction)
+- ✅ **職責分離**: 每個方法單一職責
+- ✅ **可測試性**: 每個子方法可獨立測試
+- ✅ **可讀性**: 清晰的步驟結構
+- ✅ **可維護性**: 易於修改和擴充套件
 
 ---
 
-## ⚠️ 注意事项
+## 📋 執行步驟
+
+### Step 1: 提取初始化和生成器設定
+
+- 建立 `_setup_hybrid_generators()`
+- 建立 `_extract_markdown_from_structure_output()`
+- 建立 `_generate_dual_pdfs()`
+
+### Step 2: 提取單頁處理邏輯
+
+- 建立 `_process_single_hybrid_page()`
+
+### Step 3: 提取輸出儲存邏輯
+
+- 建立 `_save_markdown_output()`
+- 建立 `_save_json_output()`
+- 建立 `_save_html_output()`
+- 建立 `_save_hybrid_outputs()`（統籌方法）
+
+### Step 4: 簡化主方法
+
+- 重寫 `_process_hybrid_pdf()` 使用新方法
+
+### Step 5: 測試驗證
+
+- 執行現有測試
+- 測試各種模式
+
+---
+
+## ⚠️ 注意事項
 
 ### 需要保持的功能
 
-1. ✅ 双 PDF 生成（原文 + 擦除版）
-2. ✅ 多种输出格式（MD/JSON/HTML）
-3. ✅ 翻译功能整合
-4. ✅ 统计收集
-5. ✅ 内存管理
+1. ✅ 雙 PDF 生成（原文 + 擦除版）
+2. ✅ 多種輸出格式（MD/JSON/HTML）
+3. ✅ 翻譯功能整合
+4. ✅ 統計收集
+5. ✅ 記憶體管理
 
-### 风险点
+### 風險點
 
-1. **内存管理**: 确保 pixmap 正确释放
-2. **临时文件**: 确保清理
-3. **错误处理**: 保持健壮性
-4. **翻译整合**: 不破坏现有翻译功能
+1. **記憶體管理**: 確保 pixmap 正確釋放
+2. **臨時檔案**: 確保清理
+3. **錯誤處理**: 保持健壯性
+4. **翻譯整合**: 不破壞現有翻譯功能
 
 ---
 
-## 🎯 成功标准
+## 🎯 成功標準
 
 - ✅ `_process_hybrid_pdf()` < 100 行
-- ✅ 新增 8 个结构清晰的私有方法
-- ✅ 所有测试通过
+- ✅ 新增 8 個結構清晰的私有方法
+- ✅ 所有測試透過
 - ✅ hybrid 模式功能完全保留
-- ✅ 翻译功能正常工作
+- ✅ 翻譯功能正常工作
 
 ---
 
-## 💡 建议
+## 💡 建議
 
-**考虑到时间（现在 07:05）和任务复杂度**：
+**考慮到時間（現在 07:05）和任務複雜度**：
 
-### 选项 A: 稍后执行（推荐）
+### 選項 A: 稍後執行（推薦）
 
-- 这是个较大的重构（预计 1-1.5 小时）
-- 已经工作了 30+ 分钟
-- 可以稍后精力充沛时执行
+- 這是個較大的重構（預計 1-1.5 小時）
+- 已經工作了 30+ 分鐘
+- 可以稍後精力充沛時執行
 
-### 选项 B: 立即执行
+### 選項 B: 立即執行
 
-- 如果精力充沛可以继续
-- 采用分步测试策略
-- 预计 1-1.5 小时
+- 如果精力充沛可以繼續
+- 採用分步測試策略
+- 預計 1-1.5 小時
 
 ---
 
-*计划建立：2024-12-14 07:05*  
-*预计执行时间：1-1.5 小时*  
-*难度：🟡 中等*  
-*优先级：🟡 中*
+*計劃建立：2024-12-14 07:05*  
+*預計執行時間：1-1.5 小時*  
+*難度：🟡 中等*  
+*優先順序：🟡 中*

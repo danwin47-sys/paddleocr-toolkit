@@ -122,7 +122,7 @@ ocr_tool = PaddleOCRTool(mode="basic")
 ```
 
 - ⚡ 速度最快
-- 📝 適合純文字文件
+- 📝 適合純文字檔案
 - 💾 記憶體使用最少
 
 ### structure 模式（最準確）
@@ -132,8 +132,8 @@ ocr_tool = PaddleOCRTool(mode="structure")
 ```
 
 - 🎯 識別表格和版面
-- 📊 保留文件結構
-- 🔍 適合複雜文件
+- 📊 保留檔案結構
+- 🔍 適合複雜檔案
 
 ### hybrid 模式（平衡）
 
@@ -142,7 +142,7 @@ ocr_tool = PaddleOCRTool(mode="hybrid")
 ```
 
 - ⚖️ 速度與準確度平衡
-- 📄 適合混合文件
+- 📄 適合混合檔案
 - 💡 推薦日常使用
 
 ---
@@ -171,7 +171,7 @@ for pdf_file in pdf_files:
     # 處理結果...
 ```
 
-### 記憶體優化
+### 記憶體最佳化
 
 ```python
 # 使用串流模式處理大檔案
@@ -268,9 +268,9 @@ python paddle_ocr_tool.py doc.pdf --mode hybrid --dpi 300
 
 ## 🎓 下一步
 
-- 📖 閱讀 [API 文件](API_GUIDE.md)
-- 🔧 查看 [最佳實踐](BEST_PRACTICES.md)
-- 💡 試用 [範例項目](../examples/README.md)
+- 📖 閱讀 [API 檔案](API_GUIDE.md)
+- 🔧 檢視 [最佳實踐](BEST_PRACTICES.md)
+- 💡 試用 [範例專案](../examples/README.md)
 - 🐛 [故障排除](TROUBLESHOOTING.md)
 
 ---

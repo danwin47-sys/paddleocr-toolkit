@@ -70,13 +70,13 @@ class TestOCRResultParser:
         """測試解析錯誤（非嚴格模式）"""
         parser = OCRResultParser(strict_mode=False)
 
-        # 傳入無效數據
+        # 傳入無效資料
         results = parser.parse_basic_result([None])
 
         # 非嚴格模式應該返回空列表
         assert len(results) == 0
 
-    # 註：strict_mode 主要在頂層錯誤（如無法迭代）時才會拋出異常
+    # 註：strict_mode 主要在頂層錯誤（如無法迭代）時才會丟擲異常
     # 對於單個元素的錯誤（如 None polygon），會被 _create_ocr_result 捕獲
     # 因此移除這個測試，改為測試實際會導致頂層錯誤的情況
 

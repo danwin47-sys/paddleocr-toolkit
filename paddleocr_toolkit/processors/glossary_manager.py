@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - 智能術語表管理器
+PaddleOCR Toolkit - 智慧術語表管理器
 
 支援多語言術語表，可在翻譯時自動鎖定專業術語。
 """
@@ -25,7 +25,7 @@ class GlossaryEntry:
         if not self.target_lang:
             return True  # 未指定語言 = 適用所有語言
 
-        # 正規化語言代碼
+        # 正規化語言程式碼
         normalized_entry = self.target_lang.lower().replace("-", "_")
         normalized_lang = lang.lower().replace("-", "_")
         return normalized_entry == normalized_lang
@@ -33,7 +33,7 @@ class GlossaryEntry:
 
 class GlossaryManager:
     """
-    智能術語表管理器
+    智慧術語表管理器
 
     功能：
     - 支援多個術語表檔案
@@ -47,7 +47,7 @@ class GlossaryManager:
         初始化術語表管理器
 
         Args:
-            target_lang: 目標語言代碼（如 "en", "zh-TW", "ja"）
+            target_lang: 目標語言程式碼（如 "en", "zh-TW", "ja"）
         """
         self.target_lang = target_lang
         self.glossaries: Dict[str, List[GlossaryEntry]] = {}  # name -> entries

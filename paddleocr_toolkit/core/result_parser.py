@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 try:
     from paddleocr_toolkit.core.models import OCRResult
 except ImportError:
-    # 降級導入
+    # 降級匯入
     from ..models import OCRResult
 
 
@@ -39,7 +39,7 @@ class OCRResultParser:
         初始化解析器
 
         Args:
-            strict_mode: 嚴格模式，解析失敗時拋出異常而非返回空列表
+            strict_mode: 嚴格模式，解析失敗時丟擲異常而非返回空列表
         """
         self.strict_mode = strict_mode
 
@@ -79,10 +79,10 @@ class OCRResultParser:
 
     def _parse_single_result(self, res: Any) -> List[OCRResult]:
         """
-        解析單個結果對象
+        解析單個結果物件
 
         Args:
-            res: 單個結果對象
+            res: 單個結果物件
 
         Returns:
             List[OCRResult]: 解析後的結果列表
@@ -133,7 +133,7 @@ class OCRResultParser:
         self, text: Any, score: Any, poly: Any
     ) -> Optional[OCRResult]:
         """
-        創建 OCRResult 對象
+        建立 OCRResult 物件
 
         Args:
             text: 識別文字
@@ -149,7 +149,7 @@ class OCRResultParser:
 
             return OCRResult(text=str(text), confidence=float(score), bbox=bbox)
         except Exception as e:
-            logging.warning(f"創建 OCRResult 失敗: {e}")
+            logging.warning(f"建立 OCRResult 失敗: {e}")
             return None
 
     def parse_structure_result(
@@ -317,7 +317,7 @@ class OCRResultParser:
         valid_results = []
 
         for result in results:
-            # 檢查必要字段
+            # 檢查必要欄位
             if not result.text or not result.text.strip():
                 continue
 

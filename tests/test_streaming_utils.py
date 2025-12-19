@@ -29,8 +29,8 @@ class TestOpenPdfContext:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_open_pdf_context_basic(self):
-        """測試基本 PDF 打開"""
-        # 創建測試 PDF
+        """測試基本 PDF 開啟"""
+        # 建立測試 PDF
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 
@@ -65,8 +65,8 @@ class TestOpenPdfContext:
             with open_pdf_context(temp_path) as pdf_doc:
                 doc_ref = pdf_doc
 
-            # 驗證已關閉（通過檢查是否可以訪問）
-            # fitz 文件關閉後某些操作會失敗
+            # 驗證已關閉（透過檢查是否可以訪問）
+            # fitz 檔案關閉後某些操作會失敗
             assert doc_ref is not None
 
         finally:
@@ -84,7 +84,7 @@ class TestPdfPagesGenerator:
             temp_path = f.name
 
         try:
-            # 創建3頁PDF
+            # 建立3頁PDF
             doc = fitz.open()
             for i in range(3):
                 doc.new_page(width=100, height=100)
@@ -130,7 +130,7 @@ class TestPdfPagesGenerator:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_pdf_pages_generator_with_dpi(self):
-        """測試帶DPI參數的生成"""
+        """測試帶DPI引數的生成"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 

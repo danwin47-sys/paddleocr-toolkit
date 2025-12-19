@@ -23,8 +23,8 @@ def example_1_basic_correction():
     # 模擬 OCR 識別結果（含錯誤）
     ocr_text = """
     這個文建包含銷多常見的OCR銷別字。
-    例如："文建"應讀是"文件"，"銷別字"應讀是"錯別字"。
-    通過LLM可以自動修正這些錯沒。
+    例如："文建"應讀是"檔案"，"銷別字"應讀是"錯別字"。
+    透過LLM可以自動修正這些錯沒。
     """
     
     print(f"\n原始文字：\n{ocr_text}")
@@ -34,7 +34,7 @@ def example_1_basic_correction():
         corrected_text = processor.correct_ocr_errors(ocr_text)
         print(f"\n修正後：\n{corrected_text}")
     else:
-        print("\n[警告] Ollama 服務不可用，請確保 Ollama 正在運行")
+        print("\n[警告] Ollama 服務不可用，請確保 Ollama 正在執行")
 
 
 def example_2_structured_extraction():
@@ -52,7 +52,7 @@ def example_2_structured_extraction():
     公司：科技創新股份有限公司
     電話：02-1234-5678
     Email: xiaoming.wang@techcompany.com
-    地址：台北市信義區信義路五段7號
+    地址：臺北市信義區信義路五段7號
     """
     
     # 定義提取 Schema
@@ -82,14 +82,14 @@ def example_2_structured_extraction():
 
 
 def example_3_document_summary():
-    """範例 3：文件摘要"""
+    """範例 3：檔案摘要"""
     print("\n" + "=" * 60)
-    print("範例 3：生成文件摘要")
+    print("範例 3：生成檔案摘要")
     print("=" * 60)
     
     processor = SemanticProcessor(llm_provider="ollama")
     
-    # 長篇文件內容
+    # 長篇檔案內容
     long_document = """
     PaddleOCR Toolkit 是一個功能強大的光學字元識別工具包，
     基於百度的 PaddleOCR 引擎開發。它支援多種識別模式，包括
@@ -103,14 +103,14 @@ def example_3_document_summary():
     
     v3.0 版本引入了語義處理器（SemanticProcessor），利用大型
     語言模型（LLM）自動修正 OCR 錯誤，提升識別準確率 15%+。
-    此外還支援多語言自動偵測、結構化資料提取和文件摘要生成等
+    此外還支援多語言自動偵測、結構化資料提取和檔案摘要生成等
     進階功能。
     
-    該工具包已在 GitHub 上開源，並提供完整的文件和範例程式碼，
+    該工具包已在 GitHub 上開源，並提供完整的檔案和範例程式碼，
     方便開發者快速上手。
     """
     
-    print(f"\n原始文件（{len(long_document)} 字）：\n{long_document}")
+    print(f"\n原始檔案（{len(long_document)} 字）：\n{long_document}")
     
     if processor.is_enabled():
         summary = processor.summarize_document(long_document, max_length=100)

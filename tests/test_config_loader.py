@@ -10,7 +10,7 @@ import tempfile
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.core.config_loader import (
@@ -209,7 +209,7 @@ class TestApplyConfigToArgs:
         assert args.dpi == 300
 
     def test_cli_overrides_config(self):
-        """測試 CLI 參數優先於設定"""
+        """測試 CLI 引數優先於設定"""
         config = {"ocr": {"mode": "structure"}}
 
         args = argparse.Namespace(
@@ -223,7 +223,7 @@ class TestApplyConfigToArgs:
 
         apply_config_to_args(config, args)
 
-        # CLI 參數應該保留
+        # CLI 引數應該保留
         assert args.mode == "hybrid"
 
 

@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-文字處理模組單元測試
+文書處理模組單元測試
 """
 
 import os
@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.processors.text_processor import (
@@ -75,10 +75,10 @@ class TestCommonSplits:
 
 
 class TestHyphenatedWords:
-    """測試連字符詞修復"""
+    """測試連字元詞修復"""
 
     def test_common_hyphenated(self):
-        """測試常見連字符詞"""
+        """測試常見連字元詞"""
         assert "well-established" in fix_english_spacing("wellestablished").lower()
         assert "cost-effective" in fix_english_spacing("costeffective").lower()
         assert "real-time" in fix_english_spacing("realtime").lower()

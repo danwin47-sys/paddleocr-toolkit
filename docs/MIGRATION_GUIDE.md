@@ -19,12 +19,12 @@
 - 測試覆蓋率更高（89%+）
 
 ✅ **更易擴充**
-- 新增功能只需添加新 Processor
+- 新增功能只需新增新 Processor
 - 不影響現有程式碼
 - 符合開放封閉原則
 
 ✅ **效能相同**
-- 委派調用開銷可忽略
+- 委派呼叫開銷可忽略
 - 核心邏輯完全相同
 - 無效能損失
 
@@ -67,7 +67,7 @@ from paddle_ocr_facade import PaddleOCRFacade
 # 第二步：修改變數名稱
 facade = PaddleOCRFacade(mode="hybrid", device="cpu")
 
-# 第三步：方法調用保持不變
+# 第三步：方法呼叫保持不變
 result = facade.process_hybrid("input.pdf", "output.pdf")
 ```
 
@@ -234,7 +234,7 @@ pdf_result = processor.process_pdf("document.pdf")
 
 ### Q2: 效能會受影響嗎？
 
-**A**: 不會。委派調用的開銷可忽略不計（< 1μs）。
+**A**: 不會。委派呼叫的開銷可忽略不計（< 1μs）。
 
 ### Q3: 舊程式碼還能用嗎？
 
@@ -250,7 +250,7 @@ pdf_result = processor.process_pdf("document.pdf")
 
 ### Q6: 如何驗證遷移成功？
 
-**A**: 執行現有測試。如果測試通過，遷移就成功了。
+**A**: 執行現有測試。如果測試透過，遷移就成功了。
 
 ---
 
@@ -276,7 +276,7 @@ pdf_result = processor.process_pdf("document.pdf")
 
 ### 步驟 4：驗證
 
-- [ ] 功能測試通過
+- [ ] 功能測試透過
 - [ ] 效能無明顯變化
 - [ ] 沒有新的錯誤或警告
 
@@ -284,7 +284,7 @@ pdf_result = processor.process_pdf("document.pdf")
 
 ## 七、遷移範例
 
-### 範例 1：簡單腳本
+### 範例 1：簡單指令碼
 
 #### Before
 ```python
@@ -366,9 +366,9 @@ git revert <commit-hash>
 
 ## 九、獲取幫助
 
-### 文件資源
+### 檔案資源
 
-- 📖 [FACADE_API_GUIDE.md](FACADE_API_GUIDE.md) - 完整 API 文件
+- 📖 [FACADE_API_GUIDE.md](FACADE_API_GUIDE.md) - 完整 API 檔案
 - 🏗️ [ARCHITECTURE.md](../ARCHITECTURE.md) - 架構說明
 - 🧪 [TESTING_GUIDE.md](TESTING_GUIDE.md) - 測試指南
 
@@ -392,7 +392,7 @@ git revert <commit-hash>
 ### 進行中 🔄
 - StructureProcessor
 - FormulaProcessor
-- 效能優化
+- 效能最佳化
 
 ### 計畫中 📋
 - 更多輸出格式支援

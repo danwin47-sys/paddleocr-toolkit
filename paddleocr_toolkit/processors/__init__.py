@@ -28,7 +28,7 @@ from .stats_collector import PageStats, ProcessingStats, StatsCollector
 from .text_processor import MERGE_TERMS, PROTECTED_TERMS, fix_english_spacing
 
 __all__ = [
-    # 文字處理
+    # 文書處理
     "fix_english_spacing",
     "MERGE_TERMS",
     "PROTECTED_TERMS",

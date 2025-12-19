@@ -25,17 +25,17 @@ def test_basic_correction():
     
     if not processor.is_enabled():
         print("❌ Ollama 服務未啟動")
-        print("   請確保 Ollama 正在運行：ollama serve")
+        print("   請確保 Ollama 正在執行：ollama serve")
         print("   並且已下載模型：ollama pull qwen2.5:7b")
         return False
     
-    print("✅ Ollama 服務已連接")
+    print("✅ Ollama 服務已連線")
     
     # 測試文字（包含典型 OCR 錯誤）
     test_cases = [
         {
             "input": "這個文建包含銷多OCR銷別字",
-            "expected_keywords": ["文件", "錯", "很多"]
+            "expected_keywords": ["檔案", "錯", "很多"]
         },
         {
             "input": "PaddleOCR工見包是―個強太的工其",
@@ -65,7 +65,7 @@ def test_basic_correction():
         else:
             print("  ⚠️  修正效果待確認")
     
-    print(f"\n總結: {success_count}/{len(test_cases)} 個案例通過驗證")
+    print(f"\n總結: {success_count}/{len(test_cases)} 個案例透過驗證")
     return success_count == len(test_cases)
 
 
@@ -84,12 +84,12 @@ def test_structured_extraction():
     # 模擬名片 OCR 結果
     business_card = """
     張小明
-    高級軟體工程師
+    高階軟體工程師
     ABC科技股份有限公司
     電話：(02) 2345-6789
     手機：0912-345-678
     Email: xiaoming@abc-tech.com
-    台北市大安區敦化南路二段123號5樓
+    臺北市大安區敦化南路二段123號5樓
     """
     
     schema = {
@@ -118,9 +118,9 @@ def test_structured_extraction():
 
 
 def test_summary():
-    """測試文件摘要"""
+    """測試檔案摘要"""
     print("\n" + "=" * 70)
-    print("測試 3：文件摘要生成")
+    print("測試 3：檔案摘要生成")
     print("=" * 70)
     
     processor = SemanticProcessor(llm_provider="ollama")
@@ -139,7 +139,7 @@ def test_summary():
     多語言自動偵測、互動式校對 UI 等創新功能。SemanticProcessor 利用
     大型語言模型（LLM）自動修正 OCR 錯誤，預期可提升識別準確率 15% 以上。
     
-    該專案已在 GitHub 開源，提供完整的技術文件、API 指南、遷移指南
+    該專案已在 GitHub 開源，提供完整的技術檔案、API 指南、遷移指南
     和測試指南，方便開發者快速上手使用。
     """
     
@@ -160,13 +160,13 @@ def test_summary():
 
 
 def main():
-    """主測試函數"""
+    """主測試函式"""
     print("\n🔬 SemanticProcessor 功能測試\n")
     
     results = {
         "OCR錯誤修正": test_basic_correction(),
         "結構化提取": test_structured_extraction(),
-        "文件摘要": test_summary(),
+        "檔案摘要": test_summary(),
     }
     
     # 總結
@@ -175,20 +175,20 @@ def main():
     print("=" * 70)
     
     for test_name, passed in results.items():
-        status = "✅ 通過" if passed else "❌ 失敗"
+        status = "✅ 透過" if passed else "❌ 失敗"
         print(f"  {test_name}: {status}")
     
     total = len(results)
     passed = sum(results.values())
     
-    print(f"\n總計: {passed}/{total} 測試通過")
+    print(f"\n總計: {passed}/{total} 測試透過")
     
     if passed == total:
-        print("\n🎉 所有測試通過！SemanticProcessor 工作正常！")
+        print("\n🎉 所有測試透過！SemanticProcessor 工作正常！")
     elif passed > 0:
-        print("\n⚠️  部分測試通過，請檢查失敗的測試項目")
+        print("\n⚠️  部分測試透過，請檢查失敗的測試專案")
     else:
-        print("\n❌ 所有測試失敗，請確保 Ollama 服務正在運行")
+        print("\n❌ 所有測試失敗，請確保 Ollama 服務正在執行")
 
 
 if __name__ == "__main__":

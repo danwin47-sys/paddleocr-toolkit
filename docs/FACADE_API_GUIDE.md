@@ -34,15 +34,15 @@ result = facade.process("document.pdf")
 
 ---
 
-## 初始化參數
+## 初始化引數
 
 ```python
 PaddleOCRFacade(
     mode="basic",                      # OCR 模式
-    use_orientation_classify=False,    # 文件方向校正
-    use_doc_unwarping=False,           # 文件彎曲校正
+    use_orientation_classify=False,    # 檔案方向校正
+    use_doc_unwarping=False,           # 檔案彎曲校正
     use_textline_orientation=False,    # 文字行方向偵測
-    device="cpu",                      # 運算設備 ('gpu' 或 'cpu')
+    device="cpu",                      # 運算裝置 ('gpu' 或 'cpu')
     debug_mode=False,                  # 除錯模式
     compress_images=True,              # 圖片壓縮
     jpeg_quality=85,                   # JPEG 品質
@@ -78,7 +78,7 @@ result = facade.process_hybrid(
 **輸出**：
 - 可搜尋 PDF（原文）
 - 擦除版 PDF
-- Markdown 文件
+- Markdown 檔案
 - JSON 結構化資料
 
 ### 2. 含翻譯的混合模式
@@ -144,7 +144,7 @@ facade = PaddleOCRFacade(
 # 1. 修正 OCR 錯誤
 ocr_text = "這個文建包含銷多錯沒"
 corrected = facade.correct_text(ocr_text)
-print(corrected)  # "這個文件包含很多錯誤"
+print(corrected)  # "這個檔案包含很多錯誤"
 
 # 2. 提取結構化資料
 business_card = """
@@ -236,7 +236,7 @@ tool = PaddleOCRTool(mode="hybrid")
 facade = PaddleOCRFacade(mode="hybrid")
 ```
 
-**步驟 3**：方法調用保持不變
+**步驟 3**：方法呼叫保持不變
 ```python
 # 完全相同的 API
 result = facade.process_hybrid("input.pdf")
@@ -266,7 +266,7 @@ tool = PaddleOCRTool(mode="hybrid")  # 仍然可用
 
 ### Q: 效能有影響嗎？
 
-**A**: 無影響，委派調用的開銷可忽略不計。
+**A**: 無影響，委派呼叫的開銷可忽略不計。
 
 ### Q: 舊程式碼還能用嗎？
 
@@ -316,6 +316,6 @@ else:
 
 ## 更多資訊
 
-- 📖 [完整文件](docs/API_GUIDE.md)
+- 📖 [完整檔案](docs/API_GUIDE.md)
 - 🏗️ [架構說明](ARCHITECTURE.md)
 - 🧪 [測試範例](tests/)

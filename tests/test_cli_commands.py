@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-测试CLI命令
+測試CLI命令
 """
 
 import shutil
@@ -12,7 +12,7 @@ import pytest
 
 
 def test_init_command():
-    """测试init命令"""
+    """測試init命令"""
     from paddleocr_toolkit.cli.commands.init import (
         create_config_file,
         create_project_structure,
@@ -21,7 +21,7 @@ def test_init_command():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmppath = Path(tmpdir)
 
-        # 测试创建结构
+        # 測試建立結構
         create_project_structure(tmppath)
 
         assert (tmppath / "input").exists()
@@ -29,13 +29,13 @@ def test_init_command():
         assert (tmppath / "config").exists()
         assert (tmppath / "logs").exists()
 
-        # 测试创建配置
+        # 測試建立配置
         create_config_file(tmppath)
         assert (tmppath / "config" / "default.yaml").exists()
 
 
 def test_validate_edit_distance():
-    """测试编辑距离计算"""
+    """測試編輯距離計算"""
     from paddleocr_toolkit.cli.commands.validate import edit_distance
 
     # 完全相同
@@ -47,12 +47,12 @@ def test_validate_edit_distance():
     # 插入
     assert edit_distance("hello", "helllo") == 1
 
-    # 删除
+    # 刪除
     assert edit_distance("hello", "helo") == 1
 
 
 def test_validate_accuracy():
-    """测试准确率计算"""
+    """測試準確率計算"""
     from paddleocr_toolkit.cli.commands.validate import calculate_character_accuracy
 
     # 完全匹配

@@ -14,15 +14,15 @@
 - 可維護性
 - 可測試性  
 - 可重用性
-- 代碼清晰度
+- 程式碼清晰度
 
 ---
 
 ## 📊 當前狀態分析
 
-### 文件概況
+### 檔案概況
 
-| 項目 | 數值 |
+| 專案 | 數值 |
 |------|------|
 | 總行數 | 2,355 行 |
 | 主類別 | `PaddleOCRTool` (2,034 行) |
@@ -36,7 +36,7 @@
 
 - ✅ CLI 邏輯提取（`paddleocr_toolkit/cli/`）
 - ✅ 5 個巨型方法重構
-- ✅ 輔助方法創建
+- ✅ 輔助方法建立
 
 **Stage 3 目標**:
 
@@ -52,12 +52,12 @@
 
 #### 1. PaddleOCRTool 職責過多
 
-**問題**: 單一類別包含 2,034 行代碼
+**問題**: 單一類別包含 2,034 行程式碼
 
 **職責混雜**:
 
 - OCR 引擎初始化
-- 圖像處理
+- 影象處理
 - PDF 處理
 - 結構化分析
 - 翻譯處理
@@ -68,7 +68,7 @@
 
 - 難以測試
 - 難以維護
-- 難以擴展
+- 難以擴充套件
 
 #### 2. 缺乏專業化處理器
 
@@ -77,7 +77,7 @@
 **應該分離的**:
 
 - PDF 處理 → `PDFProcessor`
-- 圖像處理 → `ImageProcessor`
+- 影象處理 → `ImageProcessor`
 - 結構化處理 → `StructureProcessor`
 - 翻譯處理 → `TranslationProcessor`
 
@@ -98,9 +98,9 @@
 
 ### Phase 1: 核心邏輯提取（2-3h）
 
-#### Task 3.1: 創建 OCR 引擎管理器
+#### Task 3.1: 建立 OCR 引擎管理器
 
-**創建**: `paddleocr_toolkit/core/ocr_engine.py`
+**建立**: `paddleocr_toolkit/core/ocr_engine.py`
 
 **目標**: 管理 OCR 引擎生命週期
 
@@ -108,11 +108,11 @@
 
 - PaddleOCRTool 減少 ~100 行
 - 引擎管理更清晰
-- 易於測試和擴展
+- 易於測試和擴充套件
 
-#### Task 3.2: 創建結果解析器
+#### Task 3.2: 建立結果解析器
 
-**創建**: `paddleocr_toolkit/core/result_parser.py`
+**建立**: `paddleocr_toolkit/core/result_parser.py`
 
 **目標**: 統一不同引擎的結果格式
 
@@ -126,21 +126,21 @@
 
 ### Phase 2: 處理器專業化（2-3h）
 
-#### Task 3.3: 創建 PDF 處理器
+#### Task 3.3: 建立 PDF 處理器
 
-**創建**: `paddleocr_toolkit/processors/pdf_processor.py`
+**建立**: `paddleocr_toolkit/processors/pdf_processor.py`
 
 **功能**:
 
-- PDF 轉圖像
+- PDF 轉影象
 - PDF 頁面處理
 - 可搜尋 PDF 生成
 
 **預期**: PaddleOCRTool 減少 ~200 行
 
-#### Task 3.4: 創建結構化處理器
+#### Task 3.4: 建立結構化處理器
 
-**創建**: `paddleocr_toolkit/processors/structure_processor.py`
+**建立**: `paddleocr_toolkit/processors/structure_processor.py`
 
 **功能**:
 
@@ -150,9 +150,9 @@
 
 **預期**: PaddleOCRTool 減少 ~250 行
 
-#### Task 3.5: 創建翻譯處理器
+#### Task 3.5: 建立翻譯處理器
 
-**創建**: `paddleocr_toolkit/processors/translation_processor.py`
+**建立**: `paddleocr_toolkit/processors/translation_processor.py`
 
 **功能**:
 
@@ -168,7 +168,7 @@
 
 #### Task 3.6: 統一輸出管理
 
-**創建**: `paddleocr_toolkit/outputs/output_manager.py`
+**建立**: `paddleocr_toolkit/outputs/output_manager.py`
 
 **功能**:
 
@@ -193,7 +193,7 @@
 
 **目標**: 將 PaddleOCRTool 改為協調器
 
-**新架構**: 組件化設計，協調各專業處理器
+**新架構**: 元件化設計，協調各專業處理器
 
 **預期**: 2,034 行 → ~300 行 (-85%)
 
@@ -201,7 +201,7 @@
 
 ## 📊 重構效果預估
 
-### 代碼分布
+### 程式碼分佈
 
 | 模組 | 當前 | 重構後 | 變化 |
 |------|------|--------|------|
@@ -255,7 +255,7 @@
 
 ### 主要風險
 
-1. **向後兼容性** - 可能破壞現有 API
+1. **向後相容性** - 可能破壞現有 API
 2. **引擎耦合** - PaddleOCR 不同模式行為不一
 3. **複雜度** - 模組增加可能導致理解困難
 
@@ -263,7 +263,7 @@
 
 - 保留舊 API 作為包裝
 - 統一抽象層
-- 完整文檔
+- 完整檔案
 
 ---
 
@@ -273,7 +273,7 @@
 
 - [ ] PaddleOCRTool < 500 行
 - [ ] 每個處理器 < 500 行
-- [ ] 所有測試通過
+- [ ] 所有測試透過
 - [ ] 覆蓋率 > 85%
 - [ ] 無功能回退
 
@@ -282,8 +282,8 @@
 - [ ] PaddleOCRTool < 400 行
 - [ ] 新增 90+ 測試
 - [ ] 覆蓋率 > 88%
-- [ ] 文檔完整
-- [ ] 性能無降低
+- [ ] 檔案完整
+- [ ] 效能無降低
 
 ---
 
@@ -294,9 +294,9 @@
 1. ✅ 高度模組化 - 職責清晰
 2. ✅ 易於維護 - 小模組 < 500 行
 3. ✅ 易於測試 - 330+ 測試
-4. ✅ 易於擴展 - 新功能簡單
-5. ✅ 性能優化 - 已整合
-6. ✅ 文檔完整 - 專業級
+4. ✅ 易於擴充套件 - 新功能簡單
+5. ✅ 效能最佳化 - 已整合
+6. ✅ 檔案完整 - 專業級
 
 **最終評價目標**: ⭐⭐⭐⭐⭐
 

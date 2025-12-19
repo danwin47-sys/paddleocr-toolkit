@@ -53,7 +53,7 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         """
-        發送訊息給特定連線
+        傳送訊息給特定連線
 
         Args:
             message: 訊息字典
@@ -79,7 +79,7 @@ class ConnectionManager:
             try:
                 await connection.send_json(message)
             except Exception as e:
-                print(f"發送失敗: {e}")
+                print(f"傳送失敗: {e}")
                 disconnected.add(connection)
 
         # 移除斷開的連線
@@ -90,7 +90,7 @@ class ConnectionManager:
         self, task_id: str, progress: float, status: str, message: str = ""
     ):
         """
-        發送進度更新
+        傳送進度更新
 
         Args:
             task_id: 任務ID
@@ -111,7 +111,7 @@ class ConnectionManager:
 
     async def send_completion(self, task_id: str, results: Any):
         """
-        發送完成訊息
+        傳送完成訊息
 
         Args:
             task_id: 任務ID
@@ -130,7 +130,7 @@ class ConnectionManager:
 
     async def send_error(self, task_id: str, error: str):
         """
-        發送錯誤訊息
+        傳送錯誤訊息
 
         Args:
             task_id: 任務ID
@@ -162,7 +162,7 @@ class ConnectionManager:
             return sum(len(conns) for conns in self.active_connections.values())
 
 
-# 全域連線管理器實例
+# 全域連線管理器例項
 manager = ConnectionManager()
 
 
@@ -170,6 +170,6 @@ manager = ConnectionManager()
 if __name__ == "__main__":
     print("WebSocket連線管理器")
     print("支援:")
-    print("  • 多任務並行")
+    print("  • 多工並行")
     print("  • 實時進度推送")
     print("  • 自動重連處理")

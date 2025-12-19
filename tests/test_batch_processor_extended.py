@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Batch Processor 擴展測試 - v1.1.0
+Batch Processor 擴充套件測試 - v1.1.0
 補充測試以達到 90% 覆蓋率
 """
 
@@ -90,17 +90,17 @@ class TestBatchProcessorAdvanced:
         assert sum(results_small) == sum(results_large) == 20
 
     def test_worker_count_effect(self):
-        """測試工作線程數影響"""
+        """測試工作執行緒數影響"""
         images = [np.ones((5, 5), dtype=np.uint8) for _ in range(10)]
 
         def process_func(img):
             return img.shape[0]
 
-        # 單線程
+        # 單執行緒
         processor_single = BatchProcessor(max_workers=1)
         results_single = processor_single.process_images(images, process_func)
 
-        # 多線程
+        # 多執行緒
         processor_multi = BatchProcessor(max_workers=4)
         results_multi = processor_multi.process_images(images, process_func)
 
@@ -113,7 +113,7 @@ class TestPdfToImagesParallelAdvanced:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_different_dpi_settings(self):
-        """測試不同 DPI 設置"""
+        """測試不同 DPI 設定"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 
@@ -141,7 +141,7 @@ class TestPdfToImagesParallelAdvanced:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_max_workers_parameter(self):
-        """測試最大工作線程參數"""
+        """測試最大工作執行緒引數"""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             temp_path = f.name
 
@@ -152,7 +152,7 @@ class TestPdfToImagesParallelAdvanced:
             doc.save(temp_path)
             doc.close()
 
-            # 不同工作線程數
+            # 不同工作執行緒數
             results_1 = pdf_to_images_parallel(temp_path, max_workers=1)
             results_4 = pdf_to_images_parallel(temp_path, max_workers=4)
 
@@ -226,13 +226,13 @@ class TestBatchProcessImagesAdvanced:
             assert len(results) == 15
 
     def test_process_with_kwargs(self):
-        """測試帶額外參數的處理"""
+        """測試帶額外引數的處理"""
         images = [np.ones((5, 5), dtype=np.uint8) for _ in range(3)]
 
         def process_with_multiplier(img, multiplier=1):
             return img.sum() * multiplier
 
-        # 這個測試確認函數簽名
+        # 這個測試確認函式簽名
         results = batch_process_images(
             images=images,
             process_func=lambda x: process_with_multiplier(x, multiplier=2),
@@ -257,7 +257,7 @@ class TestBatchProcessImagesAdvanced:
 
 
 class TestGetOptimalWorkersAdvanced:
-    """進階最佳工作線程數測試"""
+    """進階最佳工作執行緒數測試"""
 
     def test_returns_reasonable_value(self):
         """測試返回合理的值"""
@@ -268,7 +268,7 @@ class TestGetOptimalWorkersAdvanced:
 
     def test_consistent_results(self):
         """測試結果一致性"""
-        # 多次調用應該返回相同結果
+        # 多次呼叫應該返回相同結果
         result1 = get_optimal_workers()
         result2 = get_optimal_workers()
 
@@ -299,7 +299,7 @@ class TestBatchProcessorEdgeCases:
         assert len(results) == 5
 
     def test_single_worker(self):
-        """測試單個工作線程"""
+        """測試單個工作執行緒"""
         processor = BatchProcessor(max_workers=1)
 
         images = [np.ones((3, 3), dtype=np.uint8) for _ in range(10)]

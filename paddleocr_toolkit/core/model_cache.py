@@ -33,10 +33,10 @@ class ModelCache:
 
         Args:
             mode: OCR模式
-            **kwargs: 模型參數
+            **kwargs: 模型引數
 
         Returns:
-            模型實例
+            模型例項
         """
         # 建立快取鍵
         cache_key = self._make_cache_key(mode, kwargs)
@@ -58,13 +58,13 @@ class ModelCache:
 
     def _make_cache_key(self, mode: str, kwargs: dict) -> str:
         """建立快取鍵"""
-        # 將參數轉為字串
+        # 將引數轉為字串
         params_str = f"{mode}_{sorted(kwargs.items())}"
         return hashlib.md5(params_str.encode()).hexdigest()
 
     def _load_model(self, mode: str, **kwargs):
         """載入模型（佔位符）"""
-        # 實際應該調用PaddleOCR載入
+        # 實際應該呼叫PaddleOCR載入
         return {"mode": mode, "params": kwargs}
 
     def clear_cache(self):
@@ -169,16 +169,16 @@ class ResultCache:
         file_hash = self._compute_file_hash(file_path)
         cache_key = f"{file_hash}_{mode}"
 
-        # 1. 保存到記憶體
+        # 1. 儲存到記憶體
         self.memory_cache[cache_key] = result
 
-        # 2. 保存到磁碟
+        # 2. 儲存到磁碟
         cache_file = self.cache_dir / f"{cache_key}.pkl"
         try:
             with open(cache_file, "wb") as f:
                 pickle.dump(result, f)
         except Exception as e:
-            print(f"保存快取失敗: {e}")
+            print(f"儲存快取失敗: {e}")
 
         # 3. 檢查快取大小
         self._check_cache_size()
@@ -246,7 +246,7 @@ def cached_ocr_result(mode: str):
 
     def decorator(func):
         def wrapper(file_path, *args, **kwargs):
-            # 尝试从缓存获取
+            # 嘗試從快取獲取
             cached_result = cache.get(file_path, mode)
             if cached_result is not None:
                 return cached_result
@@ -254,7 +254,7 @@ def cached_ocr_result(mode: str):
             # 執行實際處理
             result = func(file_path, *args, **kwargs)
 
-            # 保存到快取
+            # 儲存到快取
             cache.set(file_path, mode, result)
 
             return result

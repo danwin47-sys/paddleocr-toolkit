@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-StatsCollector 單元測試（擴展版）
+StatsCollector 單元測試（擴充套件版）
 """
 
 import os
@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.processors.stats_collector import (
@@ -133,7 +133,7 @@ class TestProcessingStats:
         """測試零頁情況"""
         stats = ProcessingStats(input_file="test.pdf")
 
-        # 不應該拋出除以零錯誤
+        # 不應該丟擲除以零錯誤
         assert stats.chars_per_page == 0.0
         assert stats.pages_per_second == 0.0
 

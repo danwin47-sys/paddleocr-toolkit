@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 自動簡繁轉換工具
-使用 OpenCC 將專案中的簡體中文轉換為繁體中文（台灣習慣與用語修正）。
+使用 OpenCC 將專案中的簡體中文轉換為繁體中文（臺灣習慣與用語修正）。
 """
 
 import os
@@ -17,7 +17,7 @@ except ImportError:
     print("請執行: pip install opencc-python-reimplemented")
     sys.exit(1)
 
-# 支援的檔案類型
+# 支援的檔案型別
 SUPPORTED_EXTENSIONS = {'.py', '.md', '.txt', '.html', '.css', '.yml', '.yaml', '.json', '.sql'}
 
 # 排除的目錄
@@ -54,7 +54,7 @@ def localize_file(file_path: Path, config: str = 's2twp'):
 def main():
     parser = argparse.ArgumentParser(description="自動簡繁轉換工具 (OpenCC)")
     parser.add_argument("path", nargs="?", default=".", help="要轉換的目錄或檔案路徑 (預設為當前目錄)")
-    parser.add_argument("--config", default="s2twp", help="OpenCC 配置 (預設: s2twp - 簡體轉台灣繁體具用語修正)")
+    parser.add_argument("--config", default="s2twp", help="OpenCC 配置 (預設: s2twp - 簡體轉臺灣繁體具用語修正)")
     parser.add_argument("--ext", help="限制特定的副檔名 (例如: .py,.md)")
     parser.add_argument("--dry-run", action="store_true", help="僅顯示將被轉換的檔案，不實際寫入")
     

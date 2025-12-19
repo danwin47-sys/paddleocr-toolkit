@@ -1,6 +1,6 @@
 # 📚 API 使用指南
 
-完整的 PaddleOCR Toolkit API 參考文件。
+完整的 PaddleOCR Toolkit API 參考檔案。
 
 ---
 
@@ -35,9 +35,9 @@ ocr_tool = PaddleOCRTool(
 )
 ```
 
-#### 參數說明
+#### 引數說明
 
-| 參數 | 類型 | 預設值 | 說明 |
+| 引數 | 型別 | 預設值 | 說明 |
 |------|------|--------|------|
 | `mode` | str | "basic" | OCR 模式 |
 | `device` | str | "gpu" | 計算裝置 |
@@ -90,7 +90,7 @@ class OCRResult:
 
 ### process_pdf()
 
-處理 PDF 文件。
+處理 PDF 檔案。
 
 ```python
 all_results, pdf_generator = ocr_tool.process_pdf(
@@ -159,7 +159,7 @@ full_text = ocr_tool.get_text(
 ocr_tool.save_as_markdown(
     all_results,
     output_path="output.md",
-    add_page_numbers=True   # 添加頁碼標記
+    add_page_numbers=True   # 新增頁碼標記
 )
 ```
 
@@ -348,7 +348,7 @@ except ValueError as e:
 
 ---
 
-## 效能優化
+## 效能最佳化
 
 ### GPU 加速
 
@@ -363,7 +363,7 @@ ocr_tool = PaddleOCRTool(
 ### 批次處理
 
 ```python
-# 處理多個文件
+# 處理多個檔案
 from pathlib import Path
 
 pdf_files = list(Path("pdfs/").glob("*.pdf"))
@@ -374,7 +374,7 @@ for pdf_file in pdf_files:
     results, _ = ocr_tool.process_pdf(str(pdf_file))
 ```
 
-### 記憶體優化
+### 記憶體最佳化
 
 ```python
 # 啟用壓縮
@@ -435,7 +435,7 @@ print(f"平均信心度: {avg_confidence:.1%}")
 - [快速開始](QUICK_START.md)
 - [最佳實踐](BEST_PRACTICES.md)
 - [故障排除](TROUBLESHOOTING.md)
-- [範例項目](../examples/README.md)
+- [範例專案](../examples/README.md)
 
 ---
 

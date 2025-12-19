@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-統計插件
-示例全功能插件：收集OCR處理統計資訊
+統計外掛
+示例全功能外掛：收集OCR處理統計資訊
 """
 
 import time
@@ -13,7 +13,7 @@ from paddleocr_toolkit.plugins.base import OCRPlugin
 
 class StatisticsPlugin(OCRPlugin):
     """
-    統計插件
+    統計外掛
 
     功能：
     - 記錄處理次數
@@ -27,7 +27,7 @@ class StatisticsPlugin(OCRPlugin):
     description = "收集和分析OCR處理統計資訊"
 
     def on_init(self) -> bool:
-        """初始化插件"""
+        """初始化外掛"""
         self.stats = {
             "total_processed": 0,
             "total_time": 0.0,
@@ -37,7 +37,7 @@ class StatisticsPlugin(OCRPlugin):
 
         self.current_start_time = None
 
-        self.logger.info("統計插件已初始化")
+        self.logger.info("統計外掛已初始化")
         return True
 
     def on_before_ocr(self, image: Any) -> Any:

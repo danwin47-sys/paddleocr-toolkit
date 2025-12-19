@@ -10,7 +10,7 @@ import yaml
 
 
 def create_project_structure(directory: Path):
-    """?建?目目??构"""
+    """?建?目目??構"""
     directories = [
         directory / "input",
         directory / "output",
@@ -34,11 +34,11 @@ __pycache__/
 
     gitignore_path = directory / ".gitignore"
     gitignore_path.write_text(gitignore_content, encoding="utf-8")
-    print(f"  ?建文件: .gitignore")
+    print(f"  ?建檔案: .gitignore")
 
 
 def create_config_file(directory: Path):
-    """?建默?配置文件"""
+    """?建默?配置檔案"""
     config = {
         "ocr": {
             "mode": "hybrid",
@@ -70,32 +70,32 @@ def create_config_file(directory: Path):
 
 
 def create_readme(directory: Path):
-    """?建README文件"""
+    """?建README檔案"""
     readme_content = """# PaddleOCR Toolkit ?目
 
 ???目使用 PaddleOCR Toolkit ?行文?OCR?理。
 
-## 目??构
+## 目??構
 
 ```
 .
-├── input/          # ?入文件
+├── input/          # ?入檔案
 ├── output/         # ?出?果
-├── config/         # 配置文件
+├── config/         # 配置檔案
 │   └── default.yaml
-└── logs/           # 日志文件
+└── logs/           # 日誌檔案
 ```
 
 ## 使用方法
 
 ```bash
-# ?理??文件
+# ?理??檔案
 python -m paddleocr_toolkit input/document.pdf
 
-# 使用配置文件
+# 使用配置檔案
 python -m paddleocr_toolkit input/document.pdf --config config/default.yaml
 
-# 批量?理
+# 批次?理
 python -m paddleocr_toolkit input/
 ```
 
@@ -126,12 +126,12 @@ def init_command(directory: str = "."):
 
     project_dir = Path(directory).absolute()
 
-    # 1. ?建目??构
-    print("\n[1/4] ?建?目?构...")
+    # 1. ?建目??構
+    print("\n[1/4] ?建?目?構...")
     create_project_structure(project_dir)
 
-    # 2. ?建配置文件
-    print("\n[2/4] ?建配置文件...")
+    # 2. ?建配置檔案
+    print("\n[2/4] ?建配置檔案...")
     create_config_file(project_dir)
 
     # 3. ?建README
@@ -148,9 +148,9 @@ def init_command(directory: str = "."):
     print("? ?目初始化完成！")
     print(f"\n?目目?: {project_dir}")
     print("\n下一步:")
-    print("  1. ?PDF文件放入 input/ 目?")
+    print("  1. ?PDF檔案放入 input/ 目?")
     print("  2. ?行: python -m paddleocr_toolkit input/your.pdf")
-    print("  3. 查看?果: output/")
+    print("  3. 檢視?果: output/")
     print()
 
 

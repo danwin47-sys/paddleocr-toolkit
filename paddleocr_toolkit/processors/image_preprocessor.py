@@ -2,7 +2,7 @@
 """
 PaddleOCR Toolkit - 圖片預處理
 
-提供 OCR 前的圖片優化功能，以提升識別精度。
+提供 OCR 前的圖片最佳化功能，以提升識別精度。
 """
 
 import logging
@@ -242,7 +242,7 @@ def preprocess_for_ocr(
 
 def auto_preprocess(image: np.ndarray, is_scanned: bool = False) -> np.ndarray:
     """
-    根據圖片類型自動選擇預處理方式
+    根據圖片型別自動選擇預處理方式
 
     Args:
         image: 輸入圖片

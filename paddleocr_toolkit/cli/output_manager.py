@@ -137,11 +137,11 @@ class OutputPathManager:
         """根據 OCR 模式處理所有輸出路徑設定
 
         Args:
-            args: 命令列參數
-            script_dir: 腳本所在目錄
+            args: 命令列引數
+            script_dir: 指令碼所在目錄
 
         Returns:
-            argparse.Namespace: 更新後的參數
+            argparse.Namespace: 更新後的引數
         """
         # 根據模式設定預設輸出路徑
         if self.mode == "basic":
@@ -233,7 +233,7 @@ class OutputPathManager:
         """顯示輸出設定摘要
 
         Args:
-            args: 命令列參數
+            args: 命令列引數
         """
         print(f"\n[輸入] {self.input_path}")
         print(f"[模式] {self.mode}")

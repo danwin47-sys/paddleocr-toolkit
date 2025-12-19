@@ -10,7 +10,7 @@ import tempfile
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.processors.glossary_manager import (
@@ -123,7 +123,7 @@ class TestGlossaryManager:
         assert count == 0
 
     def test_find_terms_in_text(self):
-        """測試在文字中查找術語"""
+        """測試在文字中查詢術語"""
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".csv", delete=False, newline="", encoding="utf-8"
         ) as f:

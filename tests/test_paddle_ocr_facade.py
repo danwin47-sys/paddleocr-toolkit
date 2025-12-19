@@ -93,7 +93,7 @@ class TestPaddleOCRFacadeProcessHybrid:
 
     @patch("paddle_ocr_facade.OCREngineManager")
     def test_process_hybrid_wrong_mode_raises_error(self, mock_engine_class):
-        """測試錯誤模式時拋出異常"""
+        """測試錯誤模式時丟擲異常"""
         mock_engine = Mock()
         mock_engine.get_mode.return_value = OCRMode.BASIC
         mock_engine_class.return_value = mock_engine

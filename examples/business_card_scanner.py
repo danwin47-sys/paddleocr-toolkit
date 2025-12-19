@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🎫 名片扫描器 - PaddleOCR Toolkit 示例项目
-自动从名片图片中提取联系资讯
+🎫 名片掃描器 - PaddleOCR Toolkit 示例專案
+自動從名片圖片中提取聯絡資訊
 
 使用方法:
     python business_card_scanner.py card.jpg
-    python business_card_scanner.py cards/  # 批次处理
+    python business_card_scanner.py cards/  # 批次處理
 """
 
 import json
@@ -21,33 +21,33 @@ from paddle_ocr_tool import PaddleOCRTool
 
 
 class BusinessCardScanner:
-    """名片扫描器"""
+    """名片掃描器"""
 
     def __init__(self):
         """初始化OCR引擎"""
         print("初始化 OCR 引擎...")
         self.ocr_tool = PaddleOCRTool(mode="basic", device="gpu")
-        print("OCR 引擎就绪！\n")
+        print("OCR 引擎就緒！\n")
 
     def scan_card(self, image_path: str) -> Dict:
         """
-        扫描名片并提取资讯
+        掃描名片並提取資訊
 
         Args:
-            image_path: 名片图片路径
+            image_path: 名片圖片路徑
 
         Returns:
-            包含联系资讯的字典
+            包含聯絡資訊的字典
         """
-        print(f"扫描名片: {image_path}")
+        print(f"掃描名片: {image_path}")
 
-        # OCR识别
+        # OCR識別
         results = self.ocr_tool.process_image(image_path)
 
-        # 合并所有文字
+        # 合併所有文字
         all_text = "\n".join([r.text for r in results])
 
-        # 提取资讯
+        # 提取資訊
         card_info = {
             "file": str(image_path),
             "name": self._extract_name(results),
@@ -63,7 +63,7 @@ class BusinessCardScanner:
         return card_info
 
     def _extract_name(self, results: List) -> Optional[str]:
-        """提取姓名（通常在頂部且字體最大）"""
+        """提取姓名（通常在頂部且字型最大）"""
         if results:
             # 假設第一行或第二行是姓名
             for result in results[:3]:
@@ -84,7 +84,7 @@ class BusinessCardScanner:
         return None
 
     def _extract_company(self, results: List) -> Optional[str]:
-        """提取公司名称"""
+        """提取公司名稱"""
         company_keywords = ["公司", "有限", "Co.", "Ltd", "Inc", "Corp"]
 
         for result in results:
@@ -97,8 +97,8 @@ class BusinessCardScanner:
         """提取電話號碼"""
         # 尋找手機號碼
         patterns = [
-            r"09\d{8}",  # 台灣手機
-            r"\d{2,4}[-\s]?\d{6,8}",  # 台灣市話 (區碼2-4位, 號碼6-8位)
+            r"09\d{8}",  # 臺灣手機
+            r"\d{2,4}[-\s]?\d{6,8}",  # 臺灣市話 (區碼2-4位, 號碼6-8位)
             r"\+\d{1,3}[-\s]?\d{1,14}",  # 國際號碼
             r"\(\d{3}\)\s?\d{3}[-\s]?\d{4}",  # (123) 456-7890
         ]
@@ -245,17 +245,17 @@ def main():
             scanner.print_card_info(info)
             all_contacts.append(info)
 
-            # 导出vCard
+            # 匯出vCard
             vcard_file = img_file.stem + ".vcf"
             scanner.export_to_vcard(info, vcard_file)
 
-        # 保存批次结果
+        # 儲存批次結果
         with open("contacts_batch.json", "w", encoding="utf-8") as f:
             json.dump(all_contacts, f, ensure_ascii=False, indent=2)
-        print(f"\n批次结果已保存至: contacts_batch.json")
+        print(f"\n批次結果已儲存至: contacts_batch.json")
 
     else:
-        print(f"路径不存在: {input_path}")
+        print(f"路徑不存在: {input_path}")
 
 
 if __name__ == "__main__":

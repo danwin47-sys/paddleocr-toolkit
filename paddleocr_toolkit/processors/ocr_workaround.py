@@ -42,9 +42,9 @@ class OCRWorkaround:
 
     適用於掃描件（黑字白底）的特殊處理：
     1. 在原文位置加入白色矩形遮罩
-    2. 在遮罩上方添加翻譯文字（強制黑色）
+    2. 在遮罩上方新增翻譯文字（強制黑色）
 
-    注意：僅適用於黑字白底的文件
+    注意：僅適用於黑字白底的檔案
     """
 
     def __init__(
@@ -57,7 +57,7 @@ class OCRWorkaround:
         初始化 OCR 補救模式
 
         Args:
-            margin: 遮罩邊距（像素）
+            margin: 遮罩邊距（畫素）
             force_black: 是否強制文字為黑色
             mask_color: 遮罩顏色（預設白色）
         """
@@ -82,7 +82,7 @@ class OCRWorkaround:
             page: PyMuPDF 頁面
             original_block: 原文區塊資訊
             translated_text: 翻譯後的文字
-            font_size: 字體大小（預設自動計算）
+            font_size: 字型大小（預設自動計算）
 
         Returns:
             bool: 是否成功
@@ -102,7 +102,7 @@ class OCRWorkaround:
             shape.finish(color=self.mask_color, fill=self.mask_color, width=0)
             shape.commit()
 
-            # 2. 計算字體大小
+            # 2. 計算字型大小
             if font_size is None:
                 font_size = original_block.height * 0.7
                 if font_size < 6:
@@ -155,7 +155,7 @@ class OCRWorkaround:
 
 def detect_scanned_document(pdf_path: str, threshold: float = 0.3) -> bool:
     """
-    偵測是否為掃描文件
+    偵測是否為掃描檔案
 
     判斷標準：
     - 可提取的文字量少

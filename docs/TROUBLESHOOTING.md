@@ -238,7 +238,7 @@ print(config)
 
 - YAML 格式錯誤
 - 檔案路徑錯誤
-- 權限問題
+- 許可權問題
 
 **驗證 YAML**:
 
@@ -381,14 +381,14 @@ import platform
 import paddleocr
 
 print(f"Python 版本: {sys.version}")
-print(f"平台: {platform.platform()}")
+print(f"平臺: {platform.platform()}")
 print(f"PaddleOCR 版本: {paddleocr.__version__}")
 print(f"錯誤訊息: [貼上完整錯誤]")
 ```
 
 ### 社群資源
 
-- 📖 [官方文件](../README.md)
+- 📖 [官方檔案](../README.md)
 - 💬 [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
 - 📚 [FAQ](FAQ.md)
 - 🎯 [最佳實踐](BEST_PRACTICES.md)

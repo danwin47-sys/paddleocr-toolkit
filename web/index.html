@@ -495,7 +495,7 @@
             <!-- 上傳區域 -->
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📤</div>
-                <h3>點擊選擇檔案，或把檔案拖到這裡</h3>
+                <h3>點選選擇檔案，或把檔案拖到這裡</h3>
                 <p class="upload-hint">支援 PDF、JPG、PNG 格式</p>
                 <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
             </div>
@@ -519,7 +519,7 @@
                         <span class="option-title">🎯 標準模式</span>
                         <span class="option-badge recommended">推薦</span>
                     </div>
-                    <p class="option-desc">適合大多數文件，自動處理各種版面</p>
+                    <p class="option-desc">適合大多數檔案，自動處理各種版面</p>
                 </div>
                 
                 <div class="option-card" data-mode="basic">
@@ -529,7 +529,7 @@
                         <span class="option-title">⚡ 快速模式</span>
                         <span class="option-badge">速度快</span>
                     </div>
-                    <p class="option-desc">適合簡單文件，處理速度較快</p>
+                    <p class="option-desc">適合簡單檔案，處理速度較快</p>
                 </div>
                 
                 <div class="option-card" data-mode="structure">
@@ -539,7 +539,7 @@
                         <span class="option-title">📊 精準模式</span>
                         <span class="option-badge">表格適用</span>
                     </div>
-                    <p class="option-desc">適合有表格、圖表的複雜文件</p>
+                    <p class="option-desc">適合有表格、圖表的複雜檔案</p>
                 </div>
             </div>
             
@@ -634,7 +634,7 @@
         let extractedText = '';
         let startTime = 0;
         
-        // 點擊上傳
+        // 點選上傳
         uploadArea.addEventListener('click', () => fileInput.click());
         
         // 檔案選擇
@@ -662,7 +662,7 @@
         function handleFile(file) {
             if (!file) return;
             
-            // 檢查檔案類型
+            // 檢查檔案型別
             const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
             if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|jpg|jpeg|png)$/i)) {
                 showToast('❌ 請選擇 PDF、JPG 或 PNG 格式的檔案');
@@ -682,7 +682,7 @@
             processBtn.disabled = false;
             updateStep(1);
             
-            // 根據檔案類型更新圖示
+            // 根據檔案型別更新圖示
             const icon = filePreview.querySelector('.file-icon');
             icon.textContent = file.type === 'application/pdf' ? '📕' : '🖼️';
         }
@@ -696,7 +696,7 @@
         function resetUpload() {
             selectedFile = null;
             uploadArea.classList.remove('has-file');
-            uploadArea.querySelector('h3').textContent = '點擊選擇檔案，或把檔案拖到這裡';
+            uploadArea.querySelector('h3').textContent = '點選選擇檔案，或把檔案拖到這裡';
             filePreview.classList.remove('show');
             processBtn.disabled = true;
             fileInput.value = '';
@@ -750,7 +750,7 @@
                 
             } catch (error) {
                 clearInterval(progressInterval);
-                showToast('❌ 連接伺服器失敗，請確認伺服器已啟動');
+                showToast('❌ 連線伺服器失敗，請確認伺服器已啟動');
                 resetAfterError();
             }
         });
@@ -775,7 +775,7 @@
                     }
                 } catch (error) {
                     clearInterval(progressInterval);
-                    showToast('❌ 連接中斷');
+                    showToast('❌ 連線中斷');
                     resetAfterError();
                 }
             };

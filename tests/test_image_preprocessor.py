@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Image Preprocessor 單元測試（擴展版）
+Image Preprocessor 單元測試（擴充套件版）
 """
 
 import os
@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -326,7 +326,7 @@ class TestMissingDependencies:
 
         image = np.ones((100, 100, 3), dtype=np.uint8) * 128
 
-        # 測試所有函數都返回原圖（降級行為）
+        # 測試所有函式都返回原圖（降級行為）
         assert np.array_equal(enhance_contrast(image), image)
         assert np.array_equal(denoise(image), image)
         assert np.array_equal(binarize(image), image)

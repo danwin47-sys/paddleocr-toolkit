@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-OCR Workaround 單元測試（擴展版）
+OCR Workaround 單元測試（擴充套件版）
 """
 
 import os
@@ -9,7 +9,7 @@ import tempfile
 
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -84,7 +84,7 @@ class TestOCRWorkaround:
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_text_with_mask(self):
-        """測試添加文字遮罩"""
+        """測試新增文字遮罩"""
         workaround = OCRWorkaround()
 
         # 建立測試頁面
@@ -93,14 +93,14 @@ class TestOCRWorkaround:
 
         text_block = TextBlock(text="Test", x=10, y=20, width=50, height=20)
 
-        # 應該不會拋出錯誤
+        # 應該不會丟擲錯誤
         workaround.add_text_with_mask(page, text_block, "翻譯")
 
         doc.close()
 
     @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
     def test_add_multiple_texts(self):
-        """測試添加多個文字"""
+        """測試新增多個文字"""
         workaround = OCRWorkaround()
 
         doc = fitz.open()

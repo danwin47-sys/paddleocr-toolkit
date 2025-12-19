@@ -1,29 +1,29 @@
-# Task 2.1.4: 提取模式分发逻辑实作计划
+# Task 2.1.4: 提取模式分發邏輯實作計劃
 
-> 建立时间：2024-12-14 06:50  
-> 状态：⏳ 执行中  
-> 风险等级：🔴 高（最大的重构任务）
-
----
-
-## 🎯 目标
-
-将 `main()` 函数中的模式处理逻辑（约 187 行，2015-2201）提取到独立的模式处理器。
+> 建立時間：2024-12-14 06:50  
+> 狀態：⏳ 執行中  
+> 風險等級：🔴 高（最大的重構任務）
 
 ---
 
-## 📊 现状分析
+## 🎯 目標
 
-### `main()` 中的模式处理逻辑（第 2015-2201 行）
+將 `main()` 函式中的模式處理邏輯（約 187 行，2015-2201）提取到獨立的模式處理器。
 
-**总计：187 行**
+---
+
+## 📊 現狀分析
+
+### `main()` 中的模式處理邏輯（第 2015-2201 行）
+
+**總計：187 行**
 
 #### 1. **formula 模式**（13 行，2015-2027）
 
 ```python
 if args.mode == "formula":
     result = tool.process_formula(...)
-    # 结果显示
+    # 結果顯示
 ```
 
 #### 2. **structure/vl 模式**（22 行，2029-2050）
@@ -31,7 +31,7 @@ if args.mode == "formula":
 ```python
 elif args.mode in ["structure", "vl"]:
     result = tool.process_structured(...)
-    # 结果显示
+    # 結果顯示
 ```
 
 #### 3. **hybrid 模式**（74 行，2052-2125）
@@ -41,24 +41,24 @@ elif args.mode in ["structure", "vl"]:
 
 #### 4. **basic 模式**（74 行，2127-2201）
 
-- 目录处理
-- PDF 处理
-- 图片处理
-- 文字输出
+- 目錄處理
+- PDF 處理
+- 圖片處理
+- 文字輸出
 
 ---
 
-## 📋 执行策略
+## 📋 執行策略
 
-### 策略选择：创建 ModeProcessor 类
+### 策略選擇：建立 ModeProcessor 類
 
-不创建复杂的 ModeDispatcher，而是创建一个简单的 `ModeProcessor` 类来封装模式处理逻辑。
+不建立複雜的 ModeDispatcher，而是建立一個簡單的 `ModeProcessor` 類來封裝模式處理邏輯。
 
-#### 新文件：`paddleocr_toolkit/cli/mode_processor.py`
+#### 新檔案：`paddleocr_toolkit/cli/mode_processor.py`
 
 ```python
 class ModeProcessor:
-    """处理不同 OCR 模式的执行和结果显示"""
+    """處理不同 OCR 模式的執行和結果顯示"""
     
     def __init__(self, tool, args, input_path):
         self.tool = tool
@@ -66,7 +66,7 @@ class ModeProcessor:
         self.input_path = input_path
     
     def process(self) -> Dict[str, Any]:
-        """根据模式执行处理"""
+        """根據模式執行處理"""
         if self.args.mode == "formula":
             return self._process_formula()
         elif self.args.mode in ["structure", "vl"]:
@@ -77,55 +77,55 @@ class ModeProcessor:
             return self._process_basic()
     
     def _process_formula(self):
-        """处理 formula 模式"""
-        # 提取 formula 逻辑
+        """處理 formula 模式"""
+        # 提取 formula 邏輯
     
     def _process_structured(self):
-        """处理 structure/vl 模式"""
-        # 提取 structure/vl 逻辑
+        """處理 structure/vl 模式"""
+        # 提取 structure/vl 邏輯
     
     def _process_hybrid(self):
-        """处理 hybrid 模式"""
-        # 提取 hybrid 逻辑（包括翻译）
+        """處理 hybrid 模式"""
+        # 提取 hybrid 邏輯（包括翻譯）
     
     def _process_basic(self):
-        """处理 basic 模式"""
-        # 提取 basic 逻辑
+        """處理 basic 模式"""
+        # 提取 basic 邏輯
 ```
 
 ---
 
-## 📋 执行步骤
+## 📋 執行步驟
 
-### Step 1: 创建 `mode_processor.py`
+### Step 1: 建立 `mode_processor.py`
 
-**创建文件**: `paddleocr_toolkit/cli/mode_processor.py`
+**建立檔案**: `paddleocr_toolkit/cli/mode_processor.py`
 
 **包含**:
 
-- `ModeProcessor` 类
-- 4 个模式处理方法
-- 结果显示辅助方法
+- `ModeProcessor` 類
+- 4 個模式處理方法
+- 結果顯示輔助方法
 
-**预计行数**: ~250 行
+**預計行數**: ~250 行
 
 ---
 
 ### Step 2: 在 `main()` 中使用 `ModeProcessor`
 
-**原始代码**（187 行）:
+**原始程式碼**（187 行）:
 
 ```python
-# 根据模式处理
+# 根據模式處理
 if args.mode == "formula":
-    # 公式识别模式
+    # 公式識別模式
     result = tool.process_formula(...)
     if result.get("error"):
         print(...)
     else:
         print(...)
 elif args.mode in ["structure", "vl"]:
-    # 结构化处理模式
+    # 結構化處理模式
     ...
 elif args.mode == "hybrid":
     # 混合模式
@@ -135,19 +135,19 @@ else:
     ...
 ```
 
-**新代码**（~10 行）:
+**新程式碼**（~10 行）:
 
 ```python
-# 使用模式处理器执行 OCR
+# 使用模式處理器執行 OCR
 from paddleocr_toolkit.cli import ModeProcessor
 processor = ModeProcessor(tool, args, input_path)
 result = processor.process()
 
-# 模式处理器已包含结果显示
-# 无需额外处理
+# 模式處理器已包含結果顯示
+# 無需額外處理
 ```
 
-**预期减少**: main() 从 ~262 行 → **~85 行** (-177 行)
+**預期減少**: main() 從 ~262 行 → **~85 行** (-177 行)
 
 ---
 
@@ -168,25 +168,25 @@ __all__ = [
 
 ---
 
-### Step 4: 测试验证
+### Step 4: 測試驗證
 
-#### 测试 1: 各种模式功能测试
+#### 測試 1: 各種模式功能測試
 
 ```bash
-# 测试 formula 模式
+# 測試 formula 模式
 python paddle_ocr_tool.py test.png --mode formula
 
-# 测试 structure 模式
+# 測試 structure 模式
 python paddle_ocr_tool.py test.pdf --mode structure
 
-# 测试 hybrid 模式
+# 測試 hybrid 模式
 python paddle_ocr_tool.py test.pdf --mode hybrid
 
-# 测试 basic 模式
+# 測試 basic 模式
 python paddle_ocr_tool.py test.pdf
 ```
 
-#### 测试 2: 执行测试套件
+#### 測試 2: 執行測試套件
 
 ```bash
 pytest tests/ -v
@@ -194,85 +194,85 @@ pytest tests/ -v
 
 ---
 
-## 📊 预期成果
+## 📊 預期成果
 
-### 程式码行数变化
+### 程式碼行數變化
 
-| 档案 | 变化 | 说明 |
+| 檔案 | 變化 | 說明 |
 |------|------|------|
-| `paddle_ocr_tool.py` | **-177 行** | 移除模式处理逻辑 |
-| `cli/mode_processor.py` | **+250 行** | 新增模式处理器 |
-| `cli/__init__.py` | **+2 行** | 汇出新类 |
-| **净变化** | **+75 行** | 模块化开销 |
+| `paddle_ocr_tool.py` | **-177 行** | 移除模式處理邏輯 |
+| `cli/mode_processor.py` | **+250 行** | 新增模式處理器 |
+| `cli/__init__.py` | **+2 行** | 匯出新類 |
+| **淨變化** | **+75 行** | 模組化開銷 |
 
-### `main()` 函数简化
+### `main()` 函式簡化
 
-- **当前**: ~262 行
-- **目标**: ~85 行
-- **减少**: **~177 行** (67.6% 减少)
+- **當前**: ~262 行
+- **目標**: ~85 行
+- **減少**: **~177 行** (67.6% 減少)
 
-### Task 2.1 整体进度
+### Task 2.1 整體進度
 
 - Step 1 完成: -300 行
 - Step 2 完成: -59 行
 - Step 3 完成: -14 行
 - Step 4 完成: -177 行
-- **累计减少**: **-550 行** (635 → 85, **86.6% 完成**)
+- **累計減少**: **-550 行** (635 → 85, **86.6% 完成**)
 
 ---
 
-## ⚠️ 注意事项
+## ⚠️ 注意事項
 
-### 需要处理的细节
+### 需要處理的細節
 
 1. ✅ 保持所有模式的功能完整
-2. ✅ 结果显示逻辑一致
-3. ✅ 错误处理不变
-4. ✅ `show_progress` 参数正确传递
-5. ✅ 翻译功能完整保留
-6. ✅ `SUPPORTED_IMAGE_FORMATS` 和 `SUPPORTED_PDF_FORMAT` 常量访问
+2. ✅ 結果顯示邏輯一致
+3. ✅ 錯誤處理不變
+4. ✅ `show_progress` 引數正確傳遞
+5. ✅ 翻譯功能完整保留
+6. ✅ `SUPPORTED_IMAGE_FORMATS` 和 `SUPPORTED_PDF_FORMAT` 常量訪問
 
-### 可能的挑战
+### 可能的挑戰
 
-1. **basic 模式复杂**: 需要处理目录/PDF/图片三种输入
-2. **hybrid + translation**: 翻译逻辑较复杂
-3. **结果显示多样**: 每个模式的输出格式不同
-4. **全局常量**: 需要正确引用 `SUPPORTED_*` 常量
+1. **basic 模式複雜**: 需要處理目錄/PDF/圖片三種輸入
+2. **hybrid + translation**: 翻譯邏輯較複雜
+3. **結果顯示多樣**: 每個模式的輸出格式不同
+4. **全域性常量**: 需要正確引用 `SUPPORTED_*` 常量
 
 ---
 
-## 🎯 成功标准
+## 🎯 成功標準
 
-- ✅ `ModeProcessor` 类功能完整
-- ✅ `main()` 减少 ~177 行
+- ✅ `ModeProcessor` 類功能完整
+- ✅ `main()` 減少 ~177 行
 - ✅ 所有模式功能正常
-- ✅ 测试全部通过
-- ✅ CLI 功能无破坏性变更
+- ✅ 測試全部透過
+- ✅ CLI 功能無破壞性變更
 
 ---
 
-## 💡 实作建议
+## 💡 實作建議
 
-### 分步实作（降低风险）
+### 分步實作（降低風險）
 
-**阶段 1**: 先提取简单模式
+**階段 1**: 先提取簡單模式
 
 - formula (13 行)
 - structure/vl (22 行)
 
-**阶段 2**: 提取 hybrid 模式
+**階段 2**: 提取 hybrid 模式
 
 - hybrid 普通 (20 行)
 - hybrid + translation (54 行)
 
-**阶段 3**: 提取 basic 模式（最复杂）
+**階段 3**: 提取 basic 模式（最複雜）
 
-- basic 全部逻辑 (74 行)
+- basic 全部邏輯 (74 行)
 
-**阶段 4**: 测试和验证
+**階段 4**: 測試和驗證
 
 ---
 
-*计划建立：2024-12-14 06:50*  
-*预计执行时间：1-1.5 小时*  
-*下一步：开始实作 Step 1*
+*計劃建立：2024-12-14 06:50*  
+*預計執行時間：1-1.5 小時*  
+*下一步：開始實作 Step 1*

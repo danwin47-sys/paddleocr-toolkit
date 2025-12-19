@@ -32,7 +32,7 @@ class TestHybridPDFProcessorInitialization:
         assert processor.jpeg_quality == 85
 
     def test_init_with_non_hybrid_engine_raises_error(self):
-        """測試使用非 hybrid 引擎初始化時拋出錯誤"""
+        """測試使用非 hybrid 引擎初始化時丟擲錯誤"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.BASIC
 
@@ -65,7 +65,7 @@ class TestHybridPDFProcessorProcessPDF:
 
     @pytest.fixture
     def processor(self, mock_engine):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         return HybridPDFProcessor(mock_engine)
 
     @patch("paddleocr_toolkit.processors.hybrid_processor.fitz")
@@ -137,7 +137,7 @@ class TestHybridPDFProcessorExtractAndMergeResults:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return HybridPDFProcessor(mock_engine)
@@ -185,7 +185,7 @@ class TestHybridPDFProcessorGenerateDualPDFs:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return HybridPDFProcessor(mock_engine)
@@ -215,7 +215,7 @@ class TestHybridPDFProcessorSaveOutputs:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         mock_engine = Mock(spec=OCREngineManager)
         mock_engine.get_mode.return_value = OCRMode.HYBRID
         return HybridPDFProcessor(mock_engine)

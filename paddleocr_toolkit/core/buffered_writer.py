@@ -1,8 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
 """
-緩衝寫入工具 - I/O 優化
+緩衝寫入工具 - I/O 最佳化
 
-提供帶緩衝的文件寫入，減少 I/O 操作次數。
+提供帶緩衝的檔案寫入，減少 I/O 操作次數。
 """
 
 from typing import Any, Dict, List, Optional
@@ -10,11 +10,11 @@ from typing import Any, Dict, List, Optional
 
 class BufferedWriter:
     """
-    帶緩衝的文件寫入器
+    帶緩衝的檔案寫入器
 
     優點：
     - 批次寫入減少 I/O 次數
-    - 大緩衝區提升性能
+    - 大緩衝區提升效能
     - 自動 flush 機制
     """
 
@@ -30,7 +30,7 @@ class BufferedWriter:
         Args:
             filepath: 輸出檔案路徑
             buffer_size: 行緩衝大小（預設 1000 行）
-            file_buffer_size: 文件緩衝大小（預設 1MB）
+            file_buffer_size: 檔案緩衝大小（預設 1MB）
         """
         self.filepath = filepath
         self.buffer: List[str] = []
@@ -69,7 +69,7 @@ class BufferedWriter:
             self.write(line)
 
     def flush(self):
-        """刷新緩衝區到文件"""
+        """重新整理緩衝區到檔案"""
         if self.buffer:
             self.file.write("\n".join(self.buffer) + "\n")
             self.buffer.clear()
@@ -127,7 +127,7 @@ class BufferedJSONWriter:
             self.flush()
 
     def flush(self):
-        """刷新緩衝區"""
+        """重新整理緩衝區"""
         if not self.buffer:
             return
 
@@ -159,7 +159,7 @@ class BufferedJSONWriter:
 
 def write_text_efficient(filepath: str, lines: List[str], buffer_size: int = 1000):
     """
-    高效寫入文字文件
+    高效寫入文字檔案
 
     Args:
         filepath: 輸出檔案路徑

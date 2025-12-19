@@ -58,7 +58,7 @@ class TestSemanticProcessor:
             mock_post = Mock()
             mock_post.status_code = 200
             mock_post.json.return_value = {
-                "response": "這個文件可能有錯別字"
+                "response": "這個檔案可能有錯別字"
             }
             mock_requests.post.return_value = mock_post
             
@@ -67,7 +67,7 @@ class TestSemanticProcessor:
             original_text = "這個文建可能有銷別字"
             corrected = processor.correct_ocr_errors(original_text)
             
-            assert corrected == "這個文件可能有錯別字"
+            assert corrected == "這個檔案可能有錯別字"
             assert "文建" not in corrected
             assert "銷別字" not in corrected
     
@@ -104,7 +104,7 @@ class TestSemanticProcessor:
             assert result["email"] == "zhang@example.com"
     
     def test_summarize_document(self):
-        """測試文件摘要"""
+        """測試檔案摘要"""
         with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True), \
              patch("paddleocr_toolkit.llm.llm_client.requests", create=True) as mock_requests:
             # Mock 服務可用
@@ -116,7 +116,7 @@ class TestSemanticProcessor:
             mock_post = Mock()
             mock_post.status_code = 200
             mock_post.json.return_value = {
-                "response": "這是關於 PaddleOCR 工具包的技術文件"
+                "response": "這是關於 PaddleOCR 工具包的技術檔案"
             }
             mock_requests.post.return_value = mock_post
             
@@ -124,8 +124,8 @@ class TestSemanticProcessor:
             
             long_text = """
             PaddleOCR Toolkit 是一個強大的光學字元識別工具包，
-            支援多種語言和格式。本文件介紹了如何使用該工具包
-            進行文字識別、翻譯和文件處理。
+            支援多種語言和格式。本檔案介紹瞭如何使用該工具包
+            進行文字識別、翻譯和檔案處理。
             """ * 10
             
             summary = processor.summarize_document(long_text, max_length=50)

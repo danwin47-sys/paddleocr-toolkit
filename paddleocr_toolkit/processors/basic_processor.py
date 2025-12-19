@@ -201,7 +201,7 @@ class BasicProcessor:
                     pdf_path_obj.parent / f"{pdf_path_obj.stem}_searchable.pdf"
                 )
 
-            # 打開 PDF
+            # 開啟 PDF
             pdf_doc = fitz.open(pdf_path)
             total_pages = len(pdf_doc)
 

@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PDF 工具函數單元測試
+PDF 工具函式單元測試
 """
 
 import os
@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import pytest
 
-# 添加專案路徑
+# 新增專案路徑
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from paddleocr_toolkit.core.pdf_utils import (
@@ -123,7 +123,7 @@ class TestAddImagePage:
     """測試 add_image_page"""
 
     def test_add_page(self):
-        """測試添加圖片頁面"""
+        """測試新增圖片頁面"""
         try:
             doc = create_pdf()
             image = np.zeros((100, 200, 3), dtype=np.uint8)
@@ -137,7 +137,7 @@ class TestAddImagePage:
             pytest.skip("PyMuPDF not installed")
 
     def test_add_compressed_page(self):
-        """測試添加壓縮頁面"""
+        """測試新增壓縮頁面"""
         try:
             doc = create_pdf()
             image = np.zeros((100, 200, 3), dtype=np.uint8)
@@ -154,7 +154,7 @@ class TestMissingDependencies:
     """測試缺少依賴時的錯誤處理"""
 
     def test_numpy_to_pdf_bytes_without_pil(self, monkeypatch):
-        """測試缺少 Pillow 時拋出錯誤"""
+        """測試缺少 Pillow 時丟擲錯誤"""
         import paddleocr_toolkit.core.pdf_utils as module
 
         monkeypatch.setattr(module, "HAS_PIL", False)
@@ -165,7 +165,7 @@ class TestMissingDependencies:
             numpy_to_pdf_bytes(image)
 
     def test_add_image_page_without_fitz(self, monkeypatch):
-        """測試缺少 PyMuPDF 時拋出錯誤"""
+        """測試缺少 PyMuPDF 時丟擲錯誤"""
         import paddleocr_toolkit.core.pdf_utils as module
 
         monkeypatch.setattr(module, "HAS_FITZ", False)
@@ -178,7 +178,7 @@ class TestMissingDependencies:
             add_image_page(None, image)
 
     def test_add_image_page_without_pil(self, monkeypatch):
-        """測試 add_image_page 缺少 Pillow 時拋出錯誤"""
+        """測試 add_image_page 缺少 Pillow 時丟擲錯誤"""
         import paddleocr_toolkit.core.pdf_utils as module
 
         monkeypatch.setattr(module, "HAS_PIL", False)
@@ -216,7 +216,7 @@ class TestRGBAConversion:
 
 
 class TestAdditionalUtilities:
-    """測試其他工具函數"""
+    """測試其他工具函式"""
 
     def test_page_to_numpy(self):
         """測試 page_to_numpy"""
@@ -267,10 +267,10 @@ class TestAdditionalUtilities:
             src_doc = fitz.open()
             dst_doc = fitz.open()
 
-            # 在來源文件建立一頁
+            # 在來原始檔建立一頁
             src_doc.new_page(width=100, height=100)
 
-            # 複製到目標文件
+            # 複製到目標檔案
             result_page = copy_page(src_doc, dst_doc, 0)
 
             assert len(dst_doc) == 1

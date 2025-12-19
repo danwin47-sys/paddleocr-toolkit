@@ -10,12 +10,12 @@ PaddleOCR Toolkit - 命令列入口點
 import os
 import sys
 
-# 添加父目錄到路徑以支援 paddle_ocr_tool
+# 新增父目錄到路徑以支援 paddle_ocr_tool
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-# 調用原始的 main 函數
+# 呼叫原始的 main 函式
 from paddle_ocr_tool import main
 
 if __name__ == "__main__":

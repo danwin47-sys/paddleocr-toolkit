@@ -1,25 +1,25 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - CLI 參數解析器
+PaddleOCR Toolkit - CLI 引數解析器
 
-提供命令列介面的參數定義和解析功能。
+提供命令列介面的引數定義和解析功能。
 """
 
 import argparse
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
-    """建立命令列參數解析器
+    """建立命令列引數解析器
 
     Returns:
-        argparse.ArgumentParser: 設定好的參數解析器
+        argparse.ArgumentParser: 設定好的引數解析器
 
     Example:
         parser = create_argument_parser()
         args = parser.parse_args()
     """
     parser = argparse.ArgumentParser(
-        description="PaddleOCR 工具 - 多功能文件辨識與處理器",
+        description="PaddleOCR 工具 - 多功能檔案辨識與處理器",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 範例:
@@ -38,7 +38,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     # 公式識別模式（輸出 LaTeX）
     python paddle_ocr_tool.py math_image.png --mode formula --latex-output formulas.tex
     
-    # 啟用文件方向校正
+    # 啟用檔案方向校正
     python paddle_ocr_tool.py input.pdf --orientation-classify --text-output result.txt
     
     # 批次處理目錄
@@ -49,7 +49,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         """,
     )
 
-    # 基本參數
+    # 基本引數
     parser.add_argument("input", help="輸入檔案或目錄路徑")
 
     # OCR 模式選項
@@ -62,12 +62,12 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="OCR 模式: basic, structure, vl, formula, hybrid (版面分析+精確OCR)",
     )
 
-    # 文件校正選項
+    # 檔案校正選項
     parser.add_argument(
-        "--orientation-classify", action="store_true", help="啟用文件方向自動校正"
+        "--orientation-classify", action="store_true", help="啟用檔案方向自動校正"
     )
 
-    parser.add_argument("--unwarping", action="store_true", help="啟用文件彎曲校正")
+    parser.add_argument("--unwarping", action="store_true", help="啟用檔案彎曲校正")
 
     parser.add_argument("--textline-orientation", action="store_true", help="啟用文字行方向偵測")
 
@@ -176,7 +176,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         type=str,
         default="cpu",
         choices=["gpu", "cpu"],
-        help="運算設備（預設：cpu，如有 CUDA 可用 --device gpu）",
+        help="運算裝置（預設：cpu，如有 CUDA 可用 --device gpu）",
     )
 
     parser.add_argument(
@@ -188,7 +188,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--debug-text",
         action="store_true",
-        help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便調試文字位置）",
+        help="DEBUG 模式：將可搜尋 PDF 的隱形文字改為粉紅色可見文字（方便除錯文字位置）",
     )
 
     parser.add_argument(
@@ -258,7 +258,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     translate_group.add_argument(
-        "--font-path", type=str, default=None, help="自訂字體路徑（用於繪製翻譯文字）"
+        "--font-path", type=str, default=None, help="自訂字型路徑（用於繪製翻譯文字）"
     )
 
     translate_group.add_argument(

@@ -30,7 +30,7 @@ class TestParallelPDFProcessor:
         assert processor.workers >= 1
 
     def test_processor_custom_workers(self):
-        """測試自定義工作進程數"""
+        """測試自定義工作程式數"""
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )
@@ -61,7 +61,7 @@ class TestParallelPDFProcessor:
         assert result[0] == 0
 
     def test_processor_process_serial(self):
-        """測試串行處理"""
+        """測試序列處理"""
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )

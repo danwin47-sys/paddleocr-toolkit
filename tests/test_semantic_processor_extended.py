@@ -15,7 +15,7 @@ class TestSemanticProcessorEdgeCases:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
             with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
                 from paddleocr_toolkit.llm import OllamaClient
@@ -56,10 +56,10 @@ class TestSemanticProcessorEdgeCases:
         # 應該優雅地處理錯誤
         try:
             result = processor.correct_text("測試")
-            # 如果沒有拋出異常，應該返回原文或空字串
+            # 如果沒有丟擲異常，應該返回原文或空字串
             assert isinstance(result, str)
         except Exception:
-            # 允許拋出異常
+            # 允許丟擲異常
             pass
 
 
@@ -68,7 +68,7 @@ class TestSemanticProcessorLanguageSupport:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
             with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
                 from paddleocr_toolkit.llm import OllamaClient
@@ -98,7 +98,7 @@ class TestSemanticProcessorPromptBuilding:
 
     @pytest.fixture
     def processor(self):
-        """建立 processor 實例"""
+        """建立 processor 例項"""
         with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
             with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
                 from paddleocr_toolkit.llm import OllamaClient

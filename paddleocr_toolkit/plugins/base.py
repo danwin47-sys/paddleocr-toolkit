@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-插件基類
-v1.2.0新增 - 可擴展的插件系統
+外掛基類
+v1.2.0新增 - 可擴充套件的外掛系統
 """
 
 import logging
@@ -12,12 +12,12 @@ from typing import Any, Dict, Optional
 
 class OCRPlugin(ABC):
     """
-    OCR插件基類
+    OCR外掛基類
 
-    所有插件都應繼承此類並實作相關方法
+    所有外掛都應繼承此類並實作相關方法
     """
 
-    # 插件元資料
+    # 外掛元資料
     name: str = "Plugin Name"
     version: str = "1.0.0"
     author: str = "Author"
@@ -25,10 +25,10 @@ class OCRPlugin(ABC):
 
     def __init__(self, config: Optional[Dict] = None):
         """
-        初始化插件
+        初始化外掛
 
         Args:
-            config: 插件配置字典
+            config: 外掛配置字典
         """
         self.config = config or {}
         self.logger = logging.getLogger(f"plugin.{self.name}")
@@ -38,9 +38,9 @@ class OCRPlugin(ABC):
     @abstractmethod
     def on_init(self) -> bool:
         """
-        插件初始化鉤子
+        外掛初始化鉤子
 
-        此方法在插件載入時調用
+        此方法在外掛載入時呼叫
 
         Returns:
             是否初始化成功
@@ -51,7 +51,7 @@ class OCRPlugin(ABC):
         """
         OCR前處理鉤子
 
-        在OCR處理之前調用，可用於圖片預處理
+        在OCR處理之前呼叫，可用於圖片預處理
 
         Args:
             image: 輸入圖片
@@ -65,7 +65,7 @@ class OCRPlugin(ABC):
         """
         OCR後處理鉤子
 
-        在OCR處理之後調用，可用於結果後處理
+        在OCR處理之後呼叫，可用於結果後處理
 
         Args:
             results: OCR結果
@@ -78,27 +78,27 @@ class OCRPlugin(ABC):
         """
         錯誤處理鉤子
 
-        當OCR處理發生錯誤時調用
+        當OCR處理發生錯誤時呼叫
 
         Args:
             error: 異常物件
         """
-        self.logger.error(f"插件 {self.name} 發生錯誤: {error}")
+        self.logger.error(f"外掛 {self.name} 發生錯誤: {error}")
 
     def on_shutdown(self) -> None:
         """
-        插件關閉鉤子
+        外掛關閉鉤子
 
-        在插件卸載時調用，用於清理資源
+        在外掛解除安裝時呼叫，用於清理資源
         """
-        self.logger.info(f"插件 {self.name} 正在關閉")
+        self.logger.info(f"外掛 {self.name} 正在關閉")
 
     def get_info(self) -> Dict[str, Any]:
         """
-        取得插件資訊
+        取得外掛資訊
 
         Returns:
-            插件資訊字典
+            外掛資訊字典
         """
         return {
             "name": self.name,
@@ -110,18 +110,18 @@ class OCRPlugin(ABC):
         }
 
     def enable(self) -> None:
-        """啟用插件"""
+        """啟用外掛"""
         self.enabled = True
-        self.logger.info(f"插件 {self.name} 已啟用")
+        self.logger.info(f"外掛 {self.name} 已啟用")
 
     def disable(self) -> None:
-        """停用插件"""
+        """停用外掛"""
         self.enabled = False
-        self.logger.info(f"插件 {self.name} 已停用")
+        self.logger.info(f"外掛 {self.name} 已停用")
 
     def initialize(self) -> bool:
         """
-        初始化插件（內部使用）
+        初始化外掛（內部使用）
 
         Returns:
             是否初始化成功
@@ -134,13 +134,13 @@ class OCRPlugin(ABC):
             self._initialized = success
 
             if success:
-                self.logger.info(f"插件 {self.name} v{self.version} 初始化成功")
+                self.logger.info(f"外掛 {self.name} v{self.version} 初始化成功")
             else:
-                self.logger.warning(f"插件 {self.name} 初始化失敗")
+                self.logger.warning(f"外掛 {self.name} 初始化失敗")
 
             return success
         except Exception as e:
-            self.logger.error(f"插件 {self.name} 初始化時發生錯誤: {e}")
+            self.logger.error(f"外掛 {self.name} 初始化時發生錯誤: {e}")
             return False
 
     def process_before_ocr(self, image: Any) -> Any:
@@ -183,25 +183,25 @@ class OCRPlugin(ABC):
 
 
 class PreprocessorPlugin(OCRPlugin):
-    """預處理插件基類"""
+    """預處理外掛基類"""
 
     def on_after_ocr(self, results: Any) -> Any:
-        """預處理插件不處理OCR結果"""
+        """預處理外掛不處理OCR結果"""
         return results
 
 
 class PostprocessorPlugin(OCRPlugin):
-    """後處理插件基類"""
+    """後處理外掛基類"""
 
     def on_before_ocr(self, image: Any) -> Any:
-        """後處理插件不處理輸入圖片"""
+        """後處理外掛不處理輸入圖片"""
         return image
 
 
 # 使用範例
 if __name__ == "__main__":
-    print("OCR插件基類")
-    print("\n建立自訂插件:")
+    print("OCR外掛基類")
+    print("\n建立自訂外掛:")
     print(
         """
 class MyPlugin(OCRPlugin):
