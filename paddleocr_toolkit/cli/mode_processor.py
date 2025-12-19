@@ -65,10 +65,6 @@ class ModeProcessor:
 
         Returns:
             Dict[str, Any]: 處理結果
-        """處理 formula 模式
-
-        Returns:
-            Dict[str, Any]: 處理結果
         """
         result = self.tool.process_formula(
             input_path=str(self.input_path), latex_output=self.args.latex_output
