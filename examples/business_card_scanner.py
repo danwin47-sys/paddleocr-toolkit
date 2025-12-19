@@ -63,19 +63,19 @@ class BusinessCardScanner:
         return card_info
 
     def _extract_name(self, results: List) -> Optional[str]:
-        """提取姓名（通常在顶部且字体最大）"""
+        """提取姓名（通常在頂部且字體最大）"""
         if results:
-            # 假设第一行或第二行是姓名
+            # 假設第一行或第二行是姓名
             for result in results[:3]:
                 text = result.text.strip()
-                # 简单判断：2-4个字或2-20个英文字母
+                # 簡單判斷：2-4個字或2-20個英文字母
                 if 2 <= len(text) <= 4 or (text.isalpha() and 2 <= len(text) <= 20):
                     return text
         return None
 
     def _extract_title(self, results: List) -> Optional[str]:
-        """提取职位"""
-        title_keywords = ["经理", "总监", "主管", "Manager", "Director", "CEO", "CTO"]
+        """提取職位"""
+        title_keywords = ["經理", "總監", "主管", "Manager", "Director", "CEO", "CTO"]
 
         for result in results:
             text = result.text.strip()
