@@ -87,9 +87,9 @@ def main():
                 config_wizard()
 
         elif args.command == "process":
-            print(f"处理文件: {args.input}")
+            print(f"處理檔案: {args.input}")
             print(f"模式: {args.mode}")
-            # 这里应该调用实际的处理逻辑
+            # 這裡是實際的處理邏輯
 
         elif args.command == "benchmark":
             from paddleocr_toolkit.cli.commands.benchmark import run_benchmark

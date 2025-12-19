@@ -65,25 +65,29 @@ class ModeProcessor:
 
         Returns:
             Dict[str, Any]: 处理结果
+        """處理 formula 模式
+
+        Returns:
+            Dict[str, Any]: 處理結果
         """
         result = self.tool.process_formula(
             input_path=str(self.input_path), latex_output=self.args.latex_output
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
-        else:
-            print(f"\n[OK] 公式识别完成！共识别 {len(result['formulas'])} 个公式")
-            if result.get("latex_file"):
-                print(f"  LaTeX 文件: {result['latex_file']}")
+            print(f"處理過程中發生錯誤: {result['error']}")
+            return result # Keep original return behavior for error case
+        print(f"\n[OK] 公式識別完成！共識別 {len(result['formulas'])} 個公式")
+        if result.get("latex_file"):
+            print(f"  LaTeX 文件: {result['latex_file']}")
 
         return result
 
     def _process_structured(self) -> Dict[str, Any]:
-        """处理 structure/vl 模式
+        """處理 structure/vl 模式
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
         result = self.tool.process_structured(
             input_path=str(self.input_path),
@@ -94,9 +98,9 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            print(f"處理過程中發生錯誤: {result['error']}")
         else:
-            print(f"\n[OK] 处理完成！共处理 {result['pages_processed']} 页")
+            print(f"\n[OK] 處理完成！共處理 {result['pages_processed']} 頁")
             if result.get("markdown_files"):
                 print(f"  Markdown 文件: {', '.join(result['markdown_files'])}")
             if result.get("json_files"):
@@ -109,38 +113,39 @@ class ModeProcessor:
         return result
 
     def _process_hybrid(self) -> Dict[str, Any]:
-        """处理 hybrid 模式
+        """處理 hybrid 模式
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
-        # 检查是否启用翻译功能
+        # 檢查是否啟用翻譯功能
         if hasattr(self.args, "translate") and self.args.translate:
             return self._process_hybrid_with_translation()
         else:
             return self._process_hybrid_normal()
 
     def _process_hybrid_with_translation(self) -> Dict[str, Any]:
-        """处理 hybrid 模式 + 翻译
+        """處理 hybrid 模式 + 翻譯
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
-        # 检查翻译模块
+        # 檢查翻譯模組
         from paddle_ocr_tool import HAS_TRANSLATOR
 
         if not HAS_TRANSLATOR:
-            print("错误：翻译模块不可用")
-            print("请确认 pdf_translator.py 存在且依赖已安装")
+            print("錯誤：翻譯模組不可用")
+            print("請確認 pdf_translator.py 存在且依賴已安裝")
             sys.exit(1)
 
-        print(f"[翻译功能] 启用")
-        print(f"   来源语言：{self.args.source_lang}")
-        print(f"   目标语言：{self.args.target_lang}")
+        print(f"[翻譯功能] 啟用")
+        print(f"   來源語言：{self.args.source_lang}")
+        print(f"   目標語言：{self.args.target_lang}")
+        print(f"   使用翻譯引擎：{self.args.trans_tool}")
         print(f"   Ollama 模型：{self.args.ollama_model}")
-        print(f"   纯翻译 PDF：{'停用' if self.args.no_mono else '启用'}")
+        print(f"   純翻譯 PDF：{'停用' if self.args.no_mono else '啟用'}")
         print(
-            f"   双语对照 PDF：{'停用' if self.args.no_dual else f'启用 ({self.args.dual_mode})'}"
+            f"   雙語對照 PDF：{'停用' if self.args.no_dual else f'啟用 ({self.args.dual_mode})'}"
         )
 
         result = self.tool.process_translate(
@@ -163,11 +168,11 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            print(f"處理過程中發生錯誤: {result['error']}")
         else:
-            print(f"\n[OK] 翻译处理完成！共处理 {result['pages_processed']} 页")
+            print(f"\n[OK] 翻譯處理完成！共處理 {result['pages_processed']} 頁")
             if result.get("searchable_pdf"):
-                print(f"  [可搜寻 PDF] {result['searchable_pdf']}")
+                print(f"  [可搜尋 PDF] {result['searchable_pdf']}")
             if result.get("markdown_file"):
                 print(f"  [Markdown] {result['markdown_file']}")
             if result.get("json_file"):
@@ -175,17 +180,17 @@ class ModeProcessor:
             if result.get("html_file"):
                 print(f"  [HTML] {result['html_file']}")
             if result.get("translated_pdf"):
-                print(f"  [翻译PDF] {result['translated_pdf']}")
+                print(f"  [翻譯PDF] {result['translated_pdf']}")
             if result.get("bilingual_pdf"):
-                print(f"  [双语PDF] {result['bilingual_pdf']}")
+                print(f"  [雙語PDF] {result['bilingual_pdf']}")
 
         return result
 
     def _process_hybrid_normal(self) -> Dict[str, Any]:
-        """处理普通 hybrid 模式（无翻译）
+        """處理普通 hybrid 模式（無翻譯）
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
         result = self.tool.process_hybrid(
             input_path=str(self.input_path),
@@ -198,27 +203,27 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            print(f"處理過程中發生錯誤: {result['error']}")
         else:
-            print(f"\n[OK] 混合模式处理完成！共处理 {result['pages_processed']} 页")
+            print(f"\n[OK] 混合模式處理完成！共處理 {result['pages_processed']} 頁")
             if result.get("searchable_pdf"):
-                print(f"  可搜寻 PDF: {result['searchable_pdf']}")
+                print(f"  可搜尋 PDF: {result['searchable_pdf']}")
             if result.get("markdown_file"):
                 print(f"  Markdown 文件: {result['markdown_file']}")
 
         return result
 
     def _process_basic(self) -> Dict[str, Any]:
-        """处理 basic 模式
+        """處理 basic 模式
 
         Returns:
-            Dict[str, Any]: 处理结果
+            Dict[str, Any]: 處理結果
         """
         all_text = []
 
-        # 处理输入
+        # 處理輸入
         if self.input_path.is_dir():
-            # 目录处理
+            # 目錄處理
             results = self.tool.process_directory(
                 str(self.input_path),
                 output_path=self.args.output,
@@ -232,7 +237,7 @@ class ModeProcessor:
                     all_text.append(f"=== {file_path} ===\n{text}")
 
         elif self.input_path.suffix.lower() == SUPPORTED_PDF_FORMAT:
-            # PDF 处理
+            # PDF 處理
             results, output_path = self.tool.process_pdf(
                 str(self.input_path),
                 output_path=self.args.output,
@@ -244,10 +249,10 @@ class ModeProcessor:
             for page_num, page_results in enumerate(results, 1):
                 text = self.tool.get_text(page_results)
                 if text:
-                    all_text.append(f"=== 第 {page_num} 页 ===\n{text}")
+                    all_text.append(f"=== 第 {page_num} 頁 ===\n{text}")
 
         elif self.input_path.suffix.lower() in SUPPORTED_IMAGE_FORMATS:
-            # 图片处理
+            # 圖片處理
             from paddleocr_toolkit.core import PDFGenerator
 
             results = self.tool.process_image(str(self.input_path))
@@ -267,24 +272,24 @@ class ModeProcessor:
                 all_text.append(text)
 
         else:
-            print(f"错误：不支持的文件格式: {self.input_path.suffix}")
+            print(f"錯誤：不支持的文件格式: {self.input_path.suffix}")
             sys.exit(1)
 
-        # 输出结果
+        # 輸出結果
         combined_text = "\n\n".join(all_text)
 
         if self.args.text_output:
-            # 如果输出路径不是绝对路径，则相对于脚本目录
+            # 如果輸出路徑不是絕對路徑，則相對於腳本目錄
             text_output_path = Path(self.args.text_output)
             if not text_output_path.is_absolute():
                 text_output_path = self.script_dir / text_output_path
 
             # 儲存到檔案
             with open(text_output_path, "w", encoding="utf-8") as f:
-                f.write(all_text)
+                f.write(combined_text) # Changed all_text to combined_text for correct output
             print(f"[OK] 文字已儲存：{text_output_path}")
 
-        # 如果两个输出都停用，则输出到终端
+        # 如果兩個輸出都停用，則輸出到終端
         if not self.args.text_output and not self.args.searchable and combined_text:
             print("\n" + "=" * 50)
             print("OCR 辨識結果：")

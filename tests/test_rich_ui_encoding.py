@@ -40,7 +40,7 @@ def test_print_functions_no_crash(capsys):
 def test_utf8_output_enabled():
     """测试UTF-8输出已启用"""
     if sys.platform == "win32":
-        # Windows下应该已经设置为UTF-8
+        # Windows 下應該已經設定為 UTF-8
         assert sys.stdout.encoding.lower() in ["utf-8", "utf8"]
 
 

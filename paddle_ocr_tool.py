@@ -754,8 +754,8 @@ class PaddleOCRTool:
             # 使用 predict() 方法處理
             output = self.ocr.predict(input=input_path)
 
-            # 获取脚本所在目录作为默认输出目录
-            script_dir = Path(__file__).parent.resolve()
+            # 獲取腳本所在目錄作為預設輸出目錄
+            # 處理每個結果cript_dir = Path(__file__).parent.resolve()
 
             # 设定输出路径
             md_path, json_path = self._setup_structured_output_paths(

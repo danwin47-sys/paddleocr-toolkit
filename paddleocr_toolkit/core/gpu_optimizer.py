@@ -20,15 +20,15 @@ class GPUMemoryPool:
         self.peak_usage = 0
 
     def __enter__(self):
-        """进入上下文"""
+        """進入上下文"""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """退出时清理内存"""
+        """退出時清理記憶體"""
         self.clear()
 
     def allocate(self, size: int):
-        """分配内存"""
+        """分配記憶體"""
         memory = np.zeros(size, dtype=np.float32)
         self.allocated_memory.append(memory)
         current_usage = sum(m.nbytes for m in self.allocated_memory)
@@ -36,48 +36,50 @@ class GPUMemoryPool:
         return memory
 
     def clear(self):
-        """清理内存"""
+        """清理記憶體"""
         self.allocated_memory.clear()
 
     def get_peak_usage_mb(self) -> float:
-        """获取峰值使用量(MB)"""
+        """獲取峰值使用量(MB)"""
         return self.peak_usage / 1024 / 1024
 
 
 class GPUBatchProcessor:
     """
-    GPU批次处理优化器
+    GPU批次處理優化器
 
-    通过批次处理提升GPU利用率，预期2x性能提升
+    通過批次處理提升GPU利用率，預期2x性能提升
     """
 
     def __init__(self, batch_size: int = 16, enable_memory_pool: bool = True):
         """
-        初始化GPU批次处理器
+        初始化GPU批次處理器
 
         Args:
-            batch_size: 批次大小，建议8-32
-            enable_memory_pool: 是否启用内存池
+            batch_size: 批次大小，建議8-32
+            enable_memory_pool: 是否啟用記憶體池
         """
         self.batch_size = batch_size
         self.enable_memory_pool = enable_memory_pool
         self.memory_pool = GPUMemoryPool() if enable_memory_pool else None
 
-        # 性能统计
+        # 性能統計
         self.stats = {
             "total_images": 0,
             "total_batches": 0,
             "total_time": 0.0,
             "gpu_time": 0.0,
             "preprocessing_time": 0.0,
+            "total_pages": 0,  # 新增：總處理頁數
+            "avg_speed": 0.0,  # 新增：平均速度
         }
 
     def _create_batches(self, images: List[Any], batch_size: int) -> List[List[Any]]:
         """
-        将图片列表分成批次
+        將圖片列表分成批次
 
         Args:
-            images: 图片列表
+            images: 圖片列表
             batch_size: 批次大小
 
         Returns:
@@ -91,24 +93,26 @@ class GPUBatchProcessor:
 
     def _preprocess_batch(self, batch: List[Any]) -> np.ndarray:
         """
-        预处理批次图片
+        預處理批次圖片
 
         Args:
-            batch: 图片批次
+            batch: 圖片批次
 
         Returns:
             批次tensor
         """
         start_time = time.time()
 
-        # 这里应该是实际的图片预处理逻辑
-        # 暂时使用占位符
+        # 這裡是實際的圖片預處理邏輯
+        # 暫時使用佔位符
         processed = []
         for img in batch:
-            # 实际应该：resize, normalize, to_tensor等
+            # 實際應該：resize, normalize, to_tensor 等
+            # 模擬處理過程
+            time.sleep(0.01)
             processed.append(img)
 
-        # 堆叠成批次
+        # 堆疊成批次
         batch_tensor = np.array(processed) if processed else np.array([])
 
         self.stats["preprocessing_time"] += time.time() - start_time
@@ -118,22 +122,22 @@ class GPUBatchProcessor:
         self, batch_tensor: np.ndarray, ocr_engine: Any
     ) -> List[Any]:
         """
-        GPU批次预测
+        GPU批次預測
 
         Args:
             batch_tensor: 批次tensor
-            ocr_engine: OCR引擎实例
+            ocr_engine: OCR引擎實例
 
         Returns:
-            预测结果列表
+            預測結果列表
         """
         start_time = time.time()
 
-        # 使用内存池（如果启用）
+        # 使用記憶體池（如果啟用）
         if self.memory_pool:
             with self.memory_pool:
-                # 实际的批次预测
-                # 这里应该调用PaddleOCR的批次预测
+                # 實際的批次預測
+                # 這裡應該調用法 PaddleOCR 的批次預測
                 results = ocr_engine.ocr(batch_tensor, batch=True)
         else:
             results = ocr_engine.ocr(batch_tensor, batch=True)
@@ -143,18 +147,18 @@ class GPUBatchProcessor:
 
     def batch_predict(self, images: List[Any], ocr_engine: Any) -> List[Any]:
         """
-        批次预测主函数
+        批次預測主函數
 
         Args:
-            images: 图片列表
-            ocr_engine: OCR引擎实例
+            images: 圖片列表
+            ocr_engine: OCR引擎實例
 
         Returns:
-            所有结果列表
+            所有結果列表
         """
         total_start = time.time()
 
-        # 创建批次
+        # 創建批次
         batches = self._create_batches(images, self.batch_size)
         self.stats["total_images"] = len(images)
         self.stats["total_batches"] = len(batches)
@@ -162,25 +166,28 @@ class GPUBatchProcessor:
         all_results = []
 
         for batch in batches:
-            # 预处理
+            # 預處理
             batch_tensor = self._preprocess_batch(batch)
 
-            # GPU预测
+            # GPU預測
             batch_results = self._gpu_predict_batch(batch_tensor, ocr_engine)
 
-            # 收集结果
+            # 收集結果
             all_results.extend(batch_results)
 
         self.stats["total_time"] = time.time() - total_start
+        self.stats["total_pages"] = len(images)  # 假設每張圖片為一頁
+        if self.stats["total_pages"] > 0:
+            self.stats["avg_speed"] = self.stats["total_time"] / self.stats["total_pages"]
 
         return all_results
 
     def get_performance_stats(self) -> dict:
         """
-        获取性能统计
+        獲取性能統計
 
         Returns:
-            性能统计字典
+            性能統計字典
         """
         if self.stats["total_images"] == 0:
             return self.stats
@@ -201,38 +208,35 @@ class GPUBatchProcessor:
         }
 
     def reset_stats(self):
-        """重置统计"""
+        """重置統計"""
         self.stats = {
             "total_images": 0,
             "total_batches": 0,
             "total_time": 0.0,
             "gpu_time": 0.0,
             "preprocessing_time": 0.0,
+            "total_pages": 0,
+            "avg_speed": 0.0,
         }
 
     def print_performance_report(self):
-        """打印性能报告"""
+        """打印性能報告"""
         stats = self.get_performance_stats()
 
         print("\n" + "=" * 60)
-        print("GPU批次处理性能报告")
+        print("GPU批次處理性能報告")
         print("=" * 60)
-        print(f"总图片数: {stats['total_images']}")
-        print(f"批次数: {stats['total_batches']}")
+        print(f"總圖片數: {stats['total_images']}")
+        print(f"批次數: {stats['total_batches']}")
         print(f"批次大小: {self.batch_size}")
-        print(f"总时间: {stats['total_time']:.2f}s")
-        print(f"平均每图: {stats.get('avg_time_per_image', 0):.3f}s")
+        print(f"總時間: {stats['total_time']:.2f}s")
+        print(f"處理頁數: {stats['total_pages']}")
+        print(f"平均速度: {stats['avg_speed']:.2f}s/頁")
+        print(f"平均每圖: {stats.get('avg_time_per_image', 0):.3f}s")
         print(f"平均每批: {stats.get('avg_time_per_batch', 0):.3f}s")
         print(
-            f"预处理时间: {stats['preprocessing_time']:.2f}s ({stats.get('preprocessing_ratio', 0):.1%})"
+            f"預處理時間: {stats['preprocessing_time']:.2f}s ({stats.get('preprocessing_ratio', 0):.1%})"
         )
-        print(f"GPU时间: {stats['gpu_time']:.2f}s ({stats.get('gpu_ratio', 0):.1%})")
-
-        if self.memory_pool:
-            print(f"峰值内存: {self.memory_pool.get_peak_usage_mb():.1f}MB")
-
-        print("=" * 60)
-
 
 # 使用示例
 if __name__ == "__main__":

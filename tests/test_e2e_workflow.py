@@ -76,7 +76,7 @@ class TestEndToEndWorkflow:
             doc.save(input_pdf)
             doc.close()
 
-            # 处理PDF（不生成可搜索PDF，因为API参数不同）
+            # 處理 PDF（不生成可搜尋 PDF，因為 API 參數不同）
             ocr_tool = PaddleOCRTool(mode="basic")
             results, _ = ocr_tool.process_pdf(input_pdf)
 
