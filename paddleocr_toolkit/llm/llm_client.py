@@ -186,6 +186,81 @@ class OpenAIClient(LLMClient):
             return ""
 
 
+class GeminiClient(LLMClient):
+    """Google Gemini API 客戶端 (支援 Gemini 3 Flash)"""
+    
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gemini-3-flash",
+        base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    ):
+        """
+        初始化 Gemini 客戶端
+        
+        Args:
+            api_key: Google AI API 金鑰
+            model: 模型名稱 (預設 gemini-3-flash)
+            base_url: Google AI API 基礎 URL
+        """
+        if not HAS_REQUESTS:
+            raise ImportError("需要安裝 requests: pip install requests")
+        
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url.rstrip('/')
+        # v1beta 版本的 generateContent 端點
+        self.api_url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+    
+    def is_available(self) -> bool:
+        """檢查 Gemini API 是否可用"""
+        try:
+            # 嘗試列出模型來檢查金鑰
+            check_url = f"{self.base_url}/models?key={self.api_key}"
+            response = requests.get(check_url, timeout=5)
+            return response.status_code == 200
+        except Exception as e:
+            logging.warning(f"Gemini API 不可用: {e}")
+            return False
+    
+    def generate(self, prompt: str, **kwargs) -> str:
+        """使用 Gemini API 生成文字"""
+        try:
+            payload = {
+                "contents": [
+                    {
+                        "parts": [{"text": prompt}]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": kwargs.get("temperature", 0.3),
+                    "maxOutputTokens": kwargs.get("max_tokens", 2048),
+                }
+            }
+            
+            response = requests.post(
+                self.api_url,
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                # 解析 Gemini 的多層回應結構
+                try:
+                    return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+                except (KeyError, IndexError):
+                    logging.error(f"Gemini 回應格式解析失敗: {result}")
+                    return ""
+            else:
+                logging.error(f"Gemini 請求失敗: {response.status_code} - {response.text}")
+                return ""
+        
+        except Exception as e:
+            logging.error(f"Gemini 生成失敗: {e}")
+            return ""
+
+
 def create_llm_client(
     provider: str = "ollama",
     **kwargs
@@ -194,15 +269,11 @@ def create_llm_client(
     工廠函式：建立 LLM 客戶端
     
     Args:
-        provider: 提供商 ("ollama", "openai")
+        provider: 提供商 ("ollama", "openai", "gemini")
         **kwargs: 提供商特定引數
     
     Returns:
         LLMClient: LLM 客戶端例項
-    
-    Example:
-        >>> client = create_llm_client("ollama", model="qwen2.5:14b")
-        >>> response = client.generate("Hello!")
     """
     if provider == "ollama":
         return OllamaClient(**kwargs)
@@ -210,5 +281,9 @@ def create_llm_client(
         if "api_key" not in kwargs:
             raise ValueError("OpenAI 需要提供 api_key")
         return OpenAIClient(**kwargs)
+    elif provider == "gemini":
+        if "api_key" not in kwargs:
+            raise ValueError("Gemini 需要提供 api_key")
+        return GeminiClient(**kwargs)
     else:
         raise ValueError(f"不支援的 LLM 提供商: {provider}")
