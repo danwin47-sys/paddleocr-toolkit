@@ -16,18 +16,21 @@ class TestSemanticProcessorEdgeCases:
     @pytest.fixture
     def processor(self):
         """建立 processor 例項"""
-        with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
-            with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
-                from paddleocr_toolkit.llm import OllamaClient
-                mock_client = Mock(spec=OllamaClient)
-                mock_client.is_available.return_value = True
-                return SemanticProcessor(llm_client=mock_client)
+        with patch("paddleocr_toolkit.processors.semantic_processor.create_llm_client") as mock_create:
+            mock_client = Mock()
+            mock_client.is_available.return_value = True
+            mock_client.model = "test-model"
+            mock_client.provider = "ollama"
+            mock_create.return_value = mock_client
+            proc = SemanticProcessor(llm_provider="ollama")
+            proc.llm_client = mock_client
+            return proc
 
     def test_correct_text_with_empty_string(self, processor):
         """測試空字串修正"""
         processor.llm_client.generate = Mock(return_value="")
         
-        result = processor.correct_text("")
+        result = processor.correct_ocr_errors("")
         
         assert result == ""
 
@@ -36,7 +39,7 @@ class TestSemanticProcessorEdgeCases:
         long_text = "測試" * 1000
         processor.llm_client.generate = Mock(return_value=long_text)
         
-        result = processor.correct_text(long_text)
+        result = processor.correct_ocr_errors(long_text)
         
         assert len(result) > 0
 
@@ -54,13 +57,9 @@ class TestSemanticProcessorEdgeCases:
         processor.llm_client.generate = Mock(side_effect=Exception("LLM 錯誤"))
         
         # 應該優雅地處理錯誤
-        try:
-            result = processor.correct_text("測試")
-            # 如果沒有丟擲異常，應該返回原文或空字串
-            assert isinstance(result, str)
-        except Exception:
-            # 允許丟擲異常
-            pass
+        result = processor.correct_ocr_errors("測試")
+        # 應該返回原文
+        assert result == "測試"
 
 
 class TestSemanticProcessorLanguageSupport:
@@ -69,18 +68,21 @@ class TestSemanticProcessorLanguageSupport:
     @pytest.fixture
     def processor(self):
         """建立 processor 例項"""
-        with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
-            with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
-                from paddleocr_toolkit.llm import OllamaClient
-                mock_client = Mock(spec=OllamaClient)
-                mock_client.is_available.return_value = True
-                return SemanticProcessor(llm_client=mock_client)
+        with patch("paddleocr_toolkit.processors.semantic_processor.create_llm_client") as mock_create:
+            mock_client = Mock()
+            mock_client.is_available.return_value = True
+            mock_client.model = "test-model"
+            mock_client.provider = "ollama"
+            mock_create.return_value = mock_client
+            proc = SemanticProcessor(llm_provider="ollama")
+            proc.llm_client = mock_client
+            return proc
 
     def test_correct_english_text(self, processor):
         """測試英文修正"""
         processor.llm_client.generate = Mock(return_value="Corrected English text")
         
-        result = processor.correct_text("Englsh text", language="en")
+        result = processor.correct_ocr_errors("Englsh text", language="en")
         
         assert "Corrected" in result or "English" in result
 
@@ -88,7 +90,7 @@ class TestSemanticProcessorLanguageSupport:
         """測試中文修正"""
         processor.llm_client.generate = Mock(return_value="修正後的中文")
         
-        result = processor.correct_text("錯誤的中文", language="zh")
+        result = processor.correct_ocr_errors("錯誤的中文", language="zh")
         
         assert len(result) > 0
 
@@ -99,23 +101,25 @@ class TestSemanticProcessorPromptBuilding:
     @pytest.fixture
     def processor(self):
         """建立 processor 例項"""
-        with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
-            with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
-                from paddleocr_toolkit.llm import OllamaClient
-                mock_client = Mock(spec=OllamaClient)
-                return SemanticProcessor(llm_client=mock_client)
+        with patch("paddleocr_toolkit.processors.semantic_processor.create_llm_client") as mock_create:
+            mock_client = Mock()
+            mock_client.is_available.return_value = True
+            mock_client.model = "test-model"
+            mock_client.provider = "ollama"
+            mock_create.return_value = mock_client
+            return SemanticProcessor(llm_provider="ollama")
 
     def test_build_chinese_correction_prompt(self, processor):
         """測試中文修正提示詞"""
         # 這個測試驗證內部方法
-        prompt = processor._build_chinese_correction_prompt("測試文字")
+        prompt = processor._build_chinese_correction_prompt("測試文字", "")
         
         assert "繁體中文" in prompt or "Traditional Chinese" in prompt
         assert "測試文字" in prompt
 
     def test_build_english_correction_prompt(self, processor):
         """測試英文修正提示詞"""
-        prompt = processor._build_english_correction_prompt("Test text")
+        prompt = processor._build_english_correction_prompt("Test text", "")
         
-        assert "English" in prompt or "英文" in prompt
+        assert "OCR" in prompt or "proofreader" in prompt
         assert "Test text" in prompt

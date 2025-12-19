@@ -118,31 +118,33 @@ class TestSemanticProcessingBenchmark:
         """測試文字修正效能"""
         from unittest.mock import Mock, patch
         
-        with patch("paddleocr_toolkit.processors.semantic_processor.HAS_REQUESTS", True):
-            with patch("paddleocr_toolkit.llm.llm_client.HAS_REQUESTS", True):
-                from paddleocr_toolkit.processors.semantic_processor import SemanticProcessor
-                from paddleocr_toolkit.llm import OllamaClient
-                
-                mock_client = Mock(spec=OllamaClient)
-                mock_client.generate.return_value = "修正後的文字"
-                
-                processor = SemanticProcessor(llm_client=mock_client)
-                
-                test_text = "這是一段包含錯誤的OCR文字" * 10
-                
-                result, elapsed = benchmark.measure_time(
-                    processor.correct_text,
-                    test_text
-                )
-                
-                benchmark.record_result(
-                    "semantic_text_correction",
-                    elapsed,
-                    text_length=len(test_text)
-                )
-                
-                # 斷言效能在合理範圍內（< 5 秒）
-                assert elapsed < 5, f"處理時間過長: {elapsed:.2f}s"
+        with patch("paddleocr_toolkit.processors.semantic_processor.create_llm_client") as mock_create:
+            from paddleocr_toolkit.processors.semantic_processor import SemanticProcessor
+            
+            mock_client = Mock()
+            mock_client.is_available.return_value = True
+            mock_client.model = "test-model"
+            mock_client.provider = "ollama"
+            mock_client.generate.return_value = "修正後的文字"
+            mock_create.return_value = mock_client
+            
+            processor = SemanticProcessor(llm_provider="ollama")
+            
+            test_text = "這是一段包含錯誤的OCR文字" * 10
+            
+            result, elapsed = benchmark.measure_time(
+                processor.correct_ocr_errors,
+                test_text
+            )
+            
+            benchmark.record_result(
+                "semantic_text_correction",
+                elapsed,
+                text_length=len(test_text)
+            )
+            
+            # 斷言效能在合理範圍內（< 5 秒）
+            assert elapsed < 5, f"處理時間過長: {elapsed:.2f}s"
 
 
 def generate_performance_report(results_path: str = "benchmark_results.json"):

@@ -139,6 +139,13 @@ class TestHybridProcessorImageCompression:
 class TestHybridProcessorDebugMode:
     """測試除錯模式"""
 
+    @pytest.fixture
+    def processor(self):
+        """建立 processor 例項"""
+        mock_engine = Mock(spec=OCREngineManager)
+        mock_engine.get_mode.return_value = OCRMode.HYBRID
+        return HybridPDFProcessor(mock_engine)
+
     def test_debug_mode_enabled(self):
         """測試啟用除錯模式"""
         mock_engine = Mock(spec=OCREngineManager)
