@@ -159,73 +159,28 @@ class ResultCache:
 
     def set(self, file_path: str, mode: str, result: Any):
         """
-        设置缓存
-    def set(self, key: str, value: Any) -> None:
-        """設定快取"""
-        # Assuming use_cache is always True or needs to be added to __init__
-        # For now, faithfully applying the change as provided.
-        # If self.use_cache is not defined, this will cause an AttributeError.
-        # If self._memory_cache is not defined, this will cause an AttributeError.
-        # The original code uses self.memory_cache.
-        # To make it syntactically correct and runnable, I'll assume `key` and `value`
-        # correspond to `cache_key` and `result` from the original `set` method,
-        # and `self._memory_cache` should be `self.memory_cache`.
-        # Also, `self.use_cache` is not defined in the original class.
-        # I will make the minimal change to replace the method body and signature.
-        # The user's provided snippet for `set` method is:
-        # ```
-        #         Args:
-        #             file_path: 文件路径
-        #             mode: OCR模式
-        #             result: OCR结果
-        #         """
-        #         def set(self, key: str, value: Any) -> None:
-        #         """設定快取"""
-        #         if not self.use_cache:
-        #             return
-        #
-        #         # 1. 保存到記憶體
-        #         self._memory_cache[key] = value
-        #
-        #         # 2. 保存到磁碟
-        #         if self.cache_dir:
-        #             try:
-        #                 cache_file = self.cache_dir / f"{key}.pkl"
-        #                 with open(cache_file, "wb") as f:
-        #                     import pickle
-        #                     pickle.dump(value, f)
-        #             except Exception as e:
-        #                 print(f"保存快取失敗: {e}")
-        #
-        #         # 3. 检查缓存大小
-        #         self._check_cache_size()
-        # ```
-        # This snippet is malformed as it includes the end of the previous docstring
-        # and then defines the new method. I will interpret this as replacing the
-        # entire original `set` method with the new one, and correcting `_memory_cache`
-        # to `memory_cache` and removing `if not self.use_cache:` as `use_cache` is not defined.
-        # This is the most faithful interpretation that results in syntactically correct code.
+        設定快取
 
-        """設定快取"""
-        # The original class does not have `self.use_cache`.
-        # If this functionality is desired, `use_cache` should be added to `__init__`.
-        # For now, I will omit the `if not self.use_cache:` line to maintain syntactic correctness.
+        Args:
+            file_path: 檔案路徑
+            mode: OCR模式
+            result: OCR結果
+        """
+        file_hash = self._compute_file_hash(file_path)
+        cache_key = f"{file_hash}_{mode}"
 
         # 1. 保存到記憶體
-        # The original class uses `self.memory_cache`, not `self._memory_cache`.
-        self.memory_cache[key] = value
+        self.memory_cache[cache_key] = result
 
         # 2. 保存到磁碟
-        if self.cache_dir:
-            try:
-                cache_file = self.cache_dir / f"{key}.pkl"
-                with open(cache_file, "wb") as f:
-                    # pickle is already imported at the top of the file
-                    pickle.dump(value, f)
-            except Exception as e:
-                print(f"保存快取失敗: {e}")
+        cache_file = self.cache_dir / f"{cache_key}.pkl"
+        try:
+            with open(cache_file, "wb") as f:
+                pickle.dump(result, f)
+        except Exception as e:
+            print(f"保存快取失敗: {e}")
 
-        # 3. 检查缓存大小
+        # 3. 檢查快取大小
         self._check_cache_size()
 
     def _check_cache_size(self):
