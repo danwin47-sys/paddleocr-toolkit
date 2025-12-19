@@ -9,7 +9,7 @@ import asyncio
 import os
 import uuid
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import (
     BackgroundTasks,
