@@ -413,28 +413,31 @@ async def delete_file(filename: str, api_key: str = Depends(verify_api_key)):
 
     try:
         os.remove(file_path)
-        return {"message": f"檔案 {safe_filename} 已刪除"}
+        return {"message": f"檔案 {filename} 已刪除"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"刪除失敗: {str(e)}")
 
 
-@app.get("/api/files/{filename}/download")
+@app.get("/api/files/{filename}/download", dependencies=[Depends(verify_api_key)])
 async def download_file(filename: str):
     """下載檔案"""
-    # 安全性：清理檔名以防止路徑遍歷
-    safe_filename = Path(filename).name
-    file_path = UPLOAD_DIR / safe_filename
+    file_path = UPLOAD_DIR / filename
     
-    # 確保檔案在 UPLOAD_DIR 內
-    if not file_path.resolve().is_relative_to(UPLOAD_DIR.resolve()):
-        raise HTTPException(status_code=400, detail="無效的檔案路徑")
+    # 安全性檢查：防止路徑遍歷攻擊
+    # Python 3.8 兼容：使用 resolve() 和字串比較代替 is_relative_to
+    try:
+        file_path_resolved = file_path.resolve()
+        upload_dir_resolved = UPLOAD_DIR.resolve()
+        # 檢查解析後的路徑是否以上傳目錄開頭
+        if not str(file_path_resolved).startswith(str(upload_dir_resolved)):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+    except (ValueError, OSError):
+        raise HTTPException(status_code=400, detail="Invalid file path")
     
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
 
-    return FileResponse(
-        path=file_path, filename=safe_filename, media_type="application/octet-stream"
-    )
+    return FileResponse(file_path, filename=filename)
 
 
 @app.get("/api/plugins")
