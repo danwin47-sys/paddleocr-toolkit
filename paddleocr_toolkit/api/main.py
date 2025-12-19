@@ -397,15 +397,20 @@ async def list_files():
     return files
 
 
-@app.delete("/api/files/{filename}")
-async def delete_file(filename: str, api_key: str = Depends(verify_api_key)):
+@app.delete("/api/files/{filename}", dependencies=[Depends(verify_api_key)])
+async def delete_file(filename: str):
     """刪除檔案"""
     # 安全性：清理檔名以防止路徑遍歷
     safe_filename = Path(filename).name
     file_path = UPLOAD_DIR / safe_filename
     
-    # 確保檔案在 UPLOAD_DIR 內
-    if not file_path.resolve().is_relative_to(UPLOAD_DIR.resolve()):
+    # 確保檔案在 UPLOAD_DIR 內 - Python 3.8 兼容
+    try:
+        file_path_resolved = file_path.resolve()
+        upload_dir_resolved = UPLOAD_DIR.resolve()
+        if not str(file_path_resolved).startswith(str(upload_dir_resolved)):
+            raise HTTPException(status_code=400, detail="無效的檔案路徑")
+    except (ValueError, OSError):
         raise HTTPException(status_code=400, detail="無效的檔案路徑")
     
     if not file_path.exists():
