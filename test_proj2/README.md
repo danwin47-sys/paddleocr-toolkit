@@ -1,37 +1,36 @@
-# PaddleOCR Toolkit 專案
+# PaddleOCR Toolkit 项目
 
-這個專案使用 PaddleOCR Toolkit 進行檔案OCR處理。
+这个项目使用 PaddleOCR Toolkit 进行文档OCR处理。
 
-## 目錄結構
+## 目录结构
 
 ```
 .
-├── input/          # 輸入檔案
-├── output/         # 輸出結果
-├── config/         # 配置檔案
+├── input/          # 输入文件
+├── output/         # 输出结果
+├── config/         # 配置文件
 │   └── default.yaml
-└── logs/           # 日誌檔案
+└── logs/           # 日志文件
 ```
 
 ## 使用方法
 
 ```bash
-# 處理單個檔案
-# 處理單個檔案
+# 处理单个文件
 python -m paddleocr_toolkit input/document.pdf
 
-# 使用設定檔
+# 使用配置文件
 python -m paddleocr_toolkit input/document.pdf --config config/default.yaml
 
-# 批次處理
+# 批量处理
 python -m paddleocr_toolkit input/
 ```
 
-## 設定
+## 配置
 
-編輯 `config/default.yaml` 來自定義設定。
+编辑 `config/default.yaml` 来自定义设置。
 
-## 檔案
+## 文档
 
-- [快速開始](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
-- [API檔案](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)
+- [快速开始](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/QUICK_START.md)
+- [API文档](https://github.com/danwin47-sys/paddleocr-toolkit/blob/master/docs/API_GUIDE.md)

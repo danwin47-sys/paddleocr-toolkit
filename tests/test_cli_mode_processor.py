@@ -275,7 +275,6 @@ class TestProcessHybrid:
             translate=True,
             source_lang="en",
             target_lang="zh",
-            trans_tool="ollama",
             ollama_model="qwen2.5:7b",
             ollama_url="http://localhost:11434",
             no_mono=False,

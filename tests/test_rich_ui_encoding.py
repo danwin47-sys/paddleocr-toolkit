@@ -1,19 +1,19 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-測試Rich UI在Windows下的編碼支援
+测试Rich UI在Windows下的编码支持
 """
 
 import sys
 
 import pytest
 
-# 必須先匯入rich_ui才能測試
+# 必须先导入rich_ui才能测试
 from paddleocr_toolkit.cli import rich_ui
 
 
 def test_icons_defined():
-    """測試圖示字典已定義"""
+    """测试图标字典已定义"""
     assert hasattr(rich_ui, "ICONS")
     assert "success" in rich_ui.ICONS
     assert "error" in rich_ui.ICONS
@@ -22,7 +22,7 @@ def test_icons_defined():
 
 
 def test_windows_ascii_icons():
-    """測試Windows下使用ASCII圖示"""
+    """测试Windows下使用ASCII图标"""
     if sys.platform == "win32":
         assert rich_ui.ICONS["success"] == "[OK]"
         assert rich_ui.ICONS["error"] == "[X]"
@@ -33,39 +33,39 @@ def test_windows_ascii_icons():
 
 
 def test_print_functions_no_crash(capsys):
-    """測試print函式不會崩潰"""
+    """测试print函数不会崩溃"""
+    # 这些函数应该能正常运行，不抛出UnicodeEncodeError
     try:
-        rich_ui.print_success("測試成功")
-        rich_ui.print_error("測試錯誤")
-        rich_ui.print_warning("測試警告")
-        rich_ui.print_info("測試資訊")
-        captured = capsys.readouterr()
+        rich_ui.print_success("测试成功")
+        rich_ui.print_error("测试错误")
+        rich_ui.print_warning("测试警告")
+        rich_ui.print_info("测试信息")
         success = True
     except UnicodeEncodeError:
         success = False
-    
-    assert success, "print函式出現編碼錯誤"
+
+    assert success, "print函数出现编码错误"
 
 
 def test_utf8_output_enabled():
-    """測試UTF-8輸出已啟用"""
+    """测试UTF-8输出已启用"""
     if sys.platform == "win32":
-        # Windows 下應該已經設定為 UTF-8
+        # Windows下应该已经设置为UTF-8
         assert sys.stdout.encoding.lower() in ["utf-8", "utf8"]
 
 
 def test_banner_display(capsys):
-    """測試banner顯示"""
+    """测试banner显示"""
     try:
         rich_ui.print_banner()
         captured = capsys.readouterr()
-        # 應該包含某些內容
+        # 应该包含某些内容
         assert len(captured.out) > 0 or rich_ui.HAS_RICH
         success = True
     except UnicodeEncodeError:
         success = False
 
-    assert success, "banner顯示出現編碼錯誤"
+    assert success, "banner显示出现编码错误"
 
 
 if __name__ == "__main__":

@@ -8,11 +8,11 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
 
-🔍 **專業級 OCR 檔案辨識與處理工具**
+🔍 **專業級 OCR 文件辨識與處理工具**
 
-基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能最佳化，提供生產級程式碼品質。
+基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，經過完整重構和效能優化，提供生產級代碼質量。
 
-**📚 [快速開始](docs/QUICK_START.md) | [API文件](docs/API_GUIDE.md) | [範例工具](examples/) | [貢獻指南](CONTRIBUTING.md)**
+**📚 [快速開始](docs/QUICK_START.md) | [API文檔](docs/API_GUIDE.md) | [示例工具](examples/) | [貢獻指南](CONTRIBUTING.md)**
 
 ---
 
@@ -20,47 +20,47 @@
 
 ### 功能特色
 
-| 📄 可搜尋 PDF | 在原始 PDF 上疊加透明文字層，可選取、搜尋 |
+| 功能 | 說明 |
+|------|------|
+| 📄 可搜索 PDF | 在原始 PDF 上疊加透明文字層，可選取、搜尋 |
 | 📝 多種輸出格式 | 純文字、Markdown、JSON、HTML、Excel、LaTeX |
 | 🔀 混合模式 | PP-StructureV3 版面分析 + PP-OCRv5 精確座標 |
-| 🌐 PDF 翻譯 | 使用 Ollama 本地模型翻譯，支援雙語輸出 |
-| 🤖 **AI 語義修正** | **v3.0** - LLM 自動修正 OCR 錯誤，準確率 +15% |
-| 📊 **結構化提取** | **v3.0** - 從 OCR 文字自動提取 JSON 資料 |
+| 🌐 PDF 翻譯 | 使用 Ollama 本地模型翻譯，支持雙語輸出 |
 | 🔧 文字修正 | 自動修復 OCR 空格和格式問題 |
 | 📊 進度條 | 處理多頁 PDF 時顯示進度 |
-| 🔄 方向校正 | 自動旋轉傾斜文件 |
-| ⚙️ 設定檔支援 | 支援 YAML 設定檔，簡化引數輸入 |
-| 🛠️ 批次處理 | 支援多執行緒批次處理圖片 |
-| 🎨 CLI美化 | Rich UI支援，炫酷終端介面 |
+| 🔄 方向校正 | 自動旋轉傾斜文檔 |
+| ⚙️ 設定檔支持 | 支持 YAML 設定檔，簡化參數輸入 |
+| 🛠️ 批次處理 | 支持多線程批次處理圖片 |
+| 🎨 CLI美化 | Rich UI支持，炫酷終端界面 |
 
-### 🆕 效能最佳化（Stage 2）
+### 🆕 性能優化（Stage 2）
 
-| 專案 | 改善 |
+| 項目 | 改善 |
 |------|------|
 | PDF 記憶體使用 | **-90%** (600MB → 20MB) |
 | I/O 寫入速度 | **+50%** |
-| 串流處理 | 恆定記憶體處理大型 PDF |
-| 批次緩衝 | 智慧批次寫入最佳化 |
+| 串流處理 | 恒定記憶體處理大型 PDF |
+| 批次緩衝 | 智慧批次寫入優化 |
 
 ### 🧩 模組化架構（Stage 3）
 
-**26 個專業化元件**:
+**26 個專業化組件**:
 
 - **CLI 層**: `argument_parser`, `config_handler`, `mode_processor`, `output_manager`, `rich_ui`
 - **核心 層**: `ocr_engine`, `result_parser`, `pdf_generator`, `pdf_utils`, `streaming_utils`, `config_loader`, `models`
 - **處理器 層**: `batch_processor`, `pdf_processor`, `image_preprocessor`, `structure_processor`, `translation_processor`
 - **輸出 層**: `output_manager`
 
-### 📊 程式碼品質
+### 📊 代碼質量
 
-- ✅ **391 個單元測試**（100% 透過率）⬆️
+- ✅ **391 個單元測試**（100% 通過率）⬆️
 - ✅ **84% 測試覆蓋率**⬆️
-- ✅ **100% 型別提示**
+- ✅ **100% 類型提示**
 - ✅ **100% Docstrings**
 - ✅ **模組化設計**（26 個專業化模組）⬆️
-- ✅ **程式碼格式化**（Black + isort）
+- ✅ **代碼格式化**（Black + isort）
 - ✅ **CI/CD流程**（GitHub Actions）🆕
-- ✅ **Docker支援**（生產級配置）🆕
+- ✅ **Docker支持**（生產級配置）🆕
 
 ---
 
@@ -109,7 +109,7 @@ print(result['text_content'])
 
 ## ⚙️ 設定檔使用
 
-本工具支援 `config.yaml` 設定檔，可避免每次輸入冗長的命令列引數。
+本工具支援 `config.yaml` 設定檔，可避免每次輸入冗長的命令列參數。
 
 ### 1. 建立設定檔
 
@@ -150,8 +150,8 @@ translate:
 1. 預設設定
 2. 使用者家目錄 `~/.paddleocr_toolkit/config.yaml`
 3. 當前目錄 `config.yaml`
-4. 命令列引數 `--config path/to/config.yaml`
-5. 其他命令列引數（優先順序最高）
+4. 命令列參數 `--config path/to/config.yaml`
+5. 其他命令列參數（優先級最高）
 
 ---
 
@@ -159,19 +159,19 @@ translate:
 
 | 模式 | 說明 | 使用場景 |
 |------|------|----------|
-| `basic` | PP-OCRv5 基本文字識別 | 一般檔案、書籍 |
+| `basic` | PP-OCRv5 基本文字識別 | 一般文件、書籍 |
 | `structure` | PP-StructureV3 結構化解析 | 表格、複雜排版 |
 | `hybrid` | 版面分析 + 精確 OCR（推薦） | 生成可搜尋 PDF + Markdown |
-| `vl` | PaddleOCR-VL 視覺語言模型 | 複雜檔案理解 |
+| `vl` | PaddleOCR-VL 視覺語言模型 | 複雜文件理解 |
 | `formula` | PP-FormulaNet 公式識別 | 數學公式、學術論文 |
 
 ---
 
-## 📋 命令列引數詳解
+## 📋 命令列參數詳解
 
-### 基本引數
+### 基本參數
 
- | 引數 | 說明 | 範例 |
+ | 參數 | 說明 | 範例 |
  |------|------|------|
  | `input` | 輸入檔案或目錄 | `input.pdf` |
  | `--config`, `-c` | 指定設定檔路徑 | `--config my_config.yaml` |
@@ -180,7 +180,7 @@ translate:
 
 ### 輸出格式
 
-| 引數 | 說明 | 適用模式 |
+| 參數 | 說明 | 適用模式 |
 |------|------|----------|
 | `--searchable`, `-s` | 生成可搜尋 PDF | basic |
 | `--text-output`, `-t` | 純文字輸出 | basic |
@@ -191,17 +191,17 @@ translate:
 | `--latex-output` | LaTeX 公式輸出 | formula |
 | `--all` | 同時輸出所有格式 | structure, hybrid |
 
-### 檔案校正
+### 文件校正
 
-| 引數 | 說明 |
+| 參數 | 說明 |
 |------|------|
-| `--orientation-classify` | 自動校正檔案方向 |
-| `--unwarping` | 校正彎曲檔案 |
+| `--orientation-classify` | 自動校正文件方向 |
+| `--unwarping` | 校正彎曲文件 |
 | `--textline-orientation` | 文字行方向偵測 |
 
 ### 翻譯功能（需要 Ollama）
 
-| 引數 | 說明 | 預設值 |
+| 參數 | 說明 | 預設值 |
 |------|------|--------|
 | `--translate` | 啟用翻譯 | - |
 | `--source-lang` | 來源語言 | `auto` |
@@ -212,10 +212,10 @@ translate:
 
 ### 其他選項
 
-| 引數 | 說明 | 預設值 |
+| 參數 | 說明 | 預設值 |
 |------|------|--------|
 | `--dpi` | PDF 轉圖片解析度 | 150（掃描件自動調至 300） |
-| `--device` | 運算裝置 | `cpu` |
+| `--device` | 運算設備 | `cpu` |
 | `--recursive`, `-r` | 遞迴處理子目錄 | - |
 | `--debug-text` | 顯示粉紅色文字層（除錯） | - |
 | `--no-progress` | 停用進度條 | - |
@@ -319,21 +319,21 @@ paddleocr-toolkit/
 │   ├── __init__.py              # 套件入口
 │   ├── __main__.py              # CLI 入口（python -m）
 │   ├── cli/                     # 🆕 CLI 模組（Stage 2 重構）
-│   │   ├── argument_parser.py   # 命令列引數解析
+│   │   ├── argument_parser.py   # 命令列參數解析
 │   │   ├── output_manager.py    # 輸出路徑管理
 │   │   ├── config_handler.py    # 設定檔處理
 │   │   └── mode_processor.py    # 模式處理器
 │   ├── core/                    # 核心模組
 │   │   ├── models.py            # 資料模型
 │   │   ├── pdf_generator.py     # PDF 生成器
-│   │   ├── pdf_utils.py         # PDF 工具函式
+│   │   ├── pdf_utils.py         # PDF 工具函數
 │   │   ├── config_loader.py     # 設定檔載入器
 │   │   ├── ocr_engine.py        # 🆕 OCR 引擎管理器（Stage 3）
 │   │   ├── result_parser.py     # 🆕 結果解析器（Stage 3）
-│   │   ├── streaming_utils.py   # 🆕 串流處理工具（效能最佳化）
-│   │   └── buffered_writer.py   # 🆕 緩衝寫入器（效能最佳化）
+│   │   ├── streaming_utils.py   # 🆕 串流處理工具（性能優化）
+│   │   └── buffered_writer.py   # 🆕 緩衝寫入器（性能優化）
 │   ├── processors/              # 處理器模組
-│   │   ├── text_processor.py    # 文書處理
+│   │   ├── text_processor.py    # 文字處理
 │   │   ├── pdf_quality.py       # PDF 品質偵測
 │   │   ├── batch_processor.py   # 批次處理
 │   │   ├── pdf_processor.py     # 🆕 PDF 處理器（Stage 3）
@@ -349,16 +349,16 @@ paddleocr-toolkit/
 │   ├── test_cli_*.py            # CLI 模組測試（71 個測試）
 │   ├── test_core_*.py           # 核心模組測試
 │   ├── test_processors_*.py     # 處理器測試
-│   └── test_performance_*.py    # 效能測試
+│   └── test_performance_*.py    # 性能測試
 ├── artifacts/plans/             # 📚 工作計畫與總結
 ├── requirements.txt             # Python 依賴
 ├── glossary.csv                 # 翻譯術語表
-└── README.md                    # 說明檔案
+└── README.md                    # 說明文件
 ```
 
 ---
 
-## 🏆 程式碼質量
+## 🏆 代碼質量
 
 ### 測試覆蓋率
 
@@ -369,37 +369,37 @@ paddleocr-toolkit/
 - **核心模組**: 85%
 - **處理器模組**: 79%
 - **總測試數**: 247 個
-- **測試透過率**: 100%
+- **測試通過率**: 100%
 
-### 程式碼組織
+### 代碼組織
 
 本專案經過專業重構，遵循以下最佳實踐：
 
 - ✅ **SOLID 原則** - 單一職責、開閉原則
-- ✅ **DRY 原則** - 消除重複程式碼
+- ✅ **DRY 原則** - 消除重複代碼
 - ✅ **模組化設計** - 清晰的模組邊界
-- ✅ **型別提示** - 100% 型別提示覆蓋
-- ✅ **文件字串** - 100% Google Style docstrings
+- ✅ **類型提示** - 100% 類型提示覆蓋
+- ✅ **文檔字串** - 100% Google Style docstrings
 - ✅ **測試驅動** - 247 個單元測試
 
 ### 重構成果（2024-12）
 
-最近完成的 Stage 2 重構大幅提升了程式碼質量：
+最近完成的 Stage 2 重構大幅提升了代碼質量：
 
 | 指標 | 重構前 | 重構後 | 改善 |
 |------|--------|--------|------|
 | 主方法平均長度 | 294 行 | 82 行 | ⬇️ 72% |
 | 測試覆蓋率 | 40% | 84% | ⬆️ 44% |
 | 測試數量 | ~50 | 247 | ⬆️ 395% |
-| 型別提示覆蓋 | ~85% | 100% | ⬆️ 15% |
+| 類型提示覆蓋 | ~85% | 100% | ⬆️ 15% |
 | Docstrings 覆蓋 | ~70% | 100% | ⬆️ 30% |
 
 **重構詳情**:
 
 - 將 5 個巨型方法（1,471 行）重構為 25 個輔助方法（410 行）
 - 提取 CLI 邏輯到獨立模組（`paddleocr_toolkit/cli/`）
-- 建立 71 個 CLI 測試，達到 96% 覆蓋率
-- 所有程式碼遵循 Google Style Python 規範
+- 創建 71 個 CLI 測試，達到 96% 覆蓋率
+- 所有代碼遵循 Google Style Python 規範
 
 ---
 
@@ -465,7 +465,7 @@ text = processor.extract_all_text(results)
 ```python
 from paddleocr_toolkit.outputs import OutputManager
 
-# 建立管理器
+# 創建管理器
 manager = OutputManager(
     base_path='output/result',
     formats=['md', 'json', 'txt', 'html']
@@ -550,7 +550,7 @@ config = load_config("config.yaml")
 print(config['ocr']['mode'])
 ```
 
-### 文書處理
+### 文字處理
 
 ```python
 from paddleocr_toolkit.processors import fix_english_spacing

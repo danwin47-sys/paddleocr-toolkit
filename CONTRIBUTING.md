@@ -8,7 +8,7 @@
 
 - [行為準則](#行為準則)
 - [如何貢獻](#如何貢獻)
-- [開發設定](#開發設定)
+- [開發設置](#開發設置)
 - [提交指南](#提交指南)
 - [程式碼規範](#程式碼規範)
 - [測試要求](#測試要求)
@@ -35,7 +35,7 @@
 - 預期行為
 - 實際行為
 - 環境資訊（Python 版本、作業系統等）
-- 錯誤日誌誌
+- 錯誤日誌
 
 ### 建議功能
 
@@ -55,12 +55,13 @@
 
 ---
 
-## 開發設定
+## 開發設置
 
 ### 環境要求
 
 - Python 3.8+
-- 虛擬環境工具 (venv, conda)
+- Git
+- 虛擬環境工具
 
 ### 安裝開發環境
 
@@ -71,25 +72,24 @@ cd paddleocr-toolkit
 
 # 建立虛擬環境
 python -m venv venv
-# Windows: venv\Scripts\activate
-# Linux/Mac: source venv/bin/activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # 安裝開發依賴
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
 ### 執行測試
 
 ```bash
 # 執行所有測試
-pytest
+pytest tests/
 
 # 執行帶覆蓋率的測試
-pytest --cov=paddleocr_toolkit tests/
+pytest tests/ --cov=paddleocr_toolkit --cov-report=html
 
 # 執行特定測試
-pytest tests/test_core_models.py
+pytest tests/test_ocr_engine.py -v
 ```
 
 ---
@@ -101,18 +101,18 @@ pytest tests/test_core_models.py
 我們使用 [Conventional Commits](https://www.conventionalcommits.org/) 規範：
 
 ```
-<type>[optional scope]: <description>
+<type>(<scope>): <subject>
 
-[optional body]
+<body>
 
-[optional footer(s)]
+<footer>
 ```
 
-**型別**:
+**類型**:
 
 - `feat`: 新功能
 - `fix`: Bug 修正
-- `docs`: 檔案更新
+- `docs`: 文件更新
 - `style`: 程式碼格式（不影響功能）
 - `refactor`: 重構
 - `test`: 測試相關
@@ -151,7 +151,7 @@ flake8 paddleocr_toolkit/
 mypy paddleocr_toolkit/
 ```
 
-### 檔案字串 (Docstrings)
+### 文件字串 (Docstrings)
 
 使用 Google 風格的 docstrings：
 
@@ -235,12 +235,12 @@ def test_complete_workflow():
 
 提交 PR 前，請確認：
 
-- [ ] 程式碼透過所有測試
+- [ ] 程式碼通過所有測試
 - [ ] 新功能有相應測試
 - [ ] 測試覆蓋率不降低
 - [ ] 程式碼已格式化 (black, isort)
-- [ ] 透過程式碼檢查 (flake8, mypy)
-- [ ] 更新了相關檔案
+- [ ] 通過程式碼檢查 (flake8, mypy)
+- [ ] 更新了相關文件
 - [ ] 新增了 docstrings
 - [ ] Commit 訊息符合規範
 - [ ] 沒有合併衝突
@@ -252,7 +252,7 @@ def test_complete_workflow():
 1. 自動化檢查（CI/CD）
 2. 程式碼審查（至少 1 人）
 3. 測試驗證
-4. 檔案更新確認
+4. 文件更新確認
 5. 合併到主分支
 
 ---
@@ -270,7 +270,7 @@ def test_complete_workflow():
 
 - 📧 提交 Issue
 - 💬 GitHub Discussions
-- 📖 檢視檔案
+- 📖 查看文件
 
 ---
 

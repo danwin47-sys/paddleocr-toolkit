@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-paddleocr benchmark - 效能??命令
+paddleocr benchmark - 性能??命令
 """
 
 import json
@@ -15,23 +15,23 @@ import psutil
 
 def run_benchmark(pdf_path: str, output: Optional[str] = None):
     """
-    ?行效能基準??
+    ?行性能基准??
 
     Args:
-        pdf_path: PDF檔案路?
+        pdf_path: PDF文件路?
         output: ?出?告路?
     """
     from paddle_ocr_tool import PaddleOCRTool
 
     print("\n" + "=" * 70)
-    print(" PaddleOCR Toolkit 效能基準??")
+    print(" PaddleOCR Toolkit 性能基准??")
     print("=" * 70)
-    print(f"\n??檔案: {pdf_path}")
+    print(f"\n??文件: {pdf_path}")
     print()
 
     pdf_file = Path(pdf_path)
     if not pdf_file.exists():
-        print(f"??: 檔案不存在: {pdf_path}")
+        print(f"??: 文件不存在: {pdf_path}")
         return
 
     # ???景
@@ -126,19 +126,18 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
 
     # 最省?存
     lightest = min(results, key=lambda x: x["memory_used"])
-    print(f"最省記憶體: {lightest['scenario']} ({lightest['memory_used']}MB)")
+    print(f"最省?存: {lightest['scenario']} ({lightest['memory_used']}MB)")
 
-    # 儲存結果
+    # 保存?果
     if output:
         output_path = Path(output)
     else:
-        # 儲存結果
-        output_path = Path(f"benchmark_{int(time.time())}.json")
+        output_path = Path("benchmark_results.json")
 
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
+        json.dump(results, f, indent=2, ensure_ascii=False)
 
-    print(f"\n📊 報告已儲存: {output_path}")
+    print(f"\n?告已保存: {output_path}")
     print()
 
 
@@ -146,8 +145,8 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("使用方法: python benchmark.py <pdf檔案> [?出檔案]")
-        print("範例: python benchmark.py test.pdf results.json")
+        print("使用方法: python benchmark.py <pdf文件> [?出文件]")
+        print("范例: python benchmark.py test.pdf results.json")
     else:
         pdf_path = sys.argv[1]
         output = sys.argv[2] if len(sys.argv) > 2 else None

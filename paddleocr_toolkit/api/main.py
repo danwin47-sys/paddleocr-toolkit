@@ -1,29 +1,25 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FastAPI後端 - Web介面
-v1.2.0新增 - REST API服務
+FastAPI后端 - Web界面
+v1.2.0新增 - REST API服务
 """
 
 import asyncio
 import os
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import (
     BackgroundTasks,
-    Depends,
     FastAPI,
     File,
     HTTPException,
-    Security,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
-    status,
 )
-from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,60 +29,27 @@ from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
-# 環境變數讀取
-import os
-from dotenv import load_dotenv
-
-load_dotenv()  # 讀取 .env 檔案
-
-# 安全性設定
-API_KEY = os.getenv("API_KEY", "dev-key-change-in-production")
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
-
-# API Key 驗證
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
-
-async def verify_api_key(api_key: str = Security(api_key_header)):
-    """
-    驗證 API Key
-    
-    Args:
-        api_key: 從 header 中提取的 API Key
-    
-    Raises:
-        HTTPException: 如果 API Key 無效
-    """
-    if api_key != API_KEY:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API Key",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    return api_key
-
-
 # 找到 web 目錄
 WEB_DIR = Path(__file__).parent.parent.parent / "web"
 
 app = FastAPI(
     title="PaddleOCR Toolkit API", 
-    description="專業級OCR檔案處理API", 
+    description="专业级OCR文件处理API", 
     version="1.2.0",
-    docs_url="/docs",  # API 檔案放在 /docs
+    docs_url="/docs",  # API 文件放在 /docs
     redoc_url="/redoc"
 )
 
-# CORS設定 (使用環境變數)
+# CORS设置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 任務儲存（生產環境應使用Redis等）
+# 任务存储（生产环境应使用Redis等）
 tasks = {}
 results = {}
 
@@ -95,13 +58,12 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 
-# 初始化外掛載入器（安全性：可透過環境變數禁用）
-ENABLE_PLUGINS = os.getenv("ENABLE_PLUGINS", "true").lower() == "true"
-plugin_loader = PluginLoader(str(PLUGIN_DIR), enable_plugins=ENABLE_PLUGINS)
+# 初始化插件載入器
+plugin_loader = PluginLoader(str(PLUGIN_DIR))
 plugin_loader.load_all_plugins()
 
 # 圖片大小限制 (避免 OCR 記憶體不足)
-MAX_IMAGE_SIDE = 2500  # 畫素
+MAX_IMAGE_SIDE = 2500  # 像素
 
 
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
@@ -150,7 +112,7 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> st
 
 
 class OCRRequest(BaseModel):
-    """OCR請求模型"""
+    """OCR请求模型"""
 
     mode: str = "hybrid"
     dpi: int = 200
@@ -158,15 +120,15 @@ class OCRRequest(BaseModel):
 
 
 class TaskResponse(BaseModel):
-    """任務回應模型"""
+    """任务响应模型"""
+
     task_id: str
     status: str
     message: str
-    result: Optional[Dict[str, Any]] = None
 
 
 class OCRResult(BaseModel):
-    """OCR結果模型"""
+    """OCR结果模型"""
 
     task_id: str
     status: str
@@ -177,16 +139,16 @@ class OCRResult(BaseModel):
 
 async def process_ocr_task(task_id: str, file_path: str, mode: str):
     """
-    後臺OCR處理任務 (Async)
+    后台OCR处理任务 (Async)
 
     Args:
-        task_id: 任務ID
-        file_path: 檔案路徑
+        task_id: 任务ID
+        file_path: 文件路径
         mode: OCR模式
     """
     try:
         tasks[task_id] = {"status": "processing", "progress": 0}
-        await manager.send_progress_update(task_id, 0, "processing", "任務開始")
+        await manager.send_progress_update(task_id, 0, "processing", "任务开始")
 
         # 0. 檢測並縮小大圖片
         processed_path = file_path
@@ -198,14 +160,14 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         await manager.send_progress_update(task_id, 10, "processing", "初始化OCR引擎...")
 
         def run_ocr():
-            # 在執行緒中執行阻塞的OCR操作
+            # 在线程中运行阻塞的OCR操作
             ocr_manager = OCREngineManager(
                 mode=mode, device="cpu", plugin_loader=plugin_loader
-            )  # 預設使用CPU以確保相容性
+            )  # 默认使用CPU以确保兼容性
             ocr_manager.init_engine()
             return ocr_manager
 
-        # 使用 asyncio.to_thread 執行阻塞程式碼
+        # 使用 asyncio.to_thread 運行阻塞代碼
         ocr_manager = await asyncio.to_thread(run_ocr)
 
         # 2. 執行預測
@@ -252,17 +214,16 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         tasks[task_id] = {"status": "failed", "progress": 0}
         await manager.send_error(task_id, error_msg)
 
-
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """提供使用者友好的 Web 介面"""
+    """提供用戶友好的 Web 介面"""
     index_file = WEB_DIR / "index.html"
     if index_file.exists():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
     return HTMLResponse(content="""
         <h1>PaddleOCR Toolkit API</h1>
         <p>Version: 1.2.0</p>
-        <p><a href="/docs">API 檔案</a></p>
+        <p><a href="/docs">API 文件</a></p>
     """)
 
 
@@ -271,103 +232,93 @@ async def upload_and_ocr(
     file: UploadFile = File(...),
     background_tasks: BackgroundTasks = None,  # type: ignore[assignment]
     mode: str = "hybrid",
-    api_key: str = Depends(verify_api_key),
 ):
     """
-    上傳檔案並進行OCR處理
+    上传文件并进行OCR处理
 
     Args:
-        file: 上傳的檔案
-        background_tasks: 後臺任務
+        file: 上传的文件
+        background_tasks: 后台任务
         mode: OCR模式
 
     Returns:
-        任務ID和狀態
+        任务ID和状态
     """
-    # 生成任務ID
+    # 生成任务ID
     task_id = str(uuid.uuid4())
 
-    # 儲存檔案 (安全性：清理檔名以防止路徑遍歷)
-    safe_filename = Path(file.filename).name
-    file_path = UPLOAD_DIR / f"{task_id}_{safe_filename}"
+    # 保存文件
+    file_path = UPLOAD_DIR / f"{task_id}_{file.filename}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
 
-    # 建立後臺任務
+    # 创建后台任务
     background_tasks.add_task(process_ocr_task, task_id, str(file_path), mode)
 
-    # 初始化任務狀態
+    # 初始化任务状态
     tasks[task_id] = {"status": "queued", "progress": 0}
 
-    return TaskResponse(task_id=task_id, status="queued", message="任務已建立，正在處理...")
+    return TaskResponse(task_id=task_id, status="queued", message="任务已创建，正在处理...")
 
 
-@app.get("/api/status/{task_id}", response_model=TaskResponse)
+@app.get("/api/tasks/{task_id}", response_model=OCRResult)
 async def get_task_status(task_id: str):
     """
-    獲取任務狀態
+    获取任务状态
 
     Args:
-        task_id: 任務ID
+        task_id: 任务ID
 
     Returns:
-        任務狀態和結果
+        任务状态和结果
     """
     if task_id not in tasks:
-        raise HTTPException(status_code=404, detail="任務不存在")
+        raise HTTPException(status_code=404, detail="任务不存在")
 
     task_info = tasks[task_id]
 
-    # 如果任務完成，返回結果
+    # 如果任务完成，返回结果
     if task_id in results:
-        return TaskResponse(
-            task_id=task_id,
-            status=results[task_id]["status"],
-            message="任務已完成",
-            result=results[task_id]["results"]
-        )
+        return OCRResult(**results[task_id], task_id=task_id)
 
-    # 否則返回當前狀態
-    return TaskResponse(
-        task_id=task_id,
-        status=task_info["status"],
-        message="任務正在處理中",
-        result=None
+    # 否则返回当前状态
+    return OCRResult(
+        task_id=task_id, status=task_info["status"], progress=task_info["progress"]
     )
 
 
 @app.get("/api/results/{task_id}")
 async def get_results(task_id: str):
     """
-    獲取OCR結果
+    获取OCR结果
 
     Args:
-        task_id: 任務ID
+        task_id: 任务ID
 
     Returns:
-        OCR結果
+        OCR结果
     """
     if task_id not in results:
-        raise HTTPException(status_code=404, detail="結果不存在")
+        raise HTTPException(status_code=404, detail="结果不存在")
 
     return results[task_id]
 
 
 @app.delete("/api/tasks/{task_id}")
 async def delete_task(task_id: str):
-    """刪除任務"""
+    """删除任务"""
     if task_id in tasks:
         del tasks[task_id]
     if task_id in results:
         del results[task_id]
 
-    return {"message": "任務已刪除"}
+    return {"message": "任务已删除"}
 
 
 @app.get("/api/stats")
 async def get_stats():
-    """獲取系統統計"""
+    """获取系统统计"""
     return {
         "total_tasks": len(tasks),
         "completed_tasks": sum(1 for t in tasks.values() if t["status"] == "completed"),
@@ -397,22 +348,10 @@ async def list_files():
     return files
 
 
-@app.delete("/api/files/{filename}", dependencies=[Depends(verify_api_key)])
+@app.delete("/api/files/{filename}")
 async def delete_file(filename: str):
     """刪除檔案"""
-    # 安全性：清理檔名以防止路徑遍歷
-    safe_filename = Path(filename).name
-    file_path = UPLOAD_DIR / safe_filename
-    
-    # 確保檔案在 UPLOAD_DIR 內 - Python 3.8 兼容
-    try:
-        file_path_resolved = file_path.resolve()
-        upload_dir_resolved = UPLOAD_DIR.resolve()
-        if not str(file_path_resolved).startswith(str(upload_dir_resolved)):
-            raise HTTPException(status_code=400, detail="無效的檔案路徑")
-    except (ValueError, OSError):
-        raise HTTPException(status_code=400, detail="無效的檔案路徑")
-    
+    file_path = UPLOAD_DIR / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
 
@@ -423,31 +362,21 @@ async def delete_file(filename: str):
         raise HTTPException(status_code=500, detail=f"刪除失敗: {str(e)}")
 
 
-@app.get("/api/files/{filename}/download", dependencies=[Depends(verify_api_key)])
+@app.get("/api/files/{filename}/download")
 async def download_file(filename: str):
     """下載檔案"""
     file_path = UPLOAD_DIR / filename
-    
-    # 安全性檢查：防止路徑遍歷攻擊
-    # Python 3.8 兼容：使用 resolve() 和字串比較代替 is_relative_to
-    try:
-        file_path_resolved = file_path.resolve()
-        upload_dir_resolved = UPLOAD_DIR.resolve()
-        # 檢查解析後的路徑是否以上傳目錄開頭
-        if not str(file_path_resolved).startswith(str(upload_dir_resolved)):
-            raise HTTPException(status_code=400, detail="Invalid file path")
-    except (ValueError, OSError):
-        raise HTTPException(status_code=400, detail="Invalid file path")
-    
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="檔案不存在")
 
-    return FileResponse(file_path, filename=filename)
+    return FileResponse(
+        path=file_path, filename=filename, media_type="application/octet-stream"
+    )
 
 
 @app.get("/api/plugins")
 async def list_plugins():
-    """列出所有外掛"""
+    """列出所有插件"""
     return plugin_loader.list_plugins()
 
 
@@ -484,8 +413,8 @@ if __name__ == "__main__":
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
     
-    啟動伺服器...
-    API文件: http://localhost:8000/docs
+    启动服务器...
+    API文档: http://localhost:8000/docs
     """
     )
 

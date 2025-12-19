@@ -27,7 +27,6 @@ requests>=2.31.0
 
 # ============ Configuration ============
 pyyaml>=6.0.0
-python-dotenv>=1.0.0
 
 # ============ Web API (v1.2.0新增) ============
 fastapi>=0.104.0

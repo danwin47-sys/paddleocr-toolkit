@@ -23,13 +23,6 @@ def client():
 
 
 @pytest.fixture
-def api_headers():
-    """提供 API 認證 headers"""
-    from paddleocr_toolkit.api.main import API_KEY
-    return {"X-API-Key": API_KEY}
-
-
-@pytest.fixture
 def mock_ocr_engine_manager():
     with patch("paddleocr_toolkit.api.main.OCREngineManager") as mock:
         instance = mock.return_value
@@ -56,13 +49,13 @@ def test_websocket_connection(client):
     assert manager.get_connection_count(task_id) == 0
 
 
-def test_create_task_and_status(client, api_headers, mock_ocr_engine_manager):
+def test_create_task_and_status(client, mock_ocr_engine_manager):
     """測試建立任務和狀態查詢"""
     # 建立虛擬檔案
     files = {"file": ("test.pdf", b"dummy content", "application/pdf")}
 
     # 傳送請求
-    response = client.post("/api/ocr", files=files, headers=api_headers)
+    response = client.post("/api/ocr", files=files)
     assert response.status_code == 200
     data = response.json()
 
@@ -74,7 +67,7 @@ def test_create_task_and_status(client, api_headers, mock_ocr_engine_manager):
     assert task_id in tasks
 
     # 獲取狀態
-    response = client.get(f"/api/tasks/{task_id}", headers=api_headers)
+    response = client.get(f"/api/tasks/{task_id}")
     assert response.status_code == 200
     status_data = response.json()
     assert status_data["task_id"] == task_id
