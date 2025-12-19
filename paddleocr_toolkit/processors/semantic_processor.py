@@ -13,6 +13,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from paddleocr_toolkit.llm import create_llm_client, LLMClient
+from paddleocr_toolkit.llm.llm_client import HAS_REQUESTS
 
 
 class SemanticProcessor:

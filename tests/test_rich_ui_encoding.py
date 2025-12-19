@@ -33,7 +33,17 @@ def test_windows_ascii_icons():
 
 
 def test_print_functions_no_crash(capsys):
-
+    """測試print函式不會崩潰"""
+    try:
+        rich_ui.print_success("測試成功")
+        rich_ui.print_error("測試錯誤")
+        rich_ui.print_warning("測試警告")
+        rich_ui.print_info("測試資訊")
+        captured = capsys.readouterr()
+        success = True
+    except UnicodeEncodeError:
+        success = False
+    
     assert success, "print函式出現編碼錯誤"
 
 
