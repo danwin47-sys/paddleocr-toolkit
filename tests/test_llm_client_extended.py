@@ -1,11 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-測試 LLMClient - 額外覆蓋率測試
-"""
-
-from unittest.mock import Mock, patch
+import sys
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
+# 防護：如果環境中沒有 requests，則建立一個 mock 模組以避免 decorator 失敗
+try:
+    import requests
+except ImportError:
+    mock_req = MagicMock()
+    sys.modules["requests"] = mock_req
+    import requests
 
 
 class TestOllamaClientExtended:
