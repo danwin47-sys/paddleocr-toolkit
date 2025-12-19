@@ -19,27 +19,19 @@ class TestTranslationProcessorInitialization:
 
     def test_init_with_valid_engine(self):
         """測試使用有效引擎初始化"""
-        mock_engine = Mock(spec=OCREngineManager)
-        mock_engine.get_mode.return_value = OCRMode.HYBRID
+        processor = EnhancedTranslationProcessor()
         
-        processor = EnhancedTranslationProcessor(mock_engine)
-        
-        assert processor.engine_manager == mock_engine
+        assert processor.translator is None
+        assert processor.renderer is None
 
     def test_init_with_custom_settings(self):
         """測試使用自訂設定初始化"""
-        mock_engine = Mock(spec=OCREngineManager)
-        mock_engine.get_mode.return_value = OCRMode.HYBRID
+        processor = EnhancedTranslationProcessor()
         
-        processor = EnhancedTranslationProcessor(
-            mock_engine,
-            source_lang="en",
-            target_lang="zh-TW",
-            model_name="custom-model"
-        )
-        
-        assert processor.source_lang == "en"
-        assert processor.target_lang == "zh-TW"
+        # EnhancedTranslationProcessor 不接受初始化參數
+        # 這個測試驗證基本初始化
+        assert processor.translator is None
+        assert processor.renderer is None
 
 
 class TestTranslationProcessorSetup:
@@ -48,9 +40,7 @@ class TestTranslationProcessorSetup:
     @pytest.fixture
     def processor(self):
         """建立 processor 例項"""
-        mock_engine = Mock(spec=OCREngineManager)
-        mock_engine.get_mode.return_value = OCRMode.HYBRID
-        return EnhancedTranslationProcessor(mock_engine)
+        return EnhancedTranslationProcessor()
 
     @patch("paddleocr_toolkit.processors.translation_processor.fitz")
     @patch("paddleocr_toolkit.processors.translation_processor.OllamaTranslator")
