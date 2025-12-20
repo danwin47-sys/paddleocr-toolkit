@@ -140,9 +140,17 @@ class PaddleOCRFacade:
             )
             logging.info("BasicProcessor 初始化完成")
 
-        # 可以在這裡新增其他模式的 Processor
-        # elif self.mode == "structure":
-        #     self.structure_processor = StructureProcessor(self.engine_manager)
+        elif self.mode == "structure":
+            from paddleocr_toolkit.processors.structure_processor import StructureProcessor
+
+            self.structure_processor = StructureProcessor(self.engine_manager)
+            logging.info("StructureProcessor 初始化完成")
+
+        elif self.mode == "formula":
+            from paddleocr_toolkit.processors.formula_processor import FormulaProcessor
+
+            self.formula_processor = FormulaProcessor(self.engine_manager)
+            logging.info("FormulaProcessor 初始化完成")
 
     def process(
         self,
@@ -223,7 +231,7 @@ class PaddleOCRFacade:
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        結構化識別模式（待實作）
+        結構化識別模式（委派給 StructureProcessor）
 
         Args:
             input_path: 輸入檔案路徑
@@ -233,7 +241,12 @@ class PaddleOCRFacade:
         Returns:
             Dict[str, Any]: 處理結果
         """
-        raise NotImplementedError("Structure 模式 Processor 尚未實作")
+        if self.mode != "structure":
+            raise ValueError(f"process_structured 僅適用於 structure 模式，當前: {self.mode}")
+
+        return self.structure_processor.process(
+            input_path, output_path=output_path, **kwargs
+        )
 
     def process_formula(
         self,
@@ -242,7 +255,7 @@ class PaddleOCRFacade:
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        公式識別模式（待實作）
+        公式識別模式（委派給 FormulaProcessor）
 
         Args:
             input_path: 輸入檔案路徑
@@ -252,7 +265,12 @@ class PaddleOCRFacade:
         Returns:
             Dict[str, Any]: 處理結果
         """
-        raise NotImplementedError("Formula 模式 Processor 尚未實作")
+        if self.mode != "formula":
+            raise ValueError(f"process_formula 僅適用於 formula 模式，當前: {self.mode}")
+
+        return self.formula_processor.process(
+            input_path, output_path=output_path, **kwargs
+        )
 
     def process_basic(
         self,
