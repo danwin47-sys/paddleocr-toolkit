@@ -3,878 +3,634 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字辨識工具 - 把圖片/PDF 變成文字</title>
+    <title>PaddleOCR Toolkit - 智慧文件辨識中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #10b981;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', -apple-system, 'Microsoft JhengHei', sans-serif;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft JhengHei', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-        
-        /* 步驟指示 */
-        .steps {
             display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 25px;
+            overflow-x: hidden;
         }
-        
-        .step {
+
+        /* Sidebar */
+        .sidebar {
+            width: 80px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            color: white;
-            font-size: 0.9rem;
-            opacity: 0.7;
-            transition: opacity 0.3s;
+            padding: 30px 0;
+            gap: 40px;
         }
-        
-        .step.active {
-            opacity: 1;
-        }
-        
-        .step-number {
-            width: 28px;
-            height: 28px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
         }
-        
-        .step.active .step-number {
-            background: white;
-            color: #667eea;
+
+        .nav-item {
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        
-        .card {
-            background: white;
-            border-radius: 20px;
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        /* Glass Card Base */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
-        /* 上傳區域 */
-        .upload-area {
-            border: 3px dashed #ddd;
-            border-radius: 15px;
-            padding: 40px 20px;
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: 20px;
+            padding: 60px 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            background: #fafafa;
+            transition: 0.3s;
+            position: relative;
         }
-        
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f5f5ff;
+
+        .upload-zone:hover {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: var(--primary);
         }
-        
-        .upload-area.dragging {
-            background: #eef0ff;
-            border-color: #764ba2;
+
+        .upload-zone.dragging {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
         }
-        
-        .upload-area.has-file {
-            border-color: #4caf50;
-            background: #f1f8e9;
-        }
-        
+
         .upload-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: block;
         }
-        
-        .upload-area h3 {
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .upload-hint {
-            color: #888;
-            font-size: 0.9rem;
-        }
-        
-        #fileInput {
-            display: none;
-        }
-        
-        /* 檔案預覽 */
-        .file-preview {
-            display: none;
+
+        /* Feature Switch */
+        .feature-card {
             margin-top: 20px;
-            padding: 15px;
-            background: #e8f5e9;
-            border-radius: 10px;
-            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
         }
-        
-        .file-preview.show {
+
+        .feature-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-        
-        .file-icon {
-            font-size: 32px;
+
+        .gemini-logo {
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1e1b4b;
         }
-        
-        .file-info h4 {
-            color: #2e7d32;
-            margin-bottom: 4px;
+
+        /* Recent Files Table */
+        .recent-files h3 {
+            margin-bottom: 20px;
+            font-size: 1.25rem;
         }
-        
-        .file-info span {
-            color: #666;
-            font-size: 0.85rem;
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        
-        .remove-file {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: #999;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 5px;
-        }
-        
-        .remove-file:hover {
-            color: #f44336;
-        }
-        
-        /* 選項區域 - 更友好的描述 */
-        .options {
-            margin: 25px 0;
-        }
-        
-        .option-card {
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 15px;
-            border: 2px solid #e0e0e0;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
+            border: 1px solid transparent;
+            transition: 0.3s;
         }
-        
-        .option-card:hover {
-            border-color: #667eea;
+
+        .file-item:hover {
+            border-color: var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
         }
-        
-        .option-card.selected {
-            border-color: #667eea;
-            background: #f5f5ff;
-        }
-        
-        .option-card input[type="radio"] {
-            display: none;
-        }
-        
-        .option-header {
+
+        .file-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        
-        .option-check {
-            width: 22px;
-            height: 22px;
-            border: 2px solid #ddd;
-            border-radius: 50%;
+
+        .file-ext {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
         }
-        
-        .option-card.selected .option-check {
-            border-color: #667eea;
-            background: #667eea;
-        }
-        
-        .option-card.selected .option-check::after {
-            content: "✓";
-            color: white;
-            font-size: 14px;
-        }
-        
-        .option-title {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .option-badge {
-            margin-left: auto;
-            padding: 3px 10px;
-            background: #e3f2fd;
-            color: #1976d2;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-        
-        .option-badge.recommended {
-            background: #4caf50;
-            color: white;
-        }
-        
-        .option-desc {
-            margin-top: 8px;
-            padding-left: 32px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        /* 按鈕 */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* 進度條 */
-        .progress {
-            margin-top: 25px;
-            display: none;
-        }
-        
-        .progress.show {
-            display: block;
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            color: #666;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
+
+        .file-name {
+            font-weight: 500;
+            max-width: 150px;
             overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            width: 0%;
-            transition: width 0.3s;
-            border-radius: 5px;
+
+        .file-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent);
         }
-        
-        /* 結果區域 */
-        .results {
-            margin-top: 25px;
-            display: none;
-        }
-        
-        .results.show {
-            display: block;
-        }
-        
-        .results-header {
+
+        .file-actions {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .results-header h3 {
-            color: #333;
-            display: flex;
-            align-items: center;
             gap: 8px;
         }
-        
-        .results-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-action {
-            padding: 8px 15px;
+
+        .action-btn {
+            background: none;
             border: none;
-            border-radius: 8px;
+            color: var(--text-secondary);
             cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
+            padding: 5px;
+            border-radius: 4px;
+            transition: 0.2s;
         }
-        
-        .btn-copy {
-            background: #e3f2fd;
-            color: #1976d2;
+
+        .action-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
         }
-        
-        .btn-copy:hover {
-            background: #bbdefb;
+
+        /* Switch Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
         }
-        
-        .btn-download {
-            background: #e8f5e9;
-            color: #2e7d32;
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
         }
-        
-        .btn-download:hover {
-            background: #c8e6c9;
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
-        
-        .result-text {
+
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Results Area */
+        .results-area {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-area.show { display: block; }
+
+        .result-box {
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            max-height: 400px;
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
             overflow-y: auto;
+            border: 1px solid var(--glass-border);
             white-space: pre-wrap;
-            line-height: 1.8;
-            font-size: 1rem;
-            color: #333;
-            border: 1px solid #e0e0e0;
         }
-        
-        .result-stats {
-            display: flex;
-            gap: 20px;
-            margin-top: 15px;
-            padding: 15px;
-            background: #fff3e0;
-            border-radius: 10px;
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 20px;
+            width: 100%;
         }
-        
-        .stat {
-            text-align: center;
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
         }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #e65100;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        /* 成功提示 */
+
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #333;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 25px;
-            opacity: 0;
-            transition: all 0.3s;
+            right: 30px;
+            padding: 15px 25px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            transform: translateX(200%);
+            transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 1000;
         }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        
-        /* 說明區域 */
-        .help-section {
+
+        .toast.show { transform: translateX(0); }
+
+        /* Processing Progress */
+        .progress-container {
             margin-top: 20px;
-            padding: 15px;
-            background: #fff8e1;
-            border-radius: 10px;
-            border-left: 4px solid #ffc107;
+            display: none;
         }
-        
-        .help-section h4 {
-            color: #f57c00;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+
+        .progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
         }
-        
-        .help-section p {
-            color: #666;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-        
-        /* 新增處理按鈕 */
-        .btn-new {
-            margin-top: 15px;
-            background: #f5f5f5;
-            color: #666;
-        }
-        
-        .btn-new:hover:not(:disabled) {
-            background: #e0e0e0;
-            box-shadow: none;
-            transform: none;
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: 0.3s;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📄 文字辨識工具</h1>
-            <p>把圖片或 PDF 檔案變成可編輯的文字</p>
-        </div>
-        
-        <!-- 步驟指示 -->
-        <div class="steps">
-            <div class="step active" id="step1">
-                <span class="step-number">1</span>
-                <span>選擇檔案</span>
-            </div>
-            <div class="step" id="step2">
-                <span class="step-number">2</span>
-                <span>開始辨識</span>
-            </div>
-            <div class="step" id="step3">
-                <span class="step-number">3</span>
-                <span>取得結果</span>
-            </div>
-        </div>
-        
-        <div class="card">
-            <!-- 上傳區域 -->
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📤</div>
-                <h3>點選選擇檔案，或把檔案拖到這裡</h3>
-                <p class="upload-hint">支援 PDF、JPG、PNG 格式</p>
-                <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
-            </div>
-            
-            <!-- 檔案預覽 -->
-            <div class="file-preview" id="filePreview">
-                <span class="file-icon">📄</span>
-                <div class="file-info">
-                    <h4 id="fileName">document.pdf</h4>
-                    <span id="fileSize">2.5 MB</span>
-                </div>
-                <button class="remove-file" id="removeFile" title="移除檔案">✕</button>
-            </div>
-            
-            <!-- 辨識模式選項 -->
-            <div class="options" id="optionsSection">
-                <div class="option-card selected" data-mode="hybrid">
-                    <input type="radio" name="mode" value="hybrid" checked>
-                    <div class="option-header">
-                        <span class="option-check"></span>
-                        <span class="option-title">🎯 標準模式</span>
-                        <span class="option-badge recommended">推薦</span>
+    <aside class="sidebar">
+        <div class="logo">P</div>
+        <div class="nav-item active">🏠</div>
+        <div class="nav-item">📁</div>
+        <div class="nav-item">⚙️</div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1>Dashboard</h1>
+            <p style="color: var(--text-secondary); margin-top: 8px;">歡迎使用智慧文件辨識系統</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="left-section">
+                <!-- Upload Area -->
+                <div class="glass-card">
+                    <div class="upload-zone" id="dropZone">
+                        <span class="upload-icon">☁️</span>
+                        <h2 style="margin-bottom: 10px;">點選或拖放檔案</h2>
+                        <p style="color: var(--text-secondary);">支援 PDF, PNG, JPG (最大 2500px)</p>
+                        <input type="file" id="fileInput" style="display: none;">
                     </div>
-                    <p class="option-desc">適合大多數檔案，自動處理各種版面</p>
-                </div>
-                
-                <div class="option-card" data-mode="basic">
-                    <input type="radio" name="mode" value="basic">
-                    <div class="option-header">
-                        <span class="option-check"></span>
-                        <span class="option-title">⚡ 快速模式</span>
-                        <span class="option-badge">速度快</span>
+
+                    <div class="feature-card">
+                        <div class="feature-info">
+                            <div class="gemini-logo">G</div>
+                            <div>
+                                <p style="font-weight: 600;">Gemini 3 語義校正</p>
+                                <p style="font-size: 12px; color: var(--text-secondary);">使用智慧型 AI 修復 OCR 辨識錯誤</p>
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="geminiSwitch">
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <p class="option-desc">適合簡單檔案，處理速度較快</p>
-                </div>
-                
-                <div class="option-card" data-mode="structure">
-                    <input type="radio" name="mode" value="structure">
-                    <div class="option-header">
-                        <span class="option-check"></span>
-                        <span class="option-title">📊 精準模式</span>
-                        <span class="option-badge">表格適用</span>
-                    </div>
-                    <p class="option-desc">適合有表格、圖表的複雜檔案</p>
-                </div>
-            </div>
-            
-            <!-- 處理按鈕 -->
-            <button class="btn" id="processBtn" disabled>
-                <span>🚀</span>
-                <span>開始辨識文字</span>
-            </button>
-            
-            <!-- 進度條 -->
-            <div class="progress" id="progress">
-                <div class="progress-header">
-                    <span>正在辨識中...</span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
-            
-            <!-- 結果區域 -->
-            <div class="results" id="results">
-                <div class="results-header">
-                    <h3>✅ 辨識完成</h3>
-                    <div class="results-actions">
-                        <button class="btn-action btn-copy" id="copyBtn">
-                            📋 複製文字
-                        </button>
-                        <button class="btn-action btn-download" id="downloadBtn">
-                            💾 下載檔案
-                        </button>
+
+                    <p id="selectedFileName" style="margin-top: 15px; font-size: 14px; text-align: center; color: var(--text-secondary); display: none;"></p>
+
+                    <button class="btn-primary" id="processBtn" disabled>開始處理文件</button>
+
+                    <div class="progress-container" id="progressContainer">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--text-secondary);">
+                            <span id="statusTxt">處理中...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="result-text" id="resultText"></div>
-                
-                <div class="result-stats" id="resultStats">
-                    <div class="stat">
-                        <div class="stat-value" id="charCount">0</div>
-                        <div class="stat-label">辨識字數</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="pageCount">0</div>
-                        <div class="stat-label">處理頁數</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="processTime">0</div>
-                        <div class="stat-label">處理秒數</div>
+
+                <!-- Results Area -->
+                <div class="results-area" id="resultsArea">
+                    <div class="glass-card" style="margin-top: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 1.1rem;">辨識結果</h3>
+                            <button class="action-btn" id="copyBtn" title="複製到剪貼簿">📋</button>
+                        </div>
+                        <div class="result-box" id="resultContent"></div>
                     </div>
                 </div>
-                
-                <button class="btn btn-new" id="newBtn">
-                    📄 處理另一個檔案
-                </button>
             </div>
-            
-            <!-- 說明區域 -->
-            <div class="help-section" id="helpSection">
-                <h4>💡 小提示</h4>
-                <p>• 檔案越清晰，辨識效果越好<br>
-                   • 如果結果不理想，可以試試「精準模式」<br>
-                   • 支援中文、英文、數字混合辨識</p>
+
+            <div class="right-section">
+                <!-- Recent Files -->
+                <div class="glass-card recent-files">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>最近處理檔案</h3>
+                        <button class="action-btn" id="refreshBtn" title="重新整理">🔄</button>
+                    </div>
+                    <div class="file-list" id="fileList">
+                        <!-- File items populated by JS -->
+                        <p style="text-align: center; color: var(--text-secondary); padding: 20px;">載入中...</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- 提示訊息 -->
+    </main>
+
     <div class="toast" id="toast"></div>
-    
+
     <script>
-        // 元素
-        const uploadArea = document.getElementById('uploadArea');
+        // API Base URL
+        const API_URL = "http://localhost:8000";
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-        const filePreview = document.getElementById('filePreview');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const removeFile = document.getElementById('removeFile');
         const processBtn = document.getElementById('processBtn');
-        const progress = document.getElementById('progress');
-        const progressFill = document.getElementById('progressFill');
+        const fileList = document.getElementById('fileList');
+        const resultsArea = document.getElementById('resultsArea');
+        const resultContent = document.getElementById('resultContent');
+        const progressBar = document.getElementById('progressBar');
         const progressPercent = document.getElementById('progressPercent');
-        const results = document.getElementById('results');
-        const resultText = document.getElementById('resultText');
-        const copyBtn = document.getElementById('copyBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const newBtn = document.getElementById('newBtn');
-        const optionCards = document.querySelectorAll('.option-card');
-        const helpSection = document.getElementById('helpSection');
-        const toast = document.getElementById('toast');
+        const progressContainer = document.getElementById('progressContainer');
+        const statusTxt = document.getElementById('statusTxt');
+        const geminiSwitch = document.getElementById('geminiSwitch');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        let currentFile = null;
+
+        // --- File Handling ---
+        dropZone.onclick = () => fileInput.click();
         
-        let selectedFile = null;
-        let selectedMode = 'hybrid';
-        let extractedText = '';
-        let startTime = 0;
-        
-        // 點選上傳
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        // 檔案選擇
-        fileInput.addEventListener('change', (e) => {
-            handleFile(e.target.files[0]);
-        });
-        
-        // 拖放
-        uploadArea.addEventListener('dragover', (e) => {
+        fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragging'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('dragging');
+        dropZone.ondrop = (e) => {
             e.preventDefault();
-            uploadArea.classList.add('dragging');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragging');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragging');
+            dropZone.classList.remove('dragging');
             handleFile(e.dataTransfer.files[0]);
-        });
-        
-        // 處理檔案
+        };
+
         function handleFile(file) {
             if (!file) return;
-            
-            // 檢查檔案型別
-            const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-            if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|jpg|jpeg|png)$/i)) {
-                showToast('❌ 請選擇 PDF、JPG 或 PNG 格式的檔案');
+            currentFile = file;
+            selectedFileName.textContent = `已選擇: ${file.name}`;
+            selectedFileName.style.display = 'block';
+            processBtn.disabled = false;
+        }
+
+        // --- API Calls ---
+        async function fetchRecentFiles() {
+            try {
+                const response = await fetch(`${API_URL}/api/files/list?directory=uploads`);
+                const data = await response.json();
+                renderFileList(data.files);
+            } catch (err) {
+                console.error("Failed to fetch files", err);
+                fileList.innerHTML = `<p style="text-align: center; color: var(--text-secondary);">連線失敗</p>`;
+            }
+        }
+
+        function renderFileList(files) {
+            if (!files || files.length === 0) {
+                fileList.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">尚無處理紀錄</p>`;
                 return;
             }
-            
-            selectedFile = file;
-            
-            // 更新 UI
-            uploadArea.classList.add('has-file');
-            uploadArea.querySelector('h3').textContent = '✅ 檔案已選擇';
-            
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            filePreview.classList.add('show');
-            
-            processBtn.disabled = false;
-            updateStep(1);
-            
-            // 根據檔案型別更新圖示
-            const icon = filePreview.querySelector('.file-icon');
-            icon.textContent = file.type === 'application/pdf' ? '📕' : '🖼️';
+
+            fileList.innerHTML = files.slice(0, 8).map(file => `
+                <div class="file-item">
+                    <div class="file-meta">
+                        <div class="file-ext">${file.type.replace('.', '')}</div>
+                        <div>
+                            <p class="file-name" title="${file.name}">${file.name}</p>
+                            <p style="font-size: 10px; color: var(--text-secondary);">${formatSize(file.size)}</p>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="action-btn" onclick="downloadFile('${file.name}')" title="下載">📥</button>
+                        <button class="action-btn" onclick="deleteFile('${file.name}')" title="刪除">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
         }
-        
-        // 移除檔案
-        removeFile.addEventListener('click', (e) => {
-            e.stopPropagation();
-            resetUpload();
-        });
-        
-        function resetUpload() {
-            selectedFile = null;
-            uploadArea.classList.remove('has-file');
-            uploadArea.querySelector('h3').textContent = '點選選擇檔案，或把檔案拖到這裡';
-            filePreview.classList.remove('show');
-            processBtn.disabled = true;
-            fileInput.value = '';
-            updateStep(0);
+
+        async function downloadFile(name) {
+            window.open(`${API_URL}/api/files/download/${name}?directory=uploads`);
         }
-        
-        // 模式選擇
-        optionCards.forEach(card => {
-            card.addEventListener('click', () => {
-                optionCards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                card.querySelector('input').checked = true;
-                selectedMode = card.dataset.mode;
-            });
-        });
-        
-        // 處理按鈕
-        processBtn.addEventListener('click', async () => {
-            if (!selectedFile) return;
-            
-            processBtn.disabled = true;
-            progress.classList.add('show');
-            results.classList.remove('show');
-            helpSection.style.display = 'none';
-            updateStep(2);
-            startTime = Date.now();
-            
-            // 模擬進度
-            let progressValue = 0;
-            const progressInterval = setInterval(() => {
-                progressValue += Math.random() * 15;
-                if (progressValue > 90) progressValue = 90;
-                updateProgress(progressValue);
-            }, 500);
-            
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            
+
+        async function deleteFile(name) {
+            if (!confirm(`確定要刪除 ${name} 嗎？`)) return;
             try {
-                // 上傳檔案
-                const response = await fetch(`http://localhost:8000/api/ocr?mode=${selectedMode}`, {
+                await fetch(`${API_URL}/api/files/delete/${name}?directory=uploads`, { method: 'DELETE' });
+                showToast("檔案已刪除");
+                fetchRecentFiles();
+            } catch (err) {
+                showToast("刪除失敗");
+            }
+        }
+
+        processBtn.onclick = async () => {
+            if (!currentFile) return;
+
+            processBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            resultsArea.classList.remove('show');
+            updateProgress(0, "上傳中...");
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            // Mode based on Gemini switch
+            const mode = geminiSwitch.checked ? "hybrid" : "basic"; // Placeholder for logic
+
+            try {
+                const res = await fetch(`${API_URL}/api/ocr?mode=${mode}`, {
                     method: 'POST',
                     body: formData
                 });
-                
-                const data = await response.json();
-                const taskId = data.task_id;
-                
-                // 輪詢任務狀態
-                pollTaskStatus(taskId, progressInterval);
-                
-            } catch (error) {
-                clearInterval(progressInterval);
-                showToast('❌ 連線伺服器失敗，請確認伺服器已啟動');
-                resetAfterError();
+                const task = await res.json();
+                pollStatus(task.task_id);
+            } catch (err) {
+                showToast("連線失敗");
+                processBtn.disabled = false;
             }
-        });
-        
-        async function pollTaskStatus(taskId, progressInterval) {
-            const poll = async () => {
+        };
+
+        async function pollStatus(taskId) {
+            const timer = setInterval(async () => {
                 try {
-                    const response = await fetch(`http://localhost:8000/api/tasks/${taskId}`);
-                    const data = await response.json();
+                    const res = await fetch(`${API_URL}/api/tasks/${taskId}`);
+                    const data = await res.json();
                     
-                    updateProgress(data.progress);
-                    
+                    updateProgress(data.progress, data.status === "processing" ? "辨識中..." : "準備中...");
+
                     if (data.status === 'completed') {
-                        clearInterval(progressInterval);
+                        clearInterval(timer);
                         showResults(data.results);
+                        fetchRecentFiles();
                     } else if (data.status === 'failed') {
-                        clearInterval(progressInterval);
-                        showToast('❌ 處理失敗: ' + (data.error || '未知錯誤'));
-                        resetAfterError();
-                    } else {
-                        setTimeout(poll, 1000);
+                        clearInterval(timer);
+                        showToast("處理失敗: " + data.error);
+                        processBtn.disabled = false;
                     }
-                } catch (error) {
-                    clearInterval(progressInterval);
-                    showToast('❌ 連線中斷');
-                    resetAfterError();
+                } catch (err) {
+                    clearInterval(timer);
+                    showToast("狀態追蹤中斷");
                 }
-            };
-            poll();
+            }, 1500);
         }
-        
-        function updateProgress(value) {
-            progressFill.style.width = value + '%';
-            progressPercent.textContent = Math.round(value) + '%';
-        }
-        
-        function showResults(data) {
-            progress.classList.remove('show');
-            results.classList.add('show');
-            updateStep(3);
-            
-            // 提取純文字
-            if (Array.isArray(data)) {
-                extractedText = data.map(page => {
-                    if (Array.isArray(page)) {
-                        return page.map(item => item.text || item).join('\n');
-                    }
-                    return page.text || JSON.stringify(page);
-                }).join('\n\n--- 下一頁 ---\n\n');
-            } else if (typeof data === 'string') {
-                extractedText = data;
+
+        function showResults(results) {
+            resultsArea.classList.add('show');
+            let text = "";
+            if (results.raw_result) {
+                text = results.raw_result;
+            } else if (Array.isArray(results)) {
+                text = results.map(p => p.map(l => l.text).join('\n')).join('\n\n');
             } else {
-                extractedText = data.text || JSON.stringify(data, null, 2);
+                text = JSON.stringify(results, null, 2);
             }
-            
-            resultText.textContent = extractedText || '(未辨識到文字)';
-            
-            // 統計
-            const endTime = Date.now();
-            document.getElementById('charCount').textContent = extractedText.length.toLocaleString();
-            document.getElementById('pageCount').textContent = Array.isArray(data) ? data.length : 1;
-            document.getElementById('processTime').textContent = ((endTime - startTime) / 1000).toFixed(1);
-            
-            showToast('✅ 辨識完成！');
-        }
-        
-        function resetAfterError() {
-            progress.classList.remove('show');
+            resultContent.textContent = text;
             processBtn.disabled = false;
-            helpSection.style.display = 'block';
-            updateStep(1);
+            showToast("辨識完成！");
         }
-        
-        // 複製
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(extractedText).then(() => {
-                showToast('✅ 已複製到剪貼簿');
-                copyBtn.innerHTML = '✅ 已複製';
-                setTimeout(() => {
-                    copyBtn.innerHTML = '📋 複製文字';
-                }, 2000);
-            });
-        });
-        
-        // 下載
-        downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([extractedText], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = (selectedFile?.name || 'result').replace(/\.[^.]+$/, '') + '_辨識結果.txt';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('✅ 檔案已下載');
-        });
-        
-        // 處理新檔案
-        newBtn.addEventListener('click', () => {
-            resetUpload();
-            results.classList.remove('show');
-            helpSection.style.display = 'block';
-            extractedText = '';
-        });
-        
-        // 更新步驟
-        function updateStep(stepNum) {
-            document.querySelectorAll('.step').forEach((step, i) => {
-                step.classList.toggle('active', i <= stepNum);
-            });
+
+        // --- Utilities ---
+        function updateProgress(val, txt) {
+            progressBar.style.width = `${val}%`;
+            progressPercent.textContent = `${Math.round(val)}%`;
+            statusTxt.textContent = txt;
         }
-        
-        // 顯示提示
-        function showToast(message) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
-        
-        // 格式化檔案大小
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
+
+        // --- Init ---
+        fetchRecentFiles();
+        refreshBtn.onclick = fetchRecentFiles;
+        
+        document.getElementById('copyBtn').onclick = () => {
+            navigator.clipboard.writeText(resultContent.textContent);
+            showToast("已複製到剪貼簿");
+        };
     </script>
 </body>
 </html>

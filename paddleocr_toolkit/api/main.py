@@ -26,21 +26,30 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from paddleocr_toolkit.api.websocket_manager import manager
+from paddleocr_toolkit.api.file_manager import router as file_router
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
 # 找到 web 目錄
 WEB_DIR = Path(__file__).parent.parent.parent / "web"
+STATIC_DIR = WEB_DIR  # 目前 index.html 直接在 web 根目錄
 
 app = FastAPI(
     title="PaddleOCR Toolkit API", 
-    description="专业级OCR文件处理API", 
+    description="專業級 OCR 文件處理 API", 
     version="1.2.0",
-    docs_url="/docs",  # API 文件放在 /docs
+    docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# CORS设置
+# 掛載路由
+app.include_router(file_router)
+
+# 靜態檔案服務 (如果目錄存在)
+if WEB_DIR.exists():
+    app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
+
+# CORS設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -49,7 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 任务存储（生产环境应使用Redis等）
+# 任務儲存
 tasks = {}
 results = {}
 
@@ -179,22 +188,48 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str):
         ocr_result = await asyncio.to_thread(predict, ocr_manager, processed_path)
 
         # 3. 處理結果
-        await manager.send_progress_update(task_id, 90, "processing", "處理結果...")
+        await manager.send_progress_update(task_id, 80, "processing", "處理結果...")
 
-        # 簡單序列化結果 (根據實際返回結構可能需要調整)
-        # 假設 result 是 list 或 dict，可以直接序列化
-        # 如果包含 numpy array，需要轉換
+        # 基礎文字提取
+        text_content = ""
+        if isinstance(ocr_result, list):
+            # 假設結構為 list -> list -> dict(text=...)
+            pages_texts = []
+            for page in ocr_result:
+                if isinstance(page, list):
+                    pages_texts.append("\n".join([line.get("text", "") if isinstance(line, dict) else str(line) for line in page]))
+                else:
+                    pages_texts.append(str(page))
+            text_content = "\n\n".join(pages_texts)
+        else:
+            text_content = str(ocr_result)
 
-        # 模擬結果處理 (實際應解析 ocr_result)
+        # 4. (選用) Gemini 語義校正
+        if "gemini" in mode.lower():
+            await manager.send_progress_update(task_id, 85, "processing", "Gemini 3 語義校正中...")
+            try:
+                from paddleocr_toolkit.llm.llm_client import create_llm_client
+                import os
+                
+                # 從環境變數或 config 獲取 API Key
+                api_key = os.environ.get("GEMINI_API_KEY")
+                if api_key:
+                    gemini = create_llm_client("gemini", api_key=api_key)
+                    prompt = f"請修正以下 OCR 辨識結果中的錯誤，保持原文內容完整，僅修復錯別字與排版不順之處：\n\n{text_content[:2000]}"
+                    corrected_text = await asyncio.to_thread(gemini.generate, prompt)
+                    text_content = corrected_text
+                else:
+                    print("跳過 Gemini 校正：未設定 GEMINI_API_KEY")
+            except Exception as ge:
+                print(f"Gemini 校正失敗: {ge}")
+
+        # 完成
         final_result = {
-            "raw_result": str(ocr_result)[:1000] + "..."
-            if len(str(ocr_result)) > 1000
-            else str(ocr_result),
-            "pages": 1,  # 暫時 hardcode
+            "raw_result": text_content,
+            "pages": len(ocr_result) if isinstance(ocr_result, list) else 1,
             "confidence": 0.95,
         }
 
-        # 完成
         results[task_id] = {
             "status": "completed",
             "progress": 100,
