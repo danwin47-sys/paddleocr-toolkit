@@ -261,6 +261,86 @@ class GeminiClient(LLMClient):
             return ""
 
 
+class ClaudeClient(LLMClient):
+    """Anthropic Claude API 客戶端"""
+    
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "claude-3-5-sonnet-20240620",
+        base_url: str = "https://api.anthropic.com/v1"
+    ):
+        """
+        初始化 Claude 客戶端
+        
+        Args:
+            api_key: Anthropic API 金鑰
+            model: 模型名稱
+            base_url: Claude API 基礎 URL
+        """
+        if not HAS_REQUESTS:
+            raise ImportError("需要安裝 requests: pip install requests")
+        
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url.rstrip('/')
+        self.api_url = f"{self.base_url}/messages"
+    
+    def is_available(self) -> bool:
+        """檢查 Claude API 是否可用"""
+        # 簡單驗證 API Key 的端點不穩定，這裡使用一個簡單的預檢請求
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        try:
+            # 只請求 1 個 token 來驗證
+            payload = {
+                "model": self.model,
+                "max_tokens": 1,
+                "messages": [{"role": "user", "content": "Hi"}]
+            }
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=5)
+            return response.status_code == 200
+        except Exception as e:
+            logging.warning(f"Claude API 不可用: {e}")
+            return False
+    
+    def generate(self, prompt: str, **kwargs) -> str:
+        """使用 Claude API 生成文字"""
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        
+        payload = {
+            "model": self.model,
+            "max_tokens": kwargs.get("max_tokens", 2048),
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": kwargs.get("temperature", 0.3),
+        }
+        
+        try:
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result["content"][0]["text"].strip()
+            else:
+                logging.error(f"Claude 請求失敗: {response.status_code} - {response.text}")
+                return ""
+        except Exception as e:
+            logging.error(f"Claude 生成失敗: {e}")
+            return ""
+
+
 def create_llm_client(
     provider: str = "ollama",
     **kwargs
@@ -269,7 +349,7 @@ def create_llm_client(
     工廠函式：建立 LLM 客戶端
     
     Args:
-        provider: 提供商 ("ollama", "openai", "gemini")
+        provider: 提供商 ("ollama", "openai", "gemini", "claude")
         **kwargs: 提供商特定引數
     
     Returns:
@@ -285,5 +365,9 @@ def create_llm_client(
         if "api_key" not in kwargs:
             raise ValueError("Gemini 需要提供 api_key")
         return GeminiClient(**kwargs)
+    elif provider == "claude":
+        if "api_key" not in kwargs:
+            raise ValueError("Claude 需要提供 api_key")
+        return ClaudeClient(**kwargs)
     else:
         raise ValueError(f"不支援的 LLM 提供商: {provider}")

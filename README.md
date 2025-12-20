@@ -42,6 +42,17 @@
 | 串流處理 | 恒定記憶體處理大型 PDF |
 | 批次緩衝 | 智慧批次寫入優化 |
 
+### 🆕 生產力與企業級增強（Stage 4 & 5）
+
+| 項目 | 特色 |
+|------|------|
+| **並行 PDF 處理** | 利用多核心 CPU 加速大型 PDF 辨識 |
+| **多模型校正** | 支援 Gemini 3 與 Claude 3.5 雙頂級 AI |
+| **智能快取** | 基於 MD5 的 OCR 緩衝，重複檔案秒速完成 |
+| **文件匯出** | 一鍵產出 Word (.docx) 與 Excel (.xlsx) 報表 |
+| **Web 儀表板** | 專業級 Glassmorphism 介面，支援批次任務對列 |
+| **隱私控管** | 瀏覽器端 API Key 管理，不經後端持久化儲存 |
+
 ### 🧩 模組化架構（Stage 3）
 
 **26 個專業化組件**:
@@ -90,15 +101,53 @@ python paddle_ocr_tool.py input.pdf
 python -m paddleocr_toolkit input.pdf
 ```
 
-### 方法二：Python 套件
+### 方法二：Web 資源儀表板 (推薦)
+
+最新版本的 Toolkit 提供了一個視覺化的 Web 介面，適合批次處理與 AI 參數設定：
+
+```bash
+# 啟動後端服務
+python -m uvicorn paddleocr_toolkit.api.main:app --reload
+
+# 存取路徑
+# 瀏覽器打開：http://localhost:8000/
+```
+
+**Web 介面特色：**
+- **批次拖放**：支援一次處理數十個檔案。
+- **設定中心**：在介面中輸入 Gemini/Claude API Key。
+- **分頁預覽**：支援長文件的逐頁辨識結果檢視。
+- **報表匯出**：處理完成後下載 Word/Excel 文件。
+
+### 方法三：Python 套件 (推薦)
 
 ```python
-from paddleocr_toolkit import PaddleOCRTool, OCRResult, PDFGenerator
-from paddleocr_toolkit.processors import fix_english_spacing, detect_pdf_quality
-from paddleocr_toolkit.core import load_config
+# 推薦：使用現代化的 PaddleOCRFacade
+from paddle_ocr_facade import PaddleOCRFacade
 
-# 初始化 OCR 工具
+# 初始化 Facade（支援 LLM 語義校正）
+tool = PaddleOCRFacade(
+    mode="hybrid",
+    enable_semantic=True,  # 啟用 AI 校正
+    llm_provider="gemini"  # 或 "claude", "ollama"
+)
+
+# 處理文件
+result = tool.process("input.pdf")
+print(result["text_content"])
+```
+
+**Facade 優點：**
+- 輕量化設計（352 行 vs 遺留版 2,691 行）
+- 內建 LLM 語義校正支援
+- 委派給專業 Processor，架構清晰
+
+```python
+# 舊版用法（仍相容，但不推薦）
+from paddleocr_toolkit import get_paddle_ocr_tool
+PaddleOCRTool = get_paddle_ocr_tool()
 tool = PaddleOCRTool(mode="hybrid")
+
 
 # 處理 PDF
 result = tool.process_hybrid("input.pdf")

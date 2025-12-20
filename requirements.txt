@@ -19,6 +19,9 @@ tqdm>=4.65.0
 # ============ Excel Output (可選) ============
 openpyxl>=3.1.0
 
+# ============ Word Output (可選) ============
+python-docx>=1.1.0
+
 # ============ English Word Segmentation (可選) ============
 wordninja>=2.0.0
 

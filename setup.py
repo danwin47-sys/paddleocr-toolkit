@@ -11,10 +11,10 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="paddleocr-toolkit",
-    version="1.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
-    description="專業級OCR檔案辨識與處理工具",
+    version="3.2.0",
+    author="Danwin47",
+    author_email="danwin47@gmail.com",
+    description="專業級OCR檔案辨識與處理工具 (企業級擴展版)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/danwin47-sys/paddleocr-toolkit",
@@ -37,6 +37,9 @@ setup(
         "PyMuPDF>=1.23.0",
         "Pillow>=10.0.0",
         "numpy>=1.24.0",
+        "tqdm>=4.65.0",
+        "requests>=2.31.0",
+        "pyyaml>=6.0.0",
     ],
     extras_require={
         "dev": [
@@ -49,13 +52,24 @@ setup(
         "ui": [
             "rich>=14.2.0",
         ],
-        "perf": [
-            "psutil>=5.9.0",
+        "api": [
+            "fastapi>=0.104.0",
+            "uvicorn[standard]>=0.24.0",
+            "python-multipart>=0.0.6",
+            "websockets>=12.0",
+        ],
+        "export": [
+            "python-docx>=1.1.0",
+            "openpyxl>=3.1.0",
         ],
         "all": [
             "rich>=14.2.0",
             "psutil>=5.9.0",
             "wordninja>=2.0.0",
+            "fastapi>=0.104.0",
+            "uvicorn[standard]>=0.24.0",
+            "python-docx>=1.1.0",
+            "openpyxl>=3.1.0",
         ],
     },
     entry_points={

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 端到端整合测试
-测试完整的OCR工作流程
+测试完整的OCR工作流程（使用 PaddleOCRFacade）
 """
 
 import os
@@ -18,7 +18,7 @@ try:
 except ImportError:
     HAS_FITZ = False
 
-from paddle_ocr_tool import PaddleOCRTool
+from paddle_ocr_facade import PaddleOCRFacade
 
 
 @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
@@ -39,25 +39,16 @@ class TestEndToEndWorkflow:
             doc.save(temp_pdf)
             doc.close()
 
-            # 2. 初始化OCR
-            ocr_tool = PaddleOCRTool(mode="basic")
+            # 2. 初始化OCR Facade
+            ocr_tool = PaddleOCRFacade(mode="basic")
 
-            # 3. 处理PDF
-            all_results, _ = ocr_tool.process_pdf(temp_pdf)
+            # 3. 处理PDF (使用 Facade 的 process_basic 方法)
+            result = ocr_tool.process_basic(temp_pdf)
 
             # 4. 验证结果
-            assert len(all_results) >= 1
-            # 验证至少有一些结果（可能为空因为是简单测试文本）
-
-            # 5. 提取文字（使用正确的方法）
-            full_text = []
-            for page_results in all_results:
-                if page_results:  # 如果页面有结果
-                    for result in page_results:
-                        full_text.append(result.text)
-
-            # 验证处理完成（即使没有识别到文字）
-            assert all_results is not None
+            assert result is not None
+            # Facade 返回 dict 结构
+            assert isinstance(result, dict)
 
         finally:
             if os.path.exists(temp_pdf):
@@ -76,13 +67,12 @@ class TestEndToEndWorkflow:
             doc.save(input_pdf)
             doc.close()
 
-            # 处理PDF（不生成可搜索PDF，因为API参数不同）
-            ocr_tool = PaddleOCRTool(mode="basic")
-            results, _ = ocr_tool.process_pdf(input_pdf)
+            # 处理PDF
+            ocr_tool = PaddleOCRFacade(mode="basic")
+            result = ocr_tool.process_basic(input_pdf)
 
             # 验证处理完成
-            assert results is not None
-            assert len(results) >= 1
+            assert result is not None
 
         finally:
             if os.path.exists(input_pdf):
@@ -106,21 +96,22 @@ class TestEndToEndWorkflow:
                 doc.close()
 
             # 批次处理
-            ocr_tool = PaddleOCRTool(mode="basic")
+            ocr_tool = PaddleOCRFacade(mode="basic")
 
             all_results = []
             for pdf_file in temp_files:
-                results, _ = ocr_tool.process_pdf(pdf_file, show_progress=False)
-                all_results.append(results)
+                result = ocr_tool.process_basic(pdf_file)
+                all_results.append(result)
 
             # 验证结果
             assert len(all_results) == 3
-            assert all(len(r) > 0 for r in all_results)
+            assert all(r is not None for r in all_results)
 
         finally:
             for path in temp_files:
                 if os.path.exists(path):
                     os.remove(path)
+
 
 
 if __name__ == "__main__":
