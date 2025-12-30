@@ -16,6 +16,7 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
     const [isTranslating, setIsTranslating] = useState(false);
     const [error, setError] = useState('');
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
+    const VERSION = "1.2.1-DEBUG"; // 用於確認前端已更新
 
     const addLog = (msg: string) => {
         setDebugLogs(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString().split(' ')[0]} ${msg}`]);
@@ -89,7 +90,14 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
             }
 
             addLog('正在解析回應數據...');
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                const rawText = await response.text();
+                addLog(`JSON 解析失敗: ${rawText.slice(0, 50)}...`);
+                throw new Error(`回應格式錯誤 (非 JSON)`);
+            }
 
             if (data.status === 'success') {
                 addLog('翻譯成功！');
@@ -147,7 +155,10 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
             >
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>🌐 AI 翻譯</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>🌐 AI 翻譯</h2>
+                        <span style={{ fontSize: '10px', color: '#64748b', opacity: 0.7 }}>v{VERSION}</span>
+                    </div>
                     <button
                         onClick={onClose}
                         style={{

@@ -8,6 +8,7 @@
 import time
 from pathlib import Path
 from typing import List
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
@@ -108,8 +109,16 @@ async def download_file(filename: str, directory: str = "output"):
     if not file_path.is_file():
         raise HTTPException(status_code=400, detail="不是檔案")
 
+    # RFC 5987 編碼檔名
+    encoded_filename = quote(filename)
+
     return FileResponse(
-        path=file_path, filename=filename, media_type="application/octet-stream"
+        path=file_path, 
+        filename=filename, 
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"
+        }
     )
 
 

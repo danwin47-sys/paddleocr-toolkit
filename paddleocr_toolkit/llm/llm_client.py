@@ -41,7 +41,7 @@ class OllamaClient(LLMClient):
         self,
         model: str = "qwen2.5:7b",
         base_url: str = "http://localhost:11434",
-        timeout: int = 60,
+        timeout: int = 180,
     ):
         """
         初始化 Ollama 客戶端

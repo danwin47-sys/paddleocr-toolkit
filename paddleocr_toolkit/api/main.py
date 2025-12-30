@@ -11,6 +11,7 @@ import time
 import uuid
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import quote
 
 from fastapi import (
     BackgroundTasks,
@@ -631,10 +632,17 @@ async def export_text(task_id: str):
     output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{int(time.time())}.txt"
     output_file.write_text(text_content, encoding="utf-8")
     
+    # RFC 5987 編碼檔名
+    final_filename = "ocr_result.txt"
+    encoded_filename = quote(final_filename)
+
     return FileResponse(
         path=output_file,
-        filename=f"ocr_result.txt",
-        media_type="text/plain; charset=utf-8"
+        filename=final_filename,
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"
+        }
     )
 
 
@@ -808,10 +816,17 @@ async def convert_format(request: ConvertRequest):
             output_file.write_text(text_content, encoding="utf-8")
             media_type = "text/plain; charset=utf-8"
         
+        # RFC 5987 編碼檔名
+        final_filename = f"ocr_result.{target_format}"
+        encoded_filename = quote(final_filename)
+
         return FileResponse(
             path=output_file,
-            filename=f"ocr_result.{target_format}",
-            media_type=media_type
+            filename=final_filename,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"
+            }
         )
     
     except Exception as e:

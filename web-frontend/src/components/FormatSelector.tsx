@@ -41,11 +41,25 @@ export default function FormatSelector({ taskId, onDownload }: FormatSelectorPro
 
             if (!response.ok) throw new Error('轉換失敗');
 
+            // 從 Content-Disposition header 讀取檔名
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `ocr_result.${format}`;
+
+            if (contentDisposition) {
+                // 嘗試解析 filename*=utf-8''encoded_name 或 filename="name"
+                const filenameMatch = contentDisposition.match(/filename\*=utf-8''(.+)|filename="?([^"]+)"?/);
+                if (filenameMatch) {
+                    const encodedName = filenameMatch[1];
+                    const regularName = filenameMatch[2];
+                    filename = encodedName ? decodeURIComponent(encodedName) : regularName;
+                }
+            }
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ocr_result.${format}`;
+            a.download = filename;
             a.click();
             window.URL.revokeObjectURL(url);
 
