@@ -1,5 +1,6 @@
 # 使用輕量級 Python 3.10 映像檔
-FROM python:3.10-slim
+# 使用穩定的 Debian Bookworm 版本，並確保使用國內鏡像或穩定源 (如果需要)
+FROM python:3.10-slim-bookworm
 
 # 設定工作目錄
 WORKDIR /app
@@ -11,14 +12,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # 禁用 PaddlePaddle 的模型下載檢查 (我們會預先下載或在運行時處理)
     DISABLE_MODEL_SOURCE_CHECK=1
 
-# 安裝系統依賴 (OpenCV 和 PaddlePaddle 所需)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+# 安裝系統依賴 (OpenCV Headless 和 PaddlePaddle 所需 - 移除 GUI 庫)
+# 使用 --fix-missing 嘗試修復潛在的網絡問題
+RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libgomp1 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     gcc \
     python3-dev \
     && apt-get clean \
