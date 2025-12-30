@@ -445,6 +445,12 @@ class TranslationRequest(BaseModel):
     model: Optional[str] = None
 
 
+class ConvertRequest(BaseModel):
+    task_id: str
+    target_format: str
+    include_metadata: bool = True
+
+
 @app.get("/api/stats")
 async def get_stats():
     """获取系统统计"""
@@ -686,22 +692,20 @@ async def translate_text(request: TranslationRequest):
 
 
 @app.post("/api/convert")
-async def convert_format(
-    task_id: str,
-    target_format: str,  # docx, xlsx, pdf, md, txt
-    include_metadata: bool = True
-):
+async def convert_format(request: ConvertRequest):
     """
     將 OCR 結果轉換為指定格式
     
     Args:
-        task_id: 任務 ID
-        target_format: 目標格式 (docx/xlsx/pdf/md/txt)
-        include_metadata: 是否包含元數據（僅 Markdown）
+        request: 轉換請求物件
     
     Returns:
         FileResponse: 可下載的轉換檔案
     """
+    task_id = request.task_id
+    target_format = request.target_format
+    include_metadata = request.include_metadata
+    
     if task_id not in results:
         raise HTTPException(status_code=404, detail="任務不存在")
     

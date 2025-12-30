@@ -25,12 +25,13 @@ export default function FormatSelector({ taskId, onDownload }: FormatSelectorPro
             const response = await fetch('/api/convert', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                     'ngrok-skip-browser-warning': 'true'
                 },
-                body: new URLSearchParams({
+                body: JSON.stringify({
                     task_id: taskId,
-                    target_format: format
+                    target_format: format,
+                    include_metadata: true
                 })
             });
 
