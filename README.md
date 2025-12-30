@@ -53,6 +53,82 @@ pip install -r requirements.txt
 
 ---
 
+## 🌐 雲端部署 (Cloud Deployment)
+
+### 部署架構
+
+由於 PaddleOCR 模型記憶體需求較高（~500MB RAM），推薦的部署架構為：
+
+- **前端 (Frontend)**: Vercel（免費）
+- **後端 (Backend)**: 本地運行 + ngrok 暴露
+
+### 步驟 1：啟動本地後端
+
+```bash
+# 啟動 FastAPI 後端
+python -m paddleocr_toolkit.api.main
+
+# 後端將運行在 http://localhost:8000
+```
+
+### 步驟 2：使用 ngrok 暴露後端
+
+```bash
+# 安裝 ngrok (Windows)
+winget install Ngrok.Ngrok
+
+# 或前往 https://ngrok.com 下載
+
+# 註冊並取得 authtoken
+# https://dashboard.ngrok.com/get-started/your-authtoken
+
+ngrok config add-authtoken YOUR_TOKEN
+
+# 暴露本地 8000 端口
+ngrok http 8000
+
+# 複製輸出的 Forwarding URL，例如：
+# https://abc123.ngrok.io
+```
+
+### 步驟 3：部署前端到 Vercel
+
+1. **推送代碼到 GitHub**（如果還沒有）
+
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push
+```
+
+2. **連接 Vercel**
+   - 前往 [vercel.com](https://vercel.com)
+   - 點擊 "Import Project"
+   - 選擇您的 GitHub 倉庫
+   - Root Directory 設為 `web-frontend`
+
+3. **設定環境變數**
+   - 在 Vercel 專案設定中，新增環境變數：
+     ```
+     NEXT_PUBLIC_API_URL=https://your-ngrok-url.ngrok.io
+     ```
+   - 替換為您在步驟 2 獲得的 ngrok URL
+
+4. **部署**
+   - 點擊 "Deploy"
+   - 等待構建完成
+   - 獲得前端 URL：`https://your-app.vercel.app`
+
+### 🔒 安全建議
+
+- ngrok 免費版會在每次重啟時變更 URL，需要更新 Vercel 環境變數
+- **生產環境建議**：
+  - 使用 ngrok Pro（固定域名）
+  - 或改用 [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)
+  - 或升級雲端平台到 2GB RAM 實例
+
+---
+
 ## 📖 使用方式
 
 ### 方法一：命令列工具（CLI）

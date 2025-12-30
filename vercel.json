@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "buildCommand": "cd web-frontend && npm install && npm run build",
+    "devCommand": "cd web-frontend && npm run dev",
+    "installCommand": "cd web-frontend && npm install",
+    "framework": "nextjs",
+    "outputDirectory": "web-frontend/.next",
+    "regions": [
+        "sin1"
+    ]
+}
