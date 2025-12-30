@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useOCR } from "@/hooks/useOCR";
 import SettingsModal from "@/components/SettingsModal";
+import TranslationModal from "@/components/TranslationModal";
 
 export default function Home() {
   const { uploadFile, isProcessing, progress, statusText, result, error } = useOCR();
@@ -11,6 +12,7 @@ export default function Home() {
   const [useGemini, setUseGemini] = useState(false);
   const [useClaude, setUseClaude] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTranslationOpen, setIsTranslationOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -40,6 +42,11 @@ export default function Home() {
   return (
     <div className="flex" style={{ minHeight: '100vh' }}>
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <TranslationModal
+        isOpen={isTranslationOpen}
+        onClose={() => setIsTranslationOpen(false)}
+        originalText={result?.results?.raw_result || ''}
+      />
 
       {/* Sidebar */}
       <Sidebar />
@@ -198,6 +205,13 @@ export default function Home() {
                       }}
                     >
                       💾 下載 TXT
+                    </button>
+                    <button
+                      className="action-btn"
+                      style={{ flex: 1, minWidth: '120px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                      onClick={() => setIsTranslationOpen(true)}
+                    >
+                      🌐 翻譯
                     </button>
                   </div>
                   <div style={{ marginBottom: '20px' }}>
