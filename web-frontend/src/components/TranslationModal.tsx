@@ -14,6 +14,11 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
     const [translatedText, setTranslatedText] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
     const [error, setError] = useState('');
+    const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+    const addLog = (msg: string) => {
+        setDebugLogs(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString().split(' ')[0]} ${msg}`]);
+    };
 
     const languages = [
         { value: 'en', label: 'English 🇬🇧', flag: '🇬🇧' },
@@ -35,6 +40,9 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
     const handleTranslate = async () => {
         setIsTranslating(true);
         setError('');
+        setTranslatedText('');
+        setDebugLogs([]);
+        addLog('準備翻譯請求...');
 
         try {
             const body: any = {
@@ -43,14 +51,20 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                 provider: provider
             };
 
+            addLog(`文字長度: ${originalText.length} 字元`);
+
             // 如果需要 API key，從 localStorage 獲取
             if (provider === 'gemini') {
                 const apiKey = localStorage.getItem('gemini_api_key');
                 if (apiKey) body.api_key = apiKey;
+                addLog('已加載 Gemini API Key');
             } else if (provider === 'claude') {
                 const apiKey = localStorage.getItem('claude_api_key');
                 if (apiKey) body.api_key = apiKey;
+                addLog('已加載 Claude API Key');
             }
+
+            addLog(`正在向後端發送請求 (${provider})...`);
 
             const response = await fetch('/api/translate', {
                 method: 'POST',
@@ -61,14 +75,26 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                 body: JSON.stringify(body)
             });
 
+            addLog(`後端回應狀態: ${response.status} ${response.statusText}`);
+
+            if (!response.ok) {
+                const text = await response.text();
+                addLog(`錯誤詳情: ${text.slice(0, 100)}...`);
+                throw new Error(`伺服器錯誤: ${response.status}`);
+            }
+
+            addLog('正在解析回應數據...');
             const data = await response.json();
 
             if (data.status === 'success') {
+                addLog('翻譯成功！');
                 setTranslatedText(data.translated_text);
             } else {
+                addLog(`翻譯失敗: ${data.message}`);
                 setError(data.message || '翻譯失敗');
             }
         } catch (err: any) {
+            addLog(`發生異常: ${err.message}`);
             setError('翻譯失敗: ' + err.message);
         } finally {
             setIsTranslating(false);
@@ -200,13 +226,34 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                     style={{
                         width: '100%',
                         padding: '14px',
-                        marginBottom: '20px',
+                        marginBottom: '10px',
                         opacity: isTranslating ? 0.6 : 1,
                         cursor: isTranslating ? 'wait' : 'pointer'
                     }}
                 >
                     {isTranslating ? '🔄 翻譯中...' : '🚀 開始翻譯'}
                 </button>
+
+                {/* Debug Logs */}
+                {debugLogs.length > 0 && (
+                    <div style={{
+                        padding: '10px',
+                        marginBottom: '20px',
+                        borderRadius: '8px',
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        fontSize: '11px',
+                        fontFamily: 'monospace',
+                        color: '#94a3b8'
+                    }}>
+                        {debugLogs.map((log, i) => (
+                            <div key={i} style={{ marginBottom: '2px', color: log.includes('失敗') || log.includes('異常') ? '#fca5a5' : '#94a3b8' }}>
+                                > {log}
+                            </div>
+                        ))}
+                        {isTranslating && <div className="loading-dots" style={{ marginTop: '5px' }}>處理中...</div>}
+                    </div>
+                )}
 
                 {/* 錯誤訊息 */}
                 {error && (

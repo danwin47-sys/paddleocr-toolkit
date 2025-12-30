@@ -619,10 +619,16 @@ async def translate_text(request: TranslationRequest):
     api_key = request.api_key
     model = request.model
     
+    print(f"[DEBUG] 開始處理翻譯請求. 提供商: {provider}, 目標語言: {target_lang}")
+    print(f"[DEBUG] 文字長度: {len(text)} 字元")
+    
     try:
+        print("[DEBUG] 正在導入 LLM 客戶端...")
         from paddleocr_toolkit.llm.llm_client import create_llm_client
+        print("[DEBUG] 導入成功")
         
         # 設定提示詞
+        print("[DEBUG] 正在準備提示詞...")
         lang_map = {
             "en": "English",
             "zh-TW": "Traditional Chinese (繁體中文)",
@@ -643,7 +649,10 @@ async def translate_text(request: TranslationRequest):
 
 翻譯："""
         
+        print(f"[DEBUG] 提示詞準備完成. 目標語言名稱: {target_language}")
+        
         # 創建 LLM 客戶端
+        print(f"[DEBUG] 正在創建 {provider} 客戶端...")
         kwargs = {}
         if api_key:
             kwargs["api_key"] = api_key
@@ -654,16 +663,23 @@ async def translate_text(request: TranslationRequest):
             kwargs["base_url"] = "http://localhost:11434"
         
         llm = create_llm_client(provider=provider, **kwargs)
+        print(f"[DEBUG] 客戶端創建成功")
         
         # 檢查服務是否可用
+        print(f"[DEBUG] 正在檢查 {provider} 服務可用性...")
         if not llm.is_available():
+            print(f"[ERROR] {provider} 服務檢查失敗 (不可用)")
             return {
                 "status": "error",
                 "message": f"{provider} 服務不可用，請確認已啟動相關服務"
             }
         
+        print(f"[DEBUG] 服務可用性檢查通過")
+        
         # 生成翻譯
+        print(f"[DEBUG] 正在向 {provider} 發送生成請求 (此步驟可能需要一段時間)...")
         translated = llm.generate(prompt, temperature=0.3, max_tokens=4096)
+        print(f"[DEBUG] 生成請求完成")
         
         if not translated:
             print(f"[WARNING] 翻譯結果為空")
