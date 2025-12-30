@@ -590,11 +590,11 @@ async def export_text(task_id: str):
 
 @app.post("/api/translate")
 async def translate_text(
-    text: str,
-    target_lang: str = "en",
-    provider: str = "ollama",
-    api_key: str = None,
-    model: str = None
+    text: str = Query(...),
+    target_lang: str = Query("en"),
+    provider: str = Query("ollama"),
+    api_key: str = Query(None),
+    model: str = Query(None)
 ):
     """
     使用 AI 翻譯文字
