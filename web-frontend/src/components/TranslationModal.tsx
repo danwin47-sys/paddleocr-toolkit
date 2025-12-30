@@ -65,12 +65,11 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                 addLog('已加載 Claude API Key');
             }
 
-            addLog(`正在向後端發送請求 (${provider})...`);
-
             const apiUrl = getApiUrl();
             const endpoint = apiUrl ? `${apiUrl}/api/translate` : '/api/translate';
 
-            addLog(`正在向後端發送請求 (${provider})...`);
+            addLog(`正在連線 API: ${endpoint}`);
+            addLog(`提供商: ${provider}, 文字長度: ${originalText.length}`);
 
             const response = await fetch(endpoint, {
                 method: 'POST',
