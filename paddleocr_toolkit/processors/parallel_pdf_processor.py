@@ -69,9 +69,52 @@ class ParallelPDFProcessor:
             engine.init_engine()
 
             # 執行識別
-            result = engine.predict(img_bytes)
+            # Convert bytes to numpy array (opencv format)
+            import cv2
+            nparr = np.frombuffer(img_bytes, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            result = engine.predict(img)
 
-            return (page_num, result)
+            # 解析並簡化結果，只保留可序列化的數據 (避免 pickle 錯誤)
+            safe_result = []
+            if isinstance(result, list):
+                for item in result:
+                    if isinstance(item, dict):
+                        # PaddleX 格式: 提取 rec_texts, rec_scores
+                        safe_item = {}
+                        if 'rec_texts' in item:
+                            safe_item['rec_texts'] = item['rec_texts']
+                        if 'rec_scores' in item:
+                            safe_item['rec_scores'] = item['rec_scores']
+                        if 'rec_boxes' in item and hasattr(item['rec_boxes'], 'tolist'):
+                            safe_item['rec_boxes'] = item['rec_boxes'].tolist()
+                        
+                        # 如果沒有標準鍵，嘗試保留所有字串/數字類型的鍵
+                        if not safe_item:
+                             for k, v in item.items():
+                                 if isinstance(v, (str, int, float, list, dict)) and k not in ['vis_fonts', 'doc_preprocessor_res']:
+                                     safe_item[k] = v
+                        safe_result.append(safe_item)
+                    elif isinstance(item, (list, tuple)):
+                        # 標準 PaddleOCR 格式: [box, (text, score)]
+                        # 這通常是可序列化的，但為了安全可以檢查
+                        safe_result.append(item)
+                    else:
+                        safe_result.append(str(item))
+            elif isinstance(result, dict):
+                # 單個字典結果
+                safe_item = {}
+                if 'rec_texts' in result:
+                    safe_item['rec_texts'] = result['rec_texts']
+                if 'rec_scores' in result:
+                    safe_item['rec_scores'] = result['rec_scores']
+                 # 避免返回大圖片或不可序列化的對象
+                safe_result = [safe_item]
+            else:
+                safe_result = str(result)
+
+            return (page_num, safe_result)
         except Exception as e:
             return (page_num, f"Error on page {page_num}: {str(e)}")
 

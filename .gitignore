@@ -76,7 +76,10 @@ coverage.xml
 artifacts/logs/
 
 # OS files
-.DS_Store
-Thumbs.db
-.mypy_cache/
 fix_pytest_encoding.py
+web-frontend/node_modules/
+web-frontend/.next/
+uploads/
+outputs/
+.env
+.DS_Store

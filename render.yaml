@@ -1,0 +1,15 @@
+services:
+  # Backend API Service (Docker)
+  - type: web
+    name: paddleocr-backend
+    env: docker
+    plan: free
+    region: singapore # Closest to potential users in Asia
+    dockerFilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 10000 # Render default port
+      - key: DISABLE_MODEL_SOURCE_CHECK
+        value: 1
+    healthCheckPath: /docs
+    autoDeploy: false

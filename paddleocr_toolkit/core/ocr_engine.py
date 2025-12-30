@@ -231,7 +231,13 @@ class OCREngineManager:
                 input_data = plugin.process_before_ocr(input_data)
 
         # 2. 執行預測
-        results = self.engine.predict(input_data, **kwargs)
+        if self.mode == OCRMode.BASIC and hasattr(self.engine, 'ocr'):
+            # Use standard ocr() method which returns list structure
+            # PaddleOCR v3/PaddleX ocr() might not accept kwargs if it forwards to predict()
+            results = self.engine.ocr(input_data)
+        else:
+            # Fallback for Structure/Layout analysis which rely on predict()
+            results = self.engine.predict(input_data, **kwargs)
 
         # 3. 外掛後處理
         if self.plugin_loader:
