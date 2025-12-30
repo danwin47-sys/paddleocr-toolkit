@@ -42,7 +42,11 @@ export function useOCR(): UseOCRReturn {
         return new Promise((resolve, reject) => {
             const timer = setInterval(async () => {
                 try {
-                    const res = await fetch(`/api/tasks/${taskId}`);
+                    const res = await fetch(`/api/tasks/${taskId}`, {
+                        headers: {
+                            'ngrok-skip-browser-warning': 'true'
+                        }
+                    });
                     if (!res.ok) throw new Error('無法獲取任務狀態');
 
                     const data: OCRResult = await res.json();
@@ -89,6 +93,9 @@ export function useOCR(): UseOCRReturn {
             const res = await fetch(`/api/ocr?${params.toString()}`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'ngrok-skip-browser-warning': 'true'
+                }
             });
 
             if (!res.ok) {
