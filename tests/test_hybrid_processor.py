@@ -149,12 +149,20 @@ class TestHybridPDFProcessorExtractAndMergeResults:
 
         structure_output = [mock_result]
 
-        with patch.object(processor.result_parser, "parse_structure_result") as mock_parse:
+        with patch.object(
+            processor.result_parser, "parse_structure_result"
+        ) as mock_parse:
             mock_parse.return_value = [
-                OCRResult(text="測試", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]])
+                OCRResult(
+                    text="測試",
+                    confidence=0.9,
+                    bbox=[[0, 0], [100, 0], [100, 30], [0, 30]],
+                )
             ]
 
-            ocr_results, markdown = processor._extract_and_merge_results(structure_output, 0)
+            ocr_results, markdown = processor._extract_and_merge_results(
+                structure_output, 0
+            )
 
             assert len(ocr_results) == 1
             assert "第 1 頁" in markdown
@@ -168,12 +176,20 @@ class TestHybridPDFProcessorExtractAndMergeResults:
 
         structure_output = [mock_result]
 
-        with patch.object(processor.result_parser, "parse_structure_result") as mock_parse:
+        with patch.object(
+            processor.result_parser, "parse_structure_result"
+        ) as mock_parse:
             mock_parse.return_value = [
-                OCRResult(text="測試文字", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]])
+                OCRResult(
+                    text="測試文字",
+                    confidence=0.9,
+                    bbox=[[0, 0], [100, 0], [100, 30], [0, 30]],
+                )
             ]
 
-            ocr_results, markdown = processor._extract_and_merge_results(structure_output, 0)
+            ocr_results, markdown = processor._extract_and_merge_results(
+                structure_output, 0
+            )
 
             assert len(ocr_results) == 1
             assert "第 1 頁" in markdown
@@ -196,7 +212,9 @@ class TestHybridPDFProcessorGenerateDualPDFs:
         mock_pixmap = Mock()
         img_array = np.zeros((100, 100, 3), dtype=np.uint8)
         ocr_results = [
-            OCRResult(text="測試", confidence=0.9, bbox=[[10, 10], [50, 10], [50, 30], [10, 30]])
+            OCRResult(
+                text="測試", confidence=0.9, bbox=[[10, 10], [50, 10], [50, 30], [10, 30]]
+            )
         ]
 
         pdf_gen = Mock()
@@ -207,7 +225,9 @@ class TestHybridPDFProcessorGenerateDualPDFs:
         )
 
         pdf_gen.add_page_from_pixmap.assert_called_once_with(mock_pixmap, ocr_results)
-        erased_gen.add_page_from_pixmap.assert_called_once_with(mock_pixmap, ocr_results)
+        erased_gen.add_page_from_pixmap.assert_called_once_with(
+            mock_pixmap, ocr_results
+        )
 
 
 class TestHybridPDFProcessorSaveOutputs:

@@ -325,7 +325,9 @@ class EnhancedTranslationProcessor:
             translated_blocks = []
             for orig, trans, bbox in zip(texts_to_translate, translated_texts, bboxes):
                 translated_blocks.append(
-                    TranslatedBlock(original_text=orig, translated_text=trans, bbox=bbox)
+                    TranslatedBlock(
+                        original_text=orig, translated_text=trans, bbox=bbox
+                    )
                 )
 
             return translated_blocks

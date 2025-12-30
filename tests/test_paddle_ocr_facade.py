@@ -175,8 +175,10 @@ class TestPaddleOCRFacadeBackwardCompatibility:
             mock_engine = Mock()
             mock_engine.init_engine = Mock()
             mock_engine_class.return_value = mock_engine
-            
-            with patch("paddleocr_toolkit.processors.hybrid_processor.HybridPDFProcessor"):
+
+            with patch(
+                "paddleocr_toolkit.processors.hybrid_processor.HybridPDFProcessor"
+            ):
                 facade = PaddleOCRFacade(mode="hybrid", device="gpu")
                 repr_str = repr(facade)
 

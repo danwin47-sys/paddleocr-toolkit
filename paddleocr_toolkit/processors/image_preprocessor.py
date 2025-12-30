@@ -277,20 +277,24 @@ def auto_preprocess(image: np.ndarray, is_scanned: bool = False) -> np.ndarray:
 # 檔案處理擴充功能 (File Handling Utility)
 # ==============================================================================
 
-from PIL import Image
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
+from PIL import Image
 
 MAX_IMAGE_SIDE = 2500
 
-def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> Tuple[str, bool]:
+
+def resize_image_if_needed(
+    file_path: str, max_side: int = MAX_IMAGE_SIDE
+) -> Tuple[str, bool]:
     """
     檢測並縮小大圖片以避免 OCR 記憶體問題
-    
+
     Args:
         file_path: 圖片路徑
         max_side: 最大邊長（預設 2500px）
-    
+
     Returns:
         Tuple[str, bool]: (處理後的圖片路徑, 是否有縮小)
     """
@@ -298,28 +302,27 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> Tu
         with Image.open(file_path) as img:
             width, height = img.size
             max_dim = max(width, height)
-            
+
             if max_dim <= max_side:
                 return file_path, False
-            
+
             # 計算縮放比例
             scale = max_side / max_dim
             new_width = int(width * scale)
             new_height = int(height * scale)
-            
+
             logging.info(f"圖片太大 ({width}x{height})，自動縮小為 {new_width}x{new_height}")
-            
+
             # 縮小圖片
             resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            
+
             # 儲存到新檔案
             path = Path(file_path)
             new_path = path.parent / f"{path.stem}_resized{path.suffix}"
             resized_img.save(str(new_path), quality=95)
-            
+
             return str(new_path), True
-            
+
     except Exception as e:
         logging.warning(f"縮小圖片時發生錯誤: {e}，使用原始圖片")
         return file_path, False
-

@@ -216,9 +216,7 @@ class BasicProcessor:
             # 處理每一頁
             page_iterator = range(total_pages)
             if show_progress and HAS_TQDM:
-                page_iterator = tqdm(
-                    page_iterator, desc="處理 PDF", unit="頁", ncols=80
-                )
+                page_iterator = tqdm(page_iterator, desc="處理 PDF", unit="頁", ncols=80)
 
             for page_num in page_iterator:
                 try:
@@ -253,9 +251,7 @@ class BasicProcessor:
             result_summary["error"] = str(e)
             return result_summary
 
-    def get_text(
-        self, ocr_results: List[OCRResult], separator: str = "\n"
-    ) -> str:
+    def get_text(self, ocr_results: List[OCRResult], separator: str = "\n") -> str:
         """
         從 OCR 結果提取純文字
 

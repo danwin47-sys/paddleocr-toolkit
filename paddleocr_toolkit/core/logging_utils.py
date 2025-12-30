@@ -13,10 +13,10 @@ from typing import Optional
 def setup_logging(log_file: Optional[str] = None) -> str:
     """
     設定日誌記錄
-    
+
     Args:
         log_file: 指定日誌檔案路徑，若未指定則自動生成
-        
+
     Returns:
         str: 日誌檔案路徑
     """
@@ -24,8 +24,7 @@ def setup_logging(log_file: Optional[str] = None) -> str:
         log_dir = Path.cwd() / "logs"
         log_dir.mkdir(exist_ok=True)
         log_file = str(
-            log_dir
-            / f"paddle_ocr_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+            log_dir / f"paddle_ocr_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         )
 
     # 移除現有的所有 handlers

@@ -78,15 +78,15 @@ class TestBasicProcessorProcessImage:
         mock_cv2 = MagicMock()
         mock_image = np.zeros((100, 100, 3), dtype=np.uint8)
         mock_cv2.imread.return_value = mock_image
-        
+
         with patch.dict("sys.modules", {"cv2": mock_cv2}):
             # Mock OCR
             processor.engine_manager.predict = Mock(return_value=["mock_result"])
             processor.result_parser = Mock()
             processor.result_parser.parse_basic_result.return_value = sample_ocr_results
-    
+
             result = processor.process_image("test.jpg")
-    
+
             assert "ocr_results" in result
             assert result["text_count"] == 1
             assert result["image"] == "test.jpg"
@@ -96,14 +96,14 @@ class TestBasicProcessorProcessImage:
         mock_cv2 = MagicMock()
         mock_image = np.zeros((100, 100, 3), dtype=np.uint8)
         mock_cv2.imread.return_value = mock_image
-        
+
         with patch.dict("sys.modules", {"cv2": mock_cv2}):
             processor.engine_manager.predict = Mock(return_value=["mock_result"])
             processor.result_parser = Mock()
             processor.result_parser.parse_basic_result.return_value = sample_ocr_results
-    
+
             result = processor.process_image("test.jpg", output_format="text")
-    
+
             assert "text" in result
             assert "測試文字" in result["text"]
 
@@ -111,10 +111,10 @@ class TestBasicProcessorProcessImage:
         """測試圖片不存在"""
         mock_cv2 = MagicMock()
         mock_cv2.imread.return_value = None
-        
+
         with patch.dict("sys.modules", {"cv2": mock_cv2}):
             result = processor.process_image("not_exist.jpg")
-    
+
             assert "error" in result
 
 
@@ -178,9 +178,7 @@ class TestBasicProcessorProcessPDF:
             pdf_path = tmp.name
 
         try:
-            with patch(
-                "paddleocr_toolkit.processors.basic_processor.pixmap_to_numpy"
-            ):
+            with patch("paddleocr_toolkit.processors.basic_processor.pixmap_to_numpy"):
                 result = processor.process_pdf(pdf_path, show_progress=False)
 
                 assert result["mode"] == "basic"
@@ -203,8 +201,14 @@ class TestBasicProcessorUtilityMethods:
     def test_get_text(self, processor):
         """測試文字提取"""
         results = [
-            OCRResult(text="第一行", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]]),
-            OCRResult(text="第二行", confidence=0.95, bbox=[[0, 40], [100, 40], [100, 70], [0, 70]]),
+            OCRResult(
+                text="第一行", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]]
+            ),
+            OCRResult(
+                text="第二行",
+                confidence=0.95,
+                bbox=[[0, 40], [100, 40], [100, 70], [0, 70]],
+            ),
         ]
 
         text = processor.get_text(results)
@@ -214,8 +218,12 @@ class TestBasicProcessorUtilityMethods:
     def test_filter_by_confidence(self, processor):
         """測試置信度過濾"""
         results = [
-            OCRResult(text="高", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]]),
-            OCRResult(text="低", confidence=0.3, bbox=[[0, 40], [100, 40], [100, 70], [0, 70]]),
+            OCRResult(
+                text="高", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 30], [0, 30]]
+            ),
+            OCRResult(
+                text="低", confidence=0.3, bbox=[[0, 40], [100, 40], [100, 70], [0, 70]]
+            ),
         ]
 
         filtered = processor.filter_by_confidence(results, min_confidence=0.5)

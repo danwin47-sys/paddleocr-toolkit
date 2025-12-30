@@ -7,7 +7,7 @@ from .llm_client import LLMClient, OllamaClient, OpenAIClient, create_llm_client
 
 __all__ = [
     "LLMClient",
-    "OllamaClient", 
+    "OllamaClient",
     "OpenAIClient",
     "create_llm_client",
 ]

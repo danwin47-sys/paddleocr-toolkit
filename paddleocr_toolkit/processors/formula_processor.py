@@ -66,7 +66,9 @@ class FormulaProcessor:
 
         self.engine_manager = engine_manager
 
-    def process_image(self, image_path: str, output_format: str = "latex") -> Dict[str, Any]:
+    def process_image(
+        self, image_path: str, output_format: str = "latex"
+    ) -> Dict[str, Any]:
         """
         處理單張圖片的公式識別
 
@@ -141,9 +143,7 @@ class FormulaProcessor:
             # 處理每一頁
             page_iterator = range(total_pages)
             if show_progress and HAS_TQDM:
-                page_iterator = tqdm(
-                    page_iterator, desc="公式識別", unit="頁", ncols=80
-                )
+                page_iterator = tqdm(page_iterator, desc="公式識別", unit="頁", ncols=80)
 
             for page_num in page_iterator:
                 try:

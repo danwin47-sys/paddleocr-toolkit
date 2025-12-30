@@ -3,15 +3,17 @@
 測試 GeminiClient
 """
 
-from unittest.mock import Mock, patch
-import pytest
 import sys
+from unittest.mock import Mock, patch
+
+import pytest
 
 # 防護：如果環境中沒有 requests，則建立一個 mock 模組以避免 decorator 失敗
 try:
     import requests
 except ImportError:
     from unittest.mock import MagicMock
+
     mock_req = MagicMock()
     sys.modules["requests"] = mock_req
     import requests
@@ -36,7 +38,7 @@ class TestGeminiClient:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
-        
+
         client = GeminiClient(api_key="test-key")
         assert client.is_available() is True
         mock_get.assert_called_once()
@@ -47,7 +49,7 @@ class TestGeminiClient:
         mock_response = Mock()
         mock_response.status_code = 403
         mock_get.return_value = mock_response
-        
+
         client = GeminiClient(api_key="invalid-key")
         assert client.is_available() is False
 
@@ -57,19 +59,13 @@ class TestGeminiClient:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [{"text": "Hello form Gemini 3!"}]
-                    }
-                }
-            ]
+            "candidates": [{"content": {"parts": [{"text": "Hello form Gemini 3!"}]}}]
         }
         mock_post.return_value = mock_response
-        
+
         client = GeminiClient(api_key="test-key")
         result = client.generate("Say hello")
-        
+
         assert result == "Hello form Gemini 3!"
         # 驗證 payload
         args, kwargs = mock_post.call_args
@@ -82,10 +78,10 @@ class TestGeminiClient:
         mock_response.status_code = 200
         mock_response.json.return_value = {"error": "unexpected format"}
         mock_post.return_value = mock_response
-        
+
         client = GeminiClient(api_key="test-key")
         result = client.generate("Say hello")
-        
+
         assert result == ""
 
     @patch("requests.post")
@@ -95,10 +91,10 @@ class TestGeminiClient:
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
         mock_post.return_value = mock_response
-        
+
         client = GeminiClient(api_key="test-key")
         result = client.generate("Say hello")
-        
+
         assert result == ""
 
 
@@ -107,7 +103,9 @@ class TestGeminiFactory:
 
     def test_create_gemini_client(self):
         """測試透過工廠建立 Gemini 客戶端"""
-        client = create_llm_client("gemini", api_key="factory-key", model="gemini-3-flash")
+        client = create_llm_client(
+            "gemini", api_key="factory-key", model="gemini-3-flash"
+        )
         assert isinstance(client, GeminiClient)
         assert client.api_key == "factory-key"
 

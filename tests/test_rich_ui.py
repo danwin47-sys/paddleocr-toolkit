@@ -57,9 +57,7 @@ class TestProgressBar:
                 from paddleocr_toolkit.cli.rich_ui import RichUI
 
                 ui = RichUI()
-                assert hasattr(ui, "create_progress") or hasattr(
-                    ui, "show_progress"
-                )
+                assert hasattr(ui, "create_progress") or hasattr(ui, "show_progress")
             except ImportError:
                 pytest.skip("Progress bar not available")
 

@@ -60,6 +60,7 @@ class TestParallelPDFProcessor:
     def test_processor_workers_default(self):
         """測試工作進程數預設值"""
         from multiprocessing import cpu_count
+
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )
@@ -85,4 +86,3 @@ class TestParallelProcessorBenchmark:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

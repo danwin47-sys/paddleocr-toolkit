@@ -51,14 +51,16 @@ class TestFormulaProcessorProcessImage:
         mock_cv2 = MagicMock()
         mock_image = np.zeros((100, 100, 3), dtype=np.uint8)
         mock_cv2.imread.return_value = mock_image
-        
+
         with patch.dict("sys.modules", {"cv2": mock_cv2}):
             # Mock OCR 輸出: [(bbox, latex_str, confidence), ...]
-            mock_output = [([[0, 0], [10, 0], [10, 10], [0, 10]], "x^2 + y^2 = z^2", 0.99)]
+            mock_output = [
+                ([[0, 0], [10, 0], [10, 10], [0, 10]], "x^2 + y^2 = z^2", 0.99)
+            ]
             processor.engine_manager.predict = Mock(return_value=mock_output)
-    
+
             result = processor.process_image("test_formula.jpg")
-    
+
             assert "formulas" in result
             assert result["formula_count"] == 1
             assert result["formulas"][0]["latex"] == "x^2 + y^2 = z^2"
@@ -67,7 +69,7 @@ class TestFormulaProcessorProcessImage:
         """測試處理圖片失敗"""
         mock_cv2 = MagicMock()
         mock_cv2.imread.return_value = None
-        
+
         with patch.dict("sys.modules", {"cv2": mock_cv2}):
             result = processor.process_image("invalid.jpg")
             assert "error" in result
@@ -110,7 +112,10 @@ class TestFormulaProcessorProcessPDF:
 
                 assert result["pages_processed"] == 1
                 assert result["total_formulas"] == 1
-                assert result["formulas_by_page"][0]["formulas"][0]["latex"] == "\\alpha + \\beta"
+                assert (
+                    result["formulas_by_page"][0]["formulas"][0]["latex"]
+                    == "\\alpha + \\beta"
+                )
         finally:
             Path(pdf_path).unlink(missing_ok=True)
 
@@ -136,13 +141,11 @@ class TestFormulaProcessorUtility:
 
     def test_save_latex(self, processor):
         """測試儲存 LaTeX 檔案"""
-        formulas_by_page = [
-            {"page": 1, "formulas": [{"latex": "x=1"}]}
-        ]
-        
+        formulas_by_page = [{"page": 1, "formulas": [{"latex": "x=1"}]}]
+
         with tempfile.NamedTemporaryFile(suffix=".tex", delete=False) as tmp:
             tex_path = tmp.name
-            
+
         try:
             processor._save_latex(formulas_by_page, tex_path)
             content = Path(tex_path).read_text(encoding="utf-8")

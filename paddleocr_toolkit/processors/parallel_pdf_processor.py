@@ -5,21 +5,23 @@
 v1.2.0 新增 - 多進程加速大檔案處理
 """
 
-import time
-import os
 import gc
+import os
+import time
 from multiprocessing import Pool, cpu_count
-from typing import Any, List, Optional, Tuple, Dict
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import fitz  # PyMuPDF
+
     HAS_PYMUPDF = True
 except ImportError:
     HAS_PYMUPDF = False
 
 try:
     import numpy as np
+
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
@@ -42,39 +44,39 @@ class ParallelPDFProcessor:
         print(f"初始化並行處理器: 使用 {self.workers} 個工作進程")
 
     @staticmethod
-    def _process_single_page(args: Tuple[int, bytes, Dict[str, Any]]) -> Tuple[int, Any]:
+    def _process_single_page(
+        args: Tuple[int, bytes, Dict[str, Any]]
+    ) -> Tuple[int, Any]:
         """
         靜態方法：處理單一頁面（供進程池使用）
-        
+
         Args:
             args: (頁碼, 圖片位元組, OCR 參數)
-            
+
         Returns:
             (頁碼, 辨識結果)
         """
         page_num, img_bytes, ocr_config = args
-        
+
         # 延遲匯入以避免進程初始化開銷
         from paddleocr_toolkit.core.ocr_engine import OCREngineManager
-        
+
         try:
             # 建立臨時引擎（進程內）
             # 註：在進程池中頻繁初始化引擎會耗時，
             # 實際生產環境建議使用進程初始化 (initializer) 保持引擎常駐
             engine = OCREngineManager(**ocr_config)
             engine.init_engine()
-            
+
             # 執行識別
             result = engine.predict(img_bytes)
-            
+
             return (page_num, result)
         except Exception as e:
             return (page_num, f"Error on page {page_num}: {str(e)}")
 
     def process_pdf_parallel(
-        self, 
-        pdf_path: str, 
-        ocr_config: Optional[Dict[str, Any]] = None
+        self, pdf_path: str, ocr_config: Optional[Dict[str, Any]] = None
     ) -> List[Any]:
         """
         以並行方式處理 PDF 檔案
@@ -90,7 +92,7 @@ class ParallelPDFProcessor:
             raise ImportError("並行處理需要安裝 pymupdf: pip install pymupdf")
 
         config = ocr_config or {"mode": "basic", "device": "cpu"}
-        
+
         start_time = time.time()
         print(f"開始並行處理: {Path(pdf_path).name}")
 
@@ -106,7 +108,7 @@ class ParallelPDFProcessor:
             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
             img_bytes = pix.tobytes("png")
             task_args.append((i, img_bytes, config))
-        
+
         doc.close()
 
         # 2. 啟動進程池
@@ -116,7 +118,7 @@ class ParallelPDFProcessor:
 
         # 3. 排序結果
         results.sort(key=lambda x: x[0])
-        
+
         elapsed = time.time() - start_time
         print(f"並行處理完成！總耗時: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/頁)")
 
@@ -129,15 +131,15 @@ class ParallelPDFProcessor:
         print("\n" + "=" * 50)
         print("🚀 效能基準測試：並行 vs 序列")
         print("=" * 50)
-        
+
         config = ocr_config or {"mode": "basic", "device": "cpu"}
-        
+
         # 序列測試
         print("\n[1/2] 正在進行序列處理...")
         start_serial = time.time()
         # 簡單模擬序列邏輯
         doc = fitz.open(pdf_path)
-        for i in range(min(5, len(doc))): # 僅測試前 5 頁以節省時間
+        for i in range(min(5, len(doc))):  # 僅測試前 5 頁以節省時間
             self._process_single_page((i, b"fake_data", config))
         serial_time = (time.time() - start_serial) * (len(doc) / 5)
         print(f"預估序列總耗時: {serial_time:.2f}s")
@@ -148,7 +150,7 @@ class ParallelPDFProcessor:
         self.process_pdf_parallel(pdf_path, config)
         parallel_time = time.time() - start_parallel
         print(f"實際並行總耗時: {parallel_time:.2f}s")
-        
+
         speedup = serial_time / parallel_time if parallel_time > 0 else 0
         print("\n" + "-" * 30)
         print(f"加速比: {speedup:.2f}x")

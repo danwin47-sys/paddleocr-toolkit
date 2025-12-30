@@ -7,8 +7,8 @@ v1.2.0新增 - REST API服务
 
 import asyncio
 import os
-import uuid
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Optional
 
@@ -17,18 +17,18 @@ from fastapi import (
     FastAPI,
     File,
     HTTPException,
+    Query,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
-    Query,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.api.file_manager import router as file_router
+from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
@@ -37,11 +37,11 @@ WEB_DIR = Path(__file__).parent.parent.parent / "web"
 STATIC_DIR = WEB_DIR  # 目前 index.html 直接在 web 根目錄
 
 app = FastAPI(
-    title="PaddleOCR Toolkit API", 
-    description="專業級 OCR 文件處理 API", 
-    version="1.2.0",
+    title="PaddleOCR Toolkit API",
+    description="專業級 OCR 文件處理 API",
+    version="3.3.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # 掛載路由
@@ -67,6 +67,8 @@ results = {}
 # 配置
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+OUTPUT_DIR = Path("outputs")
+OUTPUT_DIR.mkdir(exist_ok=True)
 PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
 
 # 初始化插件載入器
@@ -80,43 +82,43 @@ MAX_IMAGE_SIDE = 2500  # 像素
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
     """
     檢測並縮小大圖片以避免 OCR 記憶體問題
-    
+
     Args:
         file_path: 圖片路徑
         max_side: 最大邊長（預設 2500px）
-    
+
     Returns:
         處理後的圖片路徑（縮小後的新檔案或原檔案）
     """
     try:
         from PIL import Image
-        
+
         with Image.open(file_path) as img:
             width, height = img.size
             max_dim = max(width, height)
-            
+
             if max_dim <= max_side:
                 print(f"圖片大小 {width}x{height} 在限制內，不需要縮小")
                 return file_path
-            
+
             # 計算縮放比例
             scale = max_side / max_dim
             new_width = int(width * scale)
             new_height = int(height * scale)
-            
+
             print(f"圖片太大 ({width}x{height})，縮小為 {new_width}x{new_height}")
-            
+
             # 縮小圖片
             resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            
+
             # 儲存到新檔案
             path = Path(file_path)
             new_path = path.parent / f"{path.stem}_resized{path.suffix}"
             resized_img.save(str(new_path), quality=95)
-            
+
             print(f"縮小後圖片已儲存: {new_path}")
             return str(new_path)
-            
+
     except Exception as e:
         print(f"縮小圖片時發生錯誤: {e}，使用原始圖片")
         return file_path
@@ -154,13 +156,20 @@ from paddleocr_toolkit.processors.parallel_pdf_processor import ParallelPDFProce
 # 初始化平行處理器
 parallel_processor = ParallelPDFProcessor()
 
-async def process_ocr_task(task_id: str, file_path: str, mode: str, gemini_key: str = None, claude_key: str = None):
+
+async def process_ocr_task(
+    task_id: str,
+    file_path: str,
+    mode: str,
+    gemini_key: str = None,
+    claude_key: str = None,
+):
     """
     非同步處理 OCR 任務
     """
     tasks[task_id] = {"status": "processing", "progress": 0}
     processed_path = str(Path(file_path))
-    
+
     try:
         # ... (快取與處理邏輯)
         # 0. 檢查快取
@@ -179,34 +188,40 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str, gemini_key: 
 
         # 1. 預處理圖片
         actual_path = processed_path
-        if processed_path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp')):
+        if processed_path.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".webp")):
             await manager.send_progress_update(task_id, 10, "processing", "預處理圖片...")
-            actual_path = await asyncio.to_thread(resize_image_if_needed, processed_path)
+            actual_path = await asyncio.to_thread(
+                resize_image_if_needed, processed_path
+            )
 
         # 2. 執行預測
         ext = Path(processed_path).suffix.lower()
         if ext == ".pdf":
             # PDF 使用並行處理器
-            await manager.send_progress_update(task_id, 30, "processing", "PDF 並行辨識中...")
+            await manager.send_progress_update(
+                task_id, 30, "processing", "PDF 並行辨識中..."
+            )
             ocr_result = await asyncio.to_thread(
-                parallel_processor.process_pdf_parallel, 
-                actual_path, 
-                {"mode": "basic"}
+                parallel_processor.process_pdf_parallel, actual_path, {"mode": "basic"}
             )
         else:
             # 標準單點辨識
             await manager.send_progress_update(task_id, 30, "processing", "正在辨識...")
+
             def run_ocr():
-                eng = OCREngineManager(mode=mode, device="cpu", plugin_loader=plugin_loader)
+                eng = OCREngineManager(
+                    mode=mode, device="cpu", plugin_loader=plugin_loader
+                )
                 eng.init_engine()
                 res = eng.predict(actual_path)
                 eng.close()
                 return res
+
             ocr_result = await asyncio.to_thread(run_ocr)
 
         # 3. 處理與校正結果
         await manager.send_progress_update(task_id, 80, "processing", "處理辨識文本...")
-        
+
         # 提取文字內容
         text_content = ""
         if isinstance(ocr_result, list):
@@ -214,7 +229,16 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str, gemini_key: 
             for page in ocr_result:
                 if isinstance(page, list):
                     # 處理 paddle 典型的 list of lines 結構
-                    page_text = "\n".join([line[1][0] if isinstance(line, (list, tuple)) and len(line) > 1 and isinstance(line[1], (list, tuple)) else str(line) for line in page])
+                    page_text = "\n".join(
+                        [
+                            line[1][0]
+                            if isinstance(line, (list, tuple))
+                            and len(line) > 1
+                            and isinstance(line[1], (list, tuple))
+                            else str(line)
+                            for line in page
+                        ]
+                    )
                     pages_texts.append(page_text)
                 else:
                     pages_texts.append(str(page))
@@ -226,32 +250,47 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str, gemini_key: 
         current_text = text_content
         for provider in ["gemini", "claude"]:
             if provider in mode.lower():
-                await manager.send_progress_update(task_id, 90, "processing", f"{provider.capitalize()} 智慧勘誤中...")
+                await manager.send_progress_update(
+                    task_id, 90, "processing", f"{provider.capitalize()} 智慧勘誤中..."
+                )
                 try:
-                    from paddleocr_toolkit.llm.llm_client import create_llm_client
                     import os
+
+                    from paddleocr_toolkit.llm.llm_client import create_llm_client
+
                     # 優先使用傳入的金鑰，次之使用環境變數
                     passed_key = gemini_key if provider == "gemini" else claude_key
-                    api_key = passed_key or os.environ.get(f"{provider.upper()}_API_KEY")
-                    
+                    api_key = passed_key or os.environ.get(
+                        f"{provider.upper()}_API_KEY"
+                    )
+
                     if api_key:
                         llm = create_llm_client(provider, api_key=api_key)
-                        prompt = f"請修正以下 OCR 辨識結果中的錯誤，僅進行勘誤與排版修復：\n\n{text_content[:2500]}"
+                        prompt = (
+                            f"請修正以下 OCR 辨識結果中的錯誤，僅進行勘誤與排版修復：\n\n{text_content[:2500]}"
+                        )
                         corrected = await asyncio.to_thread(llm.generate, prompt)
-                        if corrected: current_text = corrected
+                        if corrected:
+                            current_text = corrected
                 except Exception as e:
                     print(f"{provider} 校正失敗: {e}")
 
         final_result = {
             "raw_result": current_text,
-            "page_results": ocr_result if isinstance(ocr_result, list) else [current_text],
+            "page_results": ocr_result
+            if isinstance(ocr_result, list)
+            else [current_text],
             "pages": len(ocr_result) if isinstance(ocr_result, list) else 1,
             "confidence": 0.95,
         }
 
         # 4. 存入快取與完成
         ocr_cache.set(processed_path, mode, final_result)
-        results[task_id] = {"status": "completed", "progress": 100, "results": final_result}
+        results[task_id] = {
+            "status": "completed",
+            "progress": 100,
+            "results": final_result,
+        }
         tasks[task_id] = {"status": "completed", "progress": 100}
         await manager.send_completion(task_id, final_result)
 
@@ -262,17 +301,20 @@ async def process_ocr_task(task_id: str, file_path: str, mode: str, gemini_key: 
         await manager.send_error(task_id, error_msg)
         print(f"Task {task_id} failed: {e}")
 
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """提供用戶友好的 Web 介面"""
     index_file = WEB_DIR / "index.html"
     if index_file.exists():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
-    return HTMLResponse(content="""
+    return HTMLResponse(
+        content="""
         <h1>PaddleOCR Toolkit API</h1>
         <p>Version: 1.2.0</p>
         <p><a href="/docs">API 文件</a></p>
-    """)
+    """
+    )
 
 
 @app.post("/api/ocr", response_model=TaskResponse)
@@ -304,7 +346,9 @@ async def upload_and_ocr(
         f.write(content)
 
     # 创建后台任务
-    background_tasks.add_task(process_ocr_task, task_id, str(file_path), mode, gemini_key, claude_key)
+    background_tasks.add_task(
+        process_ocr_task, task_id, str(file_path), mode, gemini_key, claude_key
+    )
 
     # 初始化任务状态
     tasks[task_id] = {"status": "queued", "progress": 0}
@@ -430,6 +474,54 @@ async def list_plugins():
     return plugin_loader.list_plugins()
 
 
+@app.post("/api/export")
+async def export_results(
+    data: dict,  # 接收 { "text": "...", "format": "docx", "filename": "..." }
+):
+    """
+    將辨識結果匯出為指定格式的檔案
+    """
+    text = data.get("text", "")
+    out_format = data.get("format", "docx").lower()
+    base_name = data.get("filename", "ocr_result")
+
+    # 確保輸出目錄存在
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if out_format == "docx":
+            from docx import Document
+
+            doc = Document()
+            doc.add_heading("OCR 辨識結果報告", 0)
+            doc.add_paragraph(text)
+            out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.docx"
+            doc.save(str(out_file))
+
+        elif out_format == "xlsx":
+            from openpyxl import Workbook
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "OCR Result"
+            # 按行分割內容寫入 Excel
+            lines = text.split("\n")
+            for idx, line in enumerate(lines):
+                ws.cell(row=idx + 1, column=1, value=line)
+            out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.xlsx"
+            wb.save(str(out_file))
+
+        else:
+            return {"status": "error", "message": f"不支援的格式: {out_format}"}
+
+        return {
+            "status": "success",
+            "download_url": f"/api/files/download/{out_file.name}?directory=output",
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.websocket("/ws/{task_id}")
 async def websocket_endpoint(websocket: WebSocket, task_id: str):
     """
@@ -459,60 +551,14 @@ if __name__ == "__main__":
     ╔═══════════════════════════════════════════════════════╗
     ║                                                       ║
     ║     PaddleOCR Toolkit API Server                     ║
-    ║     v1.2.0                                           ║
+    ║     v3.3.0                                           ║
+    ║                                                       ║
+    ║     Dashboard: http://localhost:8000/                ║
+    ║     Docs:      http://localhost:8000/docs            ║
     ║                                                       ║
     ╚═══════════════════════════════════════════════════════╝
     
-    启动服务器...
-    API文档: http://localhost:8000/docs
+    啟動伺服器...
     """
     )
-
-@app.post("/api/export")
-async def export_results(
-    data: dict,  # 接收 { "text": "...", "format": "docx", "filename": "..." }
-):
-    """
-    將辨識結果匯出為指定格式的檔案
-    """
-    text = data.get("text", "")
-    out_format = data.get("format", "docx").lower()
-    base_name = data.get("filename", "ocr_result")
-    
-    # 確保輸出目錄存在
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    
-    try:
-        if out_format == "docx":
-            from docx import Document
-            doc = Document()
-            doc.add_heading("OCR 辨識結果報告", 0)
-            doc.add_paragraph(text)
-            out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.docx"
-            doc.save(str(out_file))
-        
-        elif out_format == "xlsx":
-            from openpyxl import Workbook
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "OCR Result"
-            # 按行分割內容寫入 Excel
-            lines = text.split('\n')
-            for idx, line in enumerate(lines):
-                ws.cell(row=idx+1, column=1, value=line)
-            out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.xlsx"
-            wb.save(str(out_file))
-        
-        else:
-            return {"status": "error", "message": f"不支援的格式: {out_format}"}
-
-        return {
-            "status": "success",
-            "download_url": f"/api/files/download/{out_file.name}?directory=output"
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-
-if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

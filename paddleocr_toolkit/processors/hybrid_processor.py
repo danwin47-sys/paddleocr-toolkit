@@ -226,9 +226,7 @@ class HybridPDFProcessor:
         # === 2. 處理所有頁面 ===
         page_iterator = range(total_pages)
         if show_progress and HAS_TQDM:
-            page_iterator = tqdm(
-                page_iterator, desc="混合模式處理中", unit="頁", ncols=80
-            )
+            page_iterator = tqdm(page_iterator, desc="混合模式處理中", unit="頁", ncols=80)
 
         for page_num in page_iterator:
             try:
@@ -404,14 +402,11 @@ class HybridPDFProcessor:
 
         # 組合 Markdown
         if markdown_parts:
-            page_markdown = f"## 第 {page_num + 1} 頁\n\n" + "\n\n".join(
-                markdown_parts
-            )
+            page_markdown = f"## 第 {page_num + 1} 頁\n\n" + "\n\n".join(markdown_parts)
         else:
             # 使用 OCR 文字生成 Markdown
-            page_markdown = (
-                f"## 第 {page_num + 1} 頁\n\n"
-                + "\n\n".join([r.text for r in ocr_results])
+            page_markdown = f"## 第 {page_num + 1} 頁\n\n" + "\n\n".join(
+                [r.text for r in ocr_results]
             )
 
         return ocr_results, page_markdown
