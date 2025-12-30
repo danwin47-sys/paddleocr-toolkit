@@ -8,8 +8,8 @@ services:
     dockerFilePath: ./Dockerfile
     envVars:
       - key: PORT
-        value: 10000 # Render default port
+        value: "10000" # Quote strings
       - key: DISABLE_MODEL_SOURCE_CHECK
-        value: 1
+        value: "1"
     healthCheckPath: /docs
     autoDeploy: false
