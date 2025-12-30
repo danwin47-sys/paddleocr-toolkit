@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { useOCR } from "@/hooks/useOCR";
 import SettingsModal from "@/components/SettingsModal";
 import TranslationModal from "@/components/TranslationModal";
+import FormatSelector from "@/components/FormatSelector";
 
 export default function Home() {
   const { uploadFile, isProcessing, progress, statusText, result, error } = useOCR();
@@ -172,47 +173,31 @@ export default function Home() {
               {result ? (
                 <>
                   {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    <button
-                      className="action-btn"
-                      style={{ flex: 1, minWidth: '120px' }}
-                      onClick={() => {
-                        const text = result.results?.raw_result || '';
-                        navigator.clipboard.writeText(text);
-                        alert('✅ 已複製到剪貼簿');
-                      }}
-                    >
-                      📋 複製文字
-                    </button>
-                    <button
-                      className="action-btn"
-                      style={{ flex: 1, minWidth: '120px' }}
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`/api/export-text/${result.task_id}`, {
-                            headers: { 'ngrok-skip-browser-warning': 'true' }
-                          });
-                          if (!response.ok) throw new Error('下載失敗');
-                          const blob = await response.blob();
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'ocr_result.txt';
-                          a.click();
-                        } catch (err: any) {
-                          alert('❌ 下載失敗: ' + err.message);
-                        }
-                      }}
-                    >
-                      💾 下載 TXT
-                    </button>
-                    <button
-                      className="action-btn"
-                      style={{ flex: 1, minWidth: '120px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-                      onClick={() => setIsTranslationOpen(true)}
-                    >
-                      🌐 翻譯
-                    </button>
+                  <div style={{ marginBottom: '20px' }}>
+                    {/* Format Selector */}
+                    <FormatSelector taskId={result.task_id} />
+
+                    {/* Other Actions */}
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        className="action-btn"
+                        style={{ flex: 1, minWidth: '120px' }}
+                        onClick={() => {
+                          const text = result.results?.raw_result || '';
+                          navigator.clipboard.writeText(text);
+                          alert('✅ 已複製到剪貼簿');
+                        }}
+                      >
+                        📋 複製文字
+                      </button>
+                      <button
+                        className="action-btn"
+                        style={{ flex: 1, minWidth: '120px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                        onClick={() => setIsTranslationOpen(true)}
+                      >
+                        🌐 翻譯
+                      </button>
+                    </div>
                   </div>
                   <div style={{ marginBottom: '20px' }}>
                     {result.results?.raw_result || "⚠️ raw_result 為空"}

@@ -676,6 +676,84 @@ async def translate_text(
         }
 
 
+@app.post("/api/convert")
+async def convert_format(
+    task_id: str,
+    target_format: str,  # docx, xlsx, pdf, md, txt
+    include_metadata: bool = True
+):
+    """
+    將 OCR 結果轉換為指定格式
+    
+    Args:
+        task_id: 任務 ID
+        target_format: 目標格式 (docx/xlsx/pdf/md/txt)
+        include_metadata: 是否包含元數據（僅 Markdown）
+    
+    Returns:
+        FileResponse: 可下載的轉換檔案
+    """
+    if task_id not in results:
+        raise HTTPException(status_code=404, detail="任務不存在")
+    
+    task_result = results[task_id]
+    if task_result.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="任務尚未完成")
+    
+    text_content = task_result.get("results", {}).get("raw_result", "")
+    
+    # 生成輸出檔案
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = int(time.time())
+    
+    try:
+        from paddleocr_toolkit.utils.format_converter import FormatConverter
+        
+        converter = FormatConverter()
+        
+        if target_format == "docx":
+            output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{timestamp}.docx"
+            converter.text_to_docx(text_content, str(output_file))
+            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        
+        elif target_format == "xlsx":
+            output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{timestamp}.xlsx"
+            converter.text_to_xlsx(text_content, str(output_file))
+            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        
+        elif target_format == "pdf":
+            output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{timestamp}.pdf"
+            converter.text_to_pdf_searchable(text_content, str(output_file))
+            media_type = "application/pdf"
+        
+        elif target_format == "md":
+            output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{timestamp}.md"
+            metadata = None
+            if include_metadata:
+                metadata = {
+                    "date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "pages": task_result.get("results", {}).get("pages", 1),
+                    "confidence": task_result.get("results", {}).get("confidence", 0.95)
+                }
+            converter.text_to_markdown(text_content, str(output_file), metadata)
+            media_type = "text/markdown; charset=utf-8"
+        
+        else:  # txt (向後兼容)
+            output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{timestamp}.txt"
+            output_file.write_text(text_content, encoding="utf-8")
+            media_type = "text/plain; charset=utf-8"
+        
+        return FileResponse(
+            path=output_file,
+            filename=f"ocr_result.{target_format}",
+            media_type=media_type
+        )
+    
+    except Exception as e:
+        print(f"格式轉換失敗: {e}")
+        raise HTTPException(status_code=500, detail=f"轉換失敗: {str(e)}")
+
+
 @app.websocket("/ws/{task_id}")
 async def websocket_endpoint(websocket: WebSocket, task_id: str):
     """
