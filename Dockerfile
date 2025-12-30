@@ -31,19 +31,6 @@ COPY requirements.txt .
 # 注意：paddlepaddle 和 paddleocr 可能需要較長時間編譯或下載
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 🚀 預載模型到 Docker Image (減少啟動時間和運行時記憶體)
-# 先複製預載腳本
-COPY preload_models.py .
-
-# 暫時取消 DISABLE_MODEL_SOURCE_CHECK 以允許下載
-ENV DISABLE_MODEL_SOURCE_CHECK=0
-
-# 執行模型預載 (這會下載約 200MB 的模型檔案到 /root/.paddlex/)
-RUN python preload_models.py
-
-# 恢復 DISABLE_MODEL_SOURCE_CHECK (運行時不再需要檢查)
-ENV DISABLE_MODEL_SOURCE_CHECK=1
-
 # 複製應用程式程式碼
 COPY . .
 
