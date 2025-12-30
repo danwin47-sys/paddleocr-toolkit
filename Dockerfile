@@ -9,6 +9,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
+    # 限制並行工作數，避免記憶體溢出 (Render Free Tier 512MB RAM)
+    OCR_WORKERS=1 \
     # 禁用 PaddlePaddle 的模型下載檢查 (我們會預先下載或在運行時處理)
     DISABLE_MODEL_SOURCE_CHECK=1
 

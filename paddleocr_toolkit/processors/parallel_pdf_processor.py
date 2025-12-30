@@ -40,7 +40,17 @@ class ParallelPDFProcessor:
         Args:
             workers: 工作進程數，預設為 CPU 核心數 - 1
         """
-        self.workers = workers or max(1, cpu_count() - 1)
+        # 優先從環境變數讀取 (支援 Docker/Cloud 設定)
+        env_workers = os.environ.get("OCR_WORKERS")
+        if env_workers:
+            try:
+                default_workers = int(env_workers)
+            except ValueError:
+                default_workers = max(1, cpu_count() - 1)
+        else:
+            default_workers = max(1, cpu_count() - 1)
+
+        self.workers = workers or default_workers
         print(f"初始化並行處理器: 使用 {self.workers} 個工作進程")
 
     @staticmethod
