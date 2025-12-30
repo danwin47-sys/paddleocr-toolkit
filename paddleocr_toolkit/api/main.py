@@ -437,6 +437,14 @@ async def delete_task(task_id: str):
     return {"message": "任务已删除"}
 
 
+class TranslationRequest(BaseModel):
+    text: str
+    target_lang: str = "en"
+    provider: str = "ollama"
+    api_key: Optional[str] = None
+    model: Optional[str] = None
+
+
 @app.get("/api/stats")
 async def get_stats():
     """获取系统统计"""
@@ -589,26 +597,22 @@ async def export_text(task_id: str):
 
 
 @app.post("/api/translate")
-async def translate_text(
-    text: str = Query(...),
-    target_lang: str = Query("en"),
-    provider: str = Query("ollama"),
-    api_key: str = Query(None),
-    model: str = Query(None)
-):
+async def translate_text(request: TranslationRequest):
     """
     使用 AI 翻譯文字
     
     Args:
-        text: 要翻譯的文字
-        target_lang: 目標語言 (en, zh-TW, ja, ko...)
-        provider: AI 提供商 (ollama/gemini/claude)
-        api_key: API 金鑰（ollama 不需要）
-        model: 模型名稱（可選）
+        request: 翻譯請求物件
     
     Returns:
         翻譯後的文字
     """
+    text = request.text
+    target_lang = request.target_lang
+    provider = request.provider
+    api_key = request.api_key
+    model = request.model
+    
     try:
         from paddleocr_toolkit.llm.llm_client import create_llm_client
         

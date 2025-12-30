@@ -37,25 +37,28 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
         setError('');
 
         try {
-            const params = new URLSearchParams();
-            params.append('text', originalText);
-            params.append('target_lang', targetLang);
-            params.append('provider', provider);
+            const body: any = {
+                text: originalText,
+                target_lang: targetLang,
+                provider: provider
+            };
 
             // 如果需要 API key，從 localStorage 獲取
             if (provider === 'gemini') {
                 const apiKey = localStorage.getItem('gemini_api_key');
-                if (apiKey) params.append('api_key', apiKey);
+                if (apiKey) body.api_key = apiKey;
             } else if (provider === 'claude') {
                 const apiKey = localStorage.getItem('claude_api_key');
-                if (apiKey) params.append('api_key', apiKey);
+                if (apiKey) body.api_key = apiKey;
             }
 
-            const response = await fetch(`/api/translate?${params.toString()}`, {
+            const response = await fetch('/api/translate', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'ngrok-skip-browser-warning': 'true'
-                }
+                },
+                body: JSON.stringify(body)
             });
 
             const data = await response.json();
