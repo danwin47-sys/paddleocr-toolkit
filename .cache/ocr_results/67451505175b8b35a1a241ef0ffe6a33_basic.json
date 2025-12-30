@@ -1,8 +1,5 @@
 {
   "raw_result": "Hello PaddleOCR",
-  "page_results": [
-    {
-      "input_path": "uploads\\9a5aeb05-97cb-446b-9021-31d70ae74eea_test.png",
-      "page_index": null,
-      "doc_preprocessor_res": {
-        "output_img": 
+  "pages": 1,
+  "confidence": 0.95
+}

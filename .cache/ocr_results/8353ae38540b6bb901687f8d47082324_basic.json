@@ -1,0 +1,5 @@
+{
+  "raw_result": "EEDE30166 Design of Microsensors (Fall, 2025)\nHomework II\nAssigned: 11/5/2025\nDue: 11/19/2025\n1. Explain the operation principle of the gas sensor on pp. 50-54 of Lecture 3.\n2.\nExplain the operation principle of the accelerometer on pp. 67-73 of Lecture 3.\n3.\nWhat is wafer-level packaging? What is its importance in MEMS?\n4.\nExplain and compare the two fabrication platforms on p. 77 of Lecture 3.\n5.\nIn the following schematic, the bridge structure is built in Polyl in the PolyMUMPs\nprocess. Estimate the capacitance by using a parallel-plate capacitor model and compare\nwith the COMSOL simulation result.\n100 m\n10\n10 m\nμm\n6.\nCalculate the spring constants x, k, kz, of the following polysilicon cantilever beam in\nthree directions if a concentrated force is acting on its free end. Assume the Young's\nmodulus is 160 GPa. Compare the calculated values with finite-element simulation.\nfixed end\n2μm\n$F_{$\n10 m\nF\nfree end\nZ\n100 m\nFx\nX",
+  "pages": 1,
+  "confidence": 0.95
+}

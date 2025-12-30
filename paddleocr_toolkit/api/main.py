@@ -538,15 +538,142 @@ async def export_results(
             out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.xlsx"
             wb.save(str(out_file))
 
+        elif out_format == "txt":
+            # 新增純文字匯出
+            out_file = OUTPUT_DIR / f"{base_name}_{int(time.time())}.txt"
+            out_file.write_text(text, encoding="utf-8")
+
         else:
             return {"status": "error", "message": f"不支援的格式: {out_format}"}
 
         return {
             "status": "success",
             "download_url": f"/api/files/download/{out_file.name}?directory=output",
+            "filename": out_file.name
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/export-text/{task_id}")
+async def export_text(task_id: str):
+    """
+    匯出任務的 OCR 結果為純文字檔案
+    
+    Args:
+        task_id: 任務 ID
+    
+    Returns:
+        FileResponse: 可下載的文字檔案
+    """
+    if task_id not in results:
+        raise HTTPException(status_code=404, detail="任務不存在")
+    
+    task_result = results[task_id]
+    if task_result.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="任務尚未完成")
+    
+    # 獲取文字內容
+    text_content = task_result.get("results", {}).get("raw_result", "")
+    
+    # 生成文字檔案
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_file = OUTPUT_DIR / f"ocr_result_{task_id}_{int(time.time())}.txt"
+    output_file.write_text(text_content, encoding="utf-8")
+    
+    return FileResponse(
+        path=output_file,
+        filename=f"ocr_result.txt",
+        media_type="text/plain; charset=utf-8"
+    )
+
+
+@app.post("/api/translate")
+async def translate_text(
+    text: str,
+    target_lang: str = "en",
+    provider: str = "ollama",
+    api_key: str = None,
+    model: str = None
+):
+    """
+    使用 AI 翻譯文字
+    
+    Args:
+        text: 要翻譯的文字
+        target_lang: 目標語言 (en, zh-TW, ja, ko...)
+        provider: AI 提供商 (ollama/gemini/claude)
+        api_key: API 金鑰（ollama 不需要）
+        model: 模型名稱（可選）
+    
+    Returns:
+        翻譯後的文字
+    """
+    try:
+        from paddleocr_toolkit.llm.llm_client import create_llm_client
+        
+        # 設定提示詞
+        lang_map = {
+            "en": "English",
+            "zh-TW": "Traditional Chinese (繁體中文)",
+            "zh-CN": "Simplified Chinese (简体中文)",
+            "ja": "Japanese (日本語)",
+            "ko": "Korean (한국어)",
+            "es": "Spanish",
+            "fr": "French",
+            "de": "German"
+        }
+        
+        target_language = lang_map.get(target_lang, target_lang)
+        prompt = f"""請將以下文字翻譯成 {target_language}。
+只需要輸出翻譯結果，不要有任何額外說明。
+
+原文：
+{text}
+
+翻譯："""
+        
+        # 創建 LLM 客戶端
+        kwargs = {}
+        if api_key:
+            kwargs["api_key"] = api_key
+        if model:
+            kwargs["model"] = model
+        elif provider == "ollama":
+            kwargs["model"] = "qwen2.5:7b"
+            kwargs["base_url"] = "http://localhost:11434"
+        
+        llm = create_llm_client(provider=provider, **kwargs)
+        
+        # 檢查服務是否可用
+        if not llm.is_available():
+            return {
+                "status": "error",
+                "message": f"{provider} 服務不可用，請確認已啟動相關服務"
+            }
+        
+        # 生成翻譯
+        translated = llm.generate(prompt, temperature=0.3, max_tokens=4096)
+        
+        if not translated:
+            return {
+                "status": "error",
+                "message": "翻譯失敗，請重試"
+            }
+        
+        return {
+            "status": "success",
+            "translated_text": translated,
+            "provider": provider,
+            "target_lang": target_lang
+        }
+        
+    except Exception as e:
+        print(f"翻譯錯誤: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 
 @app.websocket("/ws/{task_id}")
