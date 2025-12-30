@@ -164,6 +164,42 @@ export default function Home() {
             <div style={{ flex: 1, overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '20px', whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.6', color: '#cbd5e1', minHeight: '300px' }}>
               {result ? (
                 <>
+                  {/* Action Buttons */}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <button
+                      className="action-btn"
+                      style={{ flex: 1, minWidth: '120px' }}
+                      onClick={() => {
+                        const text = result.results?.raw_result || '';
+                        navigator.clipboard.writeText(text);
+                        alert('✅ 已複製到剪貼簿');
+                      }}
+                    >
+                      📋 複製文字
+                    </button>
+                    <button
+                      className="action-btn"
+                      style={{ flex: 1, minWidth: '120px' }}
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(`/api/export-text/${result.task_id}`, {
+                            headers: { 'ngrok-skip-browser-warning': 'true' }
+                          });
+                          if (!response.ok) throw new Error('下載失敗');
+                          const blob = await response.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'ocr_result.txt';
+                          a.click();
+                        } catch (err: any) {
+                          alert('❌ 下載失敗: ' + err.message);
+                        }
+                      }}
+                    >
+                      💾 下載 TXT
+                    </button>
+                  </div>
                   <div style={{ marginBottom: '20px' }}>
                     {result.results?.raw_result || "⚠️ raw_result 為空"}
                   </div>
