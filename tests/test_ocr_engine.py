@@ -133,27 +133,27 @@ class TestOCREngineManager:
     def test_predict_after_init(self, mock_ocr):
         """測試初始化後預測"""
         mock_engine = Mock()
-        mock_engine.predict.return_value = [["test", 0.95]]
+        mock_engine.ocr.return_value = [["test", 0.95]]
         mock_ocr.return_value = mock_engine
 
         manager = OCREngineManager(mode="basic")
         manager.init_engine()
         result = manager.predict("test.jpg")
 
-        assert mock_engine.predict.called
+        assert mock_engine.ocr.called
 
     @patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR")
     def test_predict_with_kwargs(self, mock_ocr):
         """測試帶kwargs的預測"""
         mock_engine = Mock()
-        mock_engine.predict.return_value = []
+        mock_engine.ocr.return_value = []
         mock_ocr.return_value = mock_engine
 
         manager = OCREngineManager()
         manager.init_engine()
         manager.predict("test.jpg", custom_param="value")
 
-        mock_engine.predict.assert_called_with("test.jpg", custom_param="value")
+        mock_engine.ocr.assert_called_with("test.jpg")
 
     @patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR")
     def test_context_manager(self, mock_ocr):

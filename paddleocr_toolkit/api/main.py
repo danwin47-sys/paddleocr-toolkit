@@ -235,39 +235,41 @@ async def process_ocr_task(
                             if isinstance(line[1], (list, tuple)) and len(line[1]) >= 1:
                                 line_texts.append(str(line[1][0]))
                         elif isinstance(line, dict):
-                             # PaddleX 字典格式 (在列表內)
-                             if 'rec_texts' in line:
-                                 line_texts.extend([str(t) for t in line['rec_texts']])
-                             elif 'text' in line:
-                                 line_texts.append(str(line['text']))
-                    
-                    pages_texts.append("\n".join(line_texts))
-                    
-                elif isinstance(page, dict):
-                     # PPStructure or newer PaddleOCR format
-                     # 1. Check for 'res' (PPStructure standard)
-                     if 'res' in page and isinstance(page['res'], list):
-                         page_text_parts = []
-                         for region in page['res']:
-                             if isinstance(region, dict) and 'text' in region:
-                                 page_text_parts.append(region['text'])
-                             elif isinstance(region, str):
-                                 page_text_parts.append(region)
-                         pages_texts.append("\n".join(page_text_parts))
-                                 
-                     # 2. Check for 'rec_texts' (PaddleOCR Direct Result / Parallel Processor)
-                     elif 'rec_texts' in page and isinstance(page['rec_texts'], list):
-                         pages_texts.append("\n".join([str(t) for t in page['rec_texts']]))
+                            # PaddleX 字典格式 (在列表內)
+                            if "rec_texts" in line:
+                                line_texts.extend([str(t) for t in line["rec_texts"]])
+                            elif "text" in line:
+                                line_texts.append(str(line["text"]))
 
-                     # 3. Check for 'text' or 'rec_text' (Single String)
-                     elif 'text' in page:
-                         pages_texts.append(str(page['text']))
-                     elif 'rec_text' in page:
-                         pages_texts.append(str(page['rec_text']))
-                         
-                     # Fallback
-                     else:
-                         pages_texts.append(str(page))
+                    pages_texts.append("\n".join(line_texts))
+
+                elif isinstance(page, dict):
+                    # PPStructure or newer PaddleOCR format
+                    # 1. Check for 'res' (PPStructure standard)
+                    if "res" in page and isinstance(page["res"], list):
+                        page_text_parts = []
+                        for region in page["res"]:
+                            if isinstance(region, dict) and "text" in region:
+                                page_text_parts.append(region["text"])
+                            elif isinstance(region, str):
+                                page_text_parts.append(region)
+                        pages_texts.append("\n".join(page_text_parts))
+
+                    # 2. Check for 'rec_texts' (PaddleOCR Direct Result / Parallel Processor)
+                    elif "rec_texts" in page and isinstance(page["rec_texts"], list):
+                        pages_texts.append(
+                            "\n".join([str(t) for t in page["rec_texts"]])
+                        )
+
+                    # 3. Check for 'text' or 'rec_text' (Single String)
+                    elif "text" in page:
+                        pages_texts.append(str(page["text"]))
+                    elif "rec_text" in page:
+                        pages_texts.append(str(page["rec_text"]))
+
+                    # Fallback
+                    else:
+                        pages_texts.append(str(page))
                 else:
                     pages_texts.append(str(page))
             text_content = "\n\n".join(pages_texts)

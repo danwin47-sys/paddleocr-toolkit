@@ -231,7 +231,7 @@ class OCREngineManager:
                 input_data = plugin.process_before_ocr(input_data)
 
         # 2. 執行預測
-        if self.mode == OCRMode.BASIC and hasattr(self.engine, 'ocr'):
+        if self.mode == OCRMode.BASIC and hasattr(self.engine, "ocr"):
             # Use standard ocr() method which returns list structure
             # PaddleOCR v3/PaddleX ocr() might not accept kwargs if it forwards to predict()
             results = self.engine.ocr(input_data)

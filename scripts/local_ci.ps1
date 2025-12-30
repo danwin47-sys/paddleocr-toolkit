@@ -4,6 +4,7 @@ Write-Host "      PaddleOCR Toolkit - Local CI/CD Runner (v3.3.0)   " -Foregroun
 Write-Host "========================================================" -ForegroundColor Cyan
 
 $ErrorActionPreference = "Stop"
+$global:LASTEXITCODE = 0
 
 function Run-Step {
     param (
@@ -35,7 +36,31 @@ function Run-Step {
     }
 }
 
-# ... (Dependency Check, Formatting, Linting remain same) ...
+# 1. Dependency Check
+Run-Step "Dependency Check" {
+    # 簡單檢查關鍵開發工具是否存在
+    foreach ($tool in @("black", "isort", "flake8", "mypy", "pytest", "twine")) {
+        if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing missing dev dependencies..." -ForegroundColor Yellow
+            pip install --no-cache-dir -r requirements-ci.txt
+            break
+        }
+    }
+}
+
+# 2. Formatting (Auto-fix)
+Run-Step "Code Formatting (Black + Isort)" {
+    $paths = "paddleocr_toolkit/", "tests/", "plugins/", "examples/", "scripts/", "setup.py", "paddle_ocr_tool.py", "pdf_translator.py"
+    # 自動修復
+    black $paths
+    isort --profile black $paths
+}
+
+# 3. Linting
+Run-Step "Linting (Flake8)" {
+    # 與 GitHub Actions 設定一致 (.github/workflows/ci.yml)
+    flake8 paddleocr_toolkit/ --max-line-length=120 --ignore="E203,W503,F401,E722,W293,F841,E741,F541,W291,E226,E402" --exclude="__pycache__,.git,.mypy_cache"
+}
 
 # 4. Type Checking
 Run-Step "Type Checking (Mypy)" {

@@ -65,7 +65,7 @@ def test_ocr_engine_with_plugin():
     # 初始化引擎
     with patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR") as MockPaddleOCR:
         engine_instance = MockPaddleOCR.return_value
-        engine_instance.predict.return_value = "raw_results"
+        engine_instance.ocr.return_value = "raw_results"
 
         manager = OCREngineManager(mode="basic", plugin_loader=loader)
         manager.init_engine()
@@ -75,7 +75,7 @@ def test_ocr_engine_with_plugin():
 
         # 驗證外掛鉤子被呼叫
         # on_before_ocr 應該將 "input_image" 變為 "processed_image"
-        engine_instance.predict.assert_called_with("processed_image")
+        engine_instance.ocr.assert_called_with("processed_image")
 
         # on_after_ocr 應該將 "raw_results" 變為 "processed_results"
         assert result == "processed_results"

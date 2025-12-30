@@ -1,4 +1,5 @@
 from paddleocr import PaddleOCR
+
 print("Checking PaddleOCR methods...")
 ocr = PaddleOCR(use_angle_cls=True, lang="ch")
 print(f"Has 'ocr': {hasattr(ocr, 'ocr')}")

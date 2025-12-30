@@ -1,12 +1,10 @@
-import urllib.request
 import urllib.parse
+import urllib.request
 import uuid
 
 url = "http://127.0.0.1:8000/api/ocr?mode=basic"
 boundary = uuid.uuid4().hex
-headers = {
-    "Content-Type": f"multipart/form-data; boundary={boundary}"
-}
+headers = {"Content-Type": f"multipart/form-data; boundary={boundary}"}
 
 data = (
     f"--{boundary}\r\n"
