@@ -22,12 +22,16 @@ export default function FormatSelector({ taskId, onDownload }: FormatSelectorPro
         setDownloading(format);
 
         try {
-            const params = new URLSearchParams();
-            params.append('task_id', taskId);
-            params.append('target_format', format);
-
-            const response = await fetch(`/api/convert?${params.toString()}`, {
-                headers: { 'ngrok-skip-browser-warning': 'true' }
+            const response = await fetch('/api/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: new URLSearchParams({
+                    task_id: taskId,
+                    target_format: format
+                })
             });
 
             if (!response.ok) throw new Error('轉換失敗');
