@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getApiUrl } from "@/utils/api";
 
 interface FormatSelectorProps {
     taskId: string;
@@ -22,7 +23,10 @@ export default function FormatSelector({ taskId, onDownload }: FormatSelectorPro
         setDownloading(format);
 
         try {
-            const response = await fetch('/api/convert', {
+            const apiUrl = getApiUrl();
+            const endpoint = apiUrl ? `${apiUrl}/api/convert` : '/api/convert';
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

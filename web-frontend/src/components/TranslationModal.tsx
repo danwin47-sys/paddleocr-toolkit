@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getApiUrl } from "@/utils/api";
 
 interface TranslationModalProps {
     isOpen: boolean;
@@ -66,7 +67,12 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
 
             addLog(`正在向後端發送請求 (${provider})...`);
 
-            const response = await fetch('/api/translate', {
+            const apiUrl = getApiUrl();
+            const endpoint = apiUrl ? `${apiUrl}/api/translate` : '/api/translate';
+
+            addLog(`正在向後端發送請求 (${provider})...`);
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -248,7 +254,7 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                     }}>
                         {debugLogs.map((log, i) => (
                             <div key={i} style={{ marginBottom: '2px', color: log.includes('失敗') || log.includes('異常') ? '#fca5a5' : '#94a3b8' }}>
-                                > {log}
+                                {'>'} {log}
                             </div>
                         ))}
                         {isTranslating && <div className="loading-dots" style={{ marginTop: '5px' }}>處理中...</div>}

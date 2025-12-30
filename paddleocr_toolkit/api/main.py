@@ -23,9 +23,11 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+
 
 from paddleocr_toolkit.api.file_manager import router as file_router
 from paddleocr_toolkit.api.websocket_manager import manager
@@ -43,6 +45,40 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+
+# Global Exception Handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    error_detail = traceback.format_exc()
+    print(f"[CRITICAL ERROR] {exc}")
+    print(error_detail)
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "message": f"伺服器內部錯誤: {str(exc)}", "detail": error_detail}
+    )
+
+
+# Request Logging Middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    import time
+    start_time = time.time()
+    path = request.url.path
+    method = request.method
+    print(f"[HTTP] {method} {path} - 收到請求")
+    
+    try:
+        response = await call_next(request)
+        duration = time.time() - start_time
+        print(f"[HTTP] {method} {path} - 完成處理 ({duration:.2f}s) - Status: {response.status_code}")
+        return response
+    except Exception as e:
+        print(f"[HTTP] {method} {path} - 處理時發生異常: {e}")
+        import traceback
+        print(traceback.format_exc())
+        raise e
 
 # 掛載路由
 app.include_router(file_router)

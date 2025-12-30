@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getApiUrl } from '@/utils/api';
 
 export interface OCRResult {
     task_id: string;
@@ -42,7 +43,10 @@ export function useOCR(): UseOCRReturn {
         return new Promise((resolve, reject) => {
             const timer = setInterval(async () => {
                 try {
-                    const res = await fetch(`/api/tasks/${taskId}`, {
+                    const apiUrl = getApiUrl();
+                    const endpoint = apiUrl ? `${apiUrl}/api/tasks/${taskId}` : `/api/tasks/${taskId}`;
+
+                    const res = await fetch(endpoint, {
                         headers: {
                             'ngrok-skip-browser-warning': 'true'
                         }
@@ -90,7 +94,10 @@ export function useOCR(): UseOCRReturn {
             if (geminiKey) params.append('gemini_key', geminiKey);
             if (claudeKey) params.append('claude_key', claudeKey);
 
-            const res = await fetch(`/api/ocr?${params.toString()}`, {
+            const apiUrl = getApiUrl();
+            const endpoint = apiUrl ? `${apiUrl}/api/ocr?${params.toString()}` : `/api/ocr?${params.toString()}`;
+
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 body: formData,
                 headers: {
