@@ -656,11 +656,13 @@ async def translate_text(
         translated = llm.generate(prompt, temperature=0.3, max_tokens=4096)
         
         if not translated:
+            print(f"[WARNING] 翻譯結果為空")
             return {
                 "status": "error",
                 "message": "翻譯失敗，請重試"
             }
         
+        print(f"[SUCCESS] 翻譯完成，長度: {len(translated)}")
         return {
             "status": "success",
             "translated_text": translated,
@@ -669,10 +671,13 @@ async def translate_text(
         }
         
     except Exception as e:
-        print(f"翻譯錯誤: {e}")
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"[ERROR] 翻譯錯誤: {e}")
+        print(error_detail)
         return {
             "status": "error",
-            "message": str(e)
+            "message": f"翻譯失敗: {str(e)}"
         }
 
 
