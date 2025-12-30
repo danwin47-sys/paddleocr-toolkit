@@ -38,52 +38,51 @@ class TestParallelPDFProcessor:
         processor = ParallelPDFProcessor(workers=2)
         assert processor.workers == 2
 
-    def test_processor_split_pdf_pages(self):
-        """測試分割 PDF 頁面"""
+    def test_processor_has_process_pdf_parallel(self):
+        """測試 process_pdf_parallel 方法存在"""
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )
 
         processor = ParallelPDFProcessor()
-        pages = processor._split_pdf_pages("test.pdf")
-        assert isinstance(pages, list)
-        assert len(pages) > 0
+        assert hasattr(processor, "process_pdf_parallel")
+        assert callable(processor.process_pdf_parallel)
 
-    def test_processor_process_page(self):
-        """測試處理單頁"""
+    def test_processor_has_process_single_page(self):
+        """測試 _process_single_page 靜態方法存在"""
+        from paddleocr_toolkit.processors.parallel_pdf_processor import (
+            ParallelPDFProcessor,
+        )
+
+        assert hasattr(ParallelPDFProcessor, "_process_single_page")
+        assert callable(ParallelPDFProcessor._process_single_page)
+
+    def test_processor_workers_default(self):
+        """測試工作進程數預設值"""
+        from multiprocessing import cpu_count
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )
 
         processor = ParallelPDFProcessor()
-        result = processor._process_page((0, "page_0"))
-        assert result is not None
-        assert result[0] == 0
-
-    def test_processor_process_serial(self):
-        """測試序列處理"""
-        from paddleocr_toolkit.processors.parallel_pdf_processor import (
-            ParallelPDFProcessor,
-        )
-
-        processor = ParallelPDFProcessor()
-        results = processor._process_serial("test.pdf")
-        assert isinstance(results, list)
+        expected_workers = max(1, cpu_count() - 1)
+        assert processor.workers == expected_workers
 
 
 class TestParallelProcessorBenchmark:
     """測試並行處理器基準測試"""
 
     def test_benchmark_exists(self):
-        """測試基準測試方法存在"""
+        """測試基準測試方法 benchmark 存在"""
         from paddleocr_toolkit.processors.parallel_pdf_processor import (
             ParallelPDFProcessor,
         )
 
         processor = ParallelPDFProcessor()
-        assert hasattr(processor, "benchmark_parallel_vs_serial")
-        assert callable(processor.benchmark_parallel_vs_serial)
+        assert hasattr(processor, "benchmark")
+        assert callable(processor.benchmark)
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

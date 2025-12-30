@@ -1,0 +1,31 @@
+{
+    "app_name": "PaddleOCR 工具包",
+    "version": "1.1.0",
+    "messages": {
+        "processing_pdf": "正在處理 PDF...",
+        "ocr_complete": "OCR 處理完成",
+        "error_file_not_found": "找不到檔案",
+        "saving_results": "正在儲存結果...",
+        "batch_processing": "批次處理中...",
+        "initializing": "正在初始化 OCR 引擎...",
+        "ready": "準備就緒！",
+        "page_progress": "頁面 {current}/{total}",
+        "total_time": "總耗時：{time} 秒",
+        "average_confidence": "平均信心度：{conf}%",
+        "errors": {
+            "import_error": "缺少必要模組：{module}",
+            "memory_error": "記憶體不足",
+            "invalid_format": "無效的檔案格式",
+            "processing_failed": "處理失敗：{error}"
+        },
+        "cli": {
+            "help_title": "PaddleOCR 工具包 - 專業 OCR 工具",
+            "help_usage": "使用方式：python paddle_ocr_tool.py [選項] <輸入>",
+            "help_options": "選項：",
+            "help_mode": "OCR 模式（basic, structure, hybrid）",
+            "help_dpi": "PDF 解析度 DPI",
+            "help_format": "輸出格式（md, json, html）",
+            "help_device": "運算裝置（gpu, cpu）"
+        }
+    }
+}

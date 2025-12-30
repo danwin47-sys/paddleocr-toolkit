@@ -7,7 +7,8 @@ PaddleOCR Toolkit internationalization framework.
 ## Supported Languages
 
 - 🇨🇳 中文 (zh_CN) - Default
-- 🇺🇸 English (en_US) - In Progress
+- 🇹🇼 繁體中文 (zh_TW) - ✅ Available
+- 🇺🇸 English (en_US) - ✅ Available
 - 🇯🇵 日本語 (ja_JP) - Planned
 - 🇰🇷 한국어 (ko_KR) - Planned
 

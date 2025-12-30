@@ -4,13 +4,18 @@
 
 ```
 pdf/
-├── paddle_ocr_tool.py      # 主程式入口（2627 行）
-├── pdf_translator.py       # 翻譯模組（657 行）
+├── paddle_ocr_tool.py      # CLI 相容 Shim
+├── paddle_ocr_facade.py    # 主要 API 入口
 ├── paddleocr_toolkit/      # 核心套件
-│   ├── core/              # 核心資料結構
-│   └── processors/        # 處理器模組
+│   ├── core/              # 核心 (Config, Engine)
+│   ├── processors/        # 處理器 (PDF, Image)
+│   ├── cli/               # 命令行介面
+│   ├── api/               # Web API
+│   ├── plugins/           # 插件系統
+│   └── i18n/              # 國際化資源
+├── custom/                # 插件範例
 ├── tests/                 # 測試
-└── README.md              # 檔案
+└── README.md              # 說明文件
 ```
 
 ---
@@ -19,239 +24,74 @@ pdf/
 
 ```mermaid
 graph TD
-    subgraph CLI["命令列入口"]
-        main["main()"]
+    subgraph Clients["客戶端"]
+        CLI["CLI Command"]
+        WebApp["Web Dashboard"]
+        SDK["Python SDK"]
     end
     
-    subgraph Core["核心類別"]
-        PaddleOCRTool["PaddleOCRTool"]
-        OCRResult["OCRResult"]
-        PDFGenerator["PDFGenerator"]
-        OCRMode["OCRMode"]
+    subgraph Facade["Facade 層"]
+        FacadeAPI["PaddleOCRFacade"]
     end
     
-    subgraph Processors["處理器"]
-        fix_english_spacing["fix_english_spacing()"]
-        detect_pdf_quality["detect_pdf_quality()"]
-        StatsCollector["StatsCollector"]
-        OCRWorkaround["OCRWorkaround"]
+    subgraph Core["核心層"]
+        Engine["OCREngine"]
+        Config["ConfigLoader"]
+        Models["Data Models"]
     end
     
-    subgraph Translator["翻譯模組"]
-        OllamaTranslator["OllamaTranslator"]
-        TextInpainter["TextInpainter"]
-        TextRenderer["TextRenderer"]
-        MonolingualPDFGenerator["MonolingualPDFGenerator"]
-        BilingualPDFGenerator["BilingualPDFGenerator"]
+    subgraph Processors["處理層"]
+        PDF["PDFProcessor"]
+        Hybrid["HybridProcessor"]
+        PluginMgr["PluginManager"]
+        ImageParams["ImagePreprocessor"]
     end
     
-    subgraph PaddleOCR["PaddleOCR 引擎"]
-        PP-OCRv5["PP-OCRv5"]
-        PP-StructureV3["PP-StructureV3"]
-        PaddleOCR-VL["PaddleOCR-VL"]
-        PP-FormulaNet["PP-FormulaNet"]
-    end
+    CLI --> FacadeAPI
+    WebApp --> FacadeAPI
+    SDK --> FacadeAPI
     
-    main --> PaddleOCRTool
-    PaddleOCRTool --> OCRResult
-    PaddleOCRTool --> PDFGenerator
-    PaddleOCRTool --> fix_english_spacing
-    PaddleOCRTool --> detect_pdf_quality
-    PaddleOCRTool --> StatsCollector
-    PaddleOCRTool --> OllamaTranslator
-    PaddleOCRTool --> OCRWorkaround
-    OllamaTranslator --> TextInpainter
-    OllamaTranslator --> TextRenderer
+    FacadeAPI --> Config
+    FacadeAPI --> Hybrid
+    
+    Hybrid --> PDF
+    Hybrid --> Engine
+    Hybrid --> PluginMgr
+    
+    PDF --> ImageParams
 ```
 
 ---
 
 ## 核心類別
 
-### PaddleOCRTool（主類別）
+### PaddleOCRFacade
 
-| 方法 | 功能 | OCR 模式 |
-|------|------|---------|
-| `process_image()` | 處理單張圖片 | basic |
-| `process_image_array()` | 處理 numpy 陣列 | basic |
-| `process_pdf()` | 處理 PDF | basic |
-| `process_structured()` | 結構化處理 | structure, vl |
-| `process_formula()` | 公式識別 | formula |
-| `process_hybrid()` | 混合模式 | hybrid |
-| `process_translate()` | 翻譯 PDF | hybrid + translate |
-| `_process_hybrid_pdf()` | 混合模式 PDF 處理（內部） | - |
-| `_process_translation_on_pdf()` | 翻譯處理（內部） | - |
+統一的對外接口，隱藏複雜的子系統互動。
 
-### OCRResult（資料結構）
-
-```python
-@dataclass
-class OCRResult:
-    text: str                    # 辨識的文字
-    confidence: float            # 信賴度 (0-1)
-    bbox: List[List[float]]      # 邊界框座標 [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
-    
-    @property x -> float         # 左上角 X 座標
-    @property y -> float         # 左上角 Y 座標
-    @property width -> float     # 邊界框寬度
-    @property height -> float    # 邊界框高度
-```
-
-### PDFGenerator（PDF 生成器）
-
-```python
-class PDFGenerator:
-    def __init__(output_path, debug_mode=False, compress_images=False, jpeg_quality=85)
-    def add_page(image_path, ocr_results) -> bool
-    def add_page_from_pixmap(pixmap, ocr_results) -> bool
-    def save() -> bool
-```
-
----
-
-## 處理器模組
-
-### paddleocr_toolkit/processors/
-
-| 模組 | 類別/函式 | 功能 | 整合狀態 |
-|------|----------|------|---------|
-| `text_processor.py` | `fix_english_spacing()` | 英文空格修復 | ✅ |
-| `pdf_quality.py` | `detect_pdf_quality()` | PDF 品質偵測 | ✅ |
-| `stats_collector.py` | `StatsCollector` | 統計收集 | ✅ |
-| `ocr_workaround.py` | `OCRWorkaround` | 翻譯備用 | ✅ |
-| `batch_processor.py` | `pdf_to_images_parallel()` | 多執行緒轉換 | ❌ |
-| `image_preprocessor.py` | `auto_preprocess()` | 圖片預處理 | ❌ |
-| `glossary_manager.py` | `GlossaryManager` | 術語表管理 | ❌ |
-
----
-
-## 翻譯模組
-
-### pdf_translator.py
-
-| 類別 | 功能 |
+| 方法 | 功能 |
 |------|------|
-| `TranslatedBlock` | 翻譯區塊資料結構 |
-| `OllamaTranslator` | Ollama 翻譯引擎 |
-| `TextInpainter` | 文字區域擦除 |
-| `TextRenderer` | 翻譯文字繪製 |
-| `MonolingualPDFGenerator` | 純翻譯 PDF 生成 |
-| `BilingualPDFGenerator` | 雙語對照 PDF 生成 |
+| `process()` | 處理單一檔案 (支援所有模式) |
+| `process_batch()` | 批次處理 |
+| `get_system_status()` | 取得系統狀態 |
 
----
+### PluginSystem (外掛系統)
 
-## 處理流程
-
-### Hybrid 模式流程
-
-```mermaid
-flowchart TD
-    A[輸入 PDF] --> B[PDF → 圖片]
-    B --> C[PP-StructureV3 版面分析]
-    C --> D[提取 OCR 結果]
-    D --> E[fix_english_spacing 空格修復]
-    E --> F{輸出}
-    F --> G[*_hybrid.pdf 可搜尋 PDF]
-    F --> H[*_erased.pdf 擦除版 PDF]
-    F --> I[*_hybrid.md Markdown]
-    F --> J[*_hybrid.json JSON]
-    F --> K[*_hybrid.html HTML]
-    
-    L{啟用翻譯?}
-    G --> L
-    L -->|是| M[OllamaTranslator 翻譯]
-    M --> N[TextRenderer 繪製]
-    N --> O[*_translated.pdf]
-    N --> P[*_bilingual.pdf]
-```
-
-### 翻譯流程
-
-```mermaid
-flowchart TD
-    A[*_erased.pdf] --> B[提取頁面圖片]
-    B --> C[取得 OCR 結果]
-    C --> D[OllamaTranslator 批次翻譯]
-    D --> E{OCR Workaround?}
-    E -->|否| F[TextRenderer 繪製文字]
-    E -->|是| G[OCRWorkaround 直接在 PDF 操作]
-    F --> H[numpy 圖片]
-    G --> H
-    H --> I[MonolingualPDFGenerator]
-    H --> J[BilingualPDFGenerator]
-    I --> K[*_translated.pdf]
-    J --> L[*_bilingual.pdf]
-```
-
----
-
-## CLI 引數
-
-### OCR 模式
-
-| 引數 | 預設 | 說明 |
-|------|------|------|
-| `--mode` | basic | basic, structure, vl, formula, hybrid |
-
-### 輸出選項
-
-| 引數 | 說明 |
-|------|------|
-| `--searchable` | 生成可搜尋 PDF |
-| `--markdown-output` | Markdown 輸出 |
-| `--json-output` | JSON 輸出 |
-| `--html-output` | HTML 輸出 |
-| `--all` | 輸出所有格式 |
-
-### 壓縮選項
-
-| 引數 | 預設 | 說明 |
-|------|------|------|
-| `--no-compress` | False | 停用 JPEG 壓縮 |
-| `--jpeg-quality` | 85 | JPEG 品質 (0-100) |
-
-### 翻譯選項
-
-| 引數 | 預設 | 說明 |
-|------|------|------|
-| `--translate` | False | 啟用翻譯 |
-| `--source-lang` | auto | 來源語言 |
-| `--target-lang` | en | 目標語言 |
-| `--ollama-model` | qwen2.5:7b | Ollama 模型 |
-| `--ocr-workaround` | False | 使用 OCR 補救模式 |
-
----
-
-## 檔案大小
-
-| 檔案 | 行數 | 位元組 |
-|------|------|--------|
-| paddle_ocr_tool.py | 2627 | 109KB |
-| pdf_translator.py | 657 | 24KB |
-| paddleocr_toolkit | ~1200 | ~50KB |
-| **總計** | ~4500 | ~180KB |
+支援三種 hook 點：
+1. `on_init`: 系統初始化時
+2. `on_before_ocr`: 圖片預處理 (如：去除浮水印)
+3. `on_after_ocr`: 結果後處理 (如：個資遮蔽、格式轉換)
 
 ---
 
 ## 依賴關係
 
 ```
-paddle_ocr_tool.py
+paddleocr-toolkit
 ├── paddleocr (PaddleOCR 3.x)
-│   ├── PP-OCRv5
-│   ├── PP-StructureV3
-│   ├── PaddleOCR-VL
-│   └── PP-FormulaNet
-├── paddleocr_toolkit
-│   ├── core (OCRResult, PDFGenerator, OCRMode)
-│   └── processors (fix_english_spacing, StatsCollector, ...)
-├── pdf_translator.py
-│   ├── OllamaTranslator
-│   ├── TextRenderer
-│   └── MonolingualPDFGenerator
-├── PyMuPDF (fitz)
-├── Pillow (PIL)
-├── numpy
-├── tqdm
-└── wordninja (可選)
+├── PyMuPDF (PDF 處理)
+├── Pillow (影像處理)
+├── fastapi (Web API)
+├── uvicorn (Web Server)
+└── numpy (矩陣運算)
 ```

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 PaddleOCR Toolkit CLI主入口
-v1.2.0 - 完整的CLI命令系统
+v3.3.0 - 完整的CLI命令系统
 """
 
 import argparse
@@ -28,7 +28,7 @@ def main():
     )
 
     # 版本
-    parser.add_argument("--version", action="version", version="%(prog)s 1.2.0")
+    parser.add_argument("--version", action="version", version="%(prog)s 3.3.0")
 
     # 子命令
     subparsers = parser.add_subparsers(dest="command", help="可用命令")

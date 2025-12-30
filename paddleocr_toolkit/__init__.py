@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-PaddleOCR Toolkit - 專業級文件辨識與處理套件 (v3.2.0)
+PaddleOCR Toolkit - 專業級文件辨識與處理套件 (v3.3.0)
 
 本套件使用 PaddleOCR 3.x 實現文字識別，支援多種 OCR 模式:
 - basic: PP-OCRv5 基本文字識別
@@ -24,7 +24,7 @@ PaddleOCR Toolkit - 專業級文件辨識與處理套件 (v3.2.0)
     python -m paddleocr_toolkit input.pdf --mode hybrid
 """
 
-__version__ = "3.2.0"
+__version__ = "3.3.0"
 __author__ = "Danwin47"
 
 
