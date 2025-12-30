@@ -18,21 +18,31 @@ export default function Home() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      let mode = "basic";
-      if (useGemini) mode = "gemini";
-      if (useClaude) mode = "claude";
-
-      // 取得存在 localStorage 的 key (簡單實作)
+      // 檢查是否需要 Client-side API Key 驗證
       const gKey = localStorage.getItem('gemini_api_key') || undefined;
       const cKey = localStorage.getItem('claude_api_key') || undefined;
 
-      if ((mode === 'gemini' && !gKey) || (mode === 'claude' && !cKey)) {
-        alert('請先在設定 (⚙️) 中輸入對應的 API Key');
+      if (useGemini && !gKey) {
+        alert('請先在設定 (⚙️) 中輸入 Gemini API Key');
+        setIsSettingsOpen(true);
+        return;
+      }
+      if (useClaude && !cKey) {
+        alert('請先在設定 (⚙️) 中輸入 Claude API Key');
         setIsSettingsOpen(true);
         return;
       }
 
-      uploadFile(file, mode, gKey, cKey);
+      // 從設定讀取 OCR 模式 (預設 hybrid)
+      const ocrMode = localStorage.getItem('ocr_mode') || 'hybrid';
+
+      // 執行上傳 (僅在開關開啟時傳遞 Key)
+      uploadFile(
+        file,
+        ocrMode,
+        useGemini ? gKey : undefined,
+        useClaude ? cKey : undefined
+      );
     }
   };
 

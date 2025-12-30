@@ -240,7 +240,7 @@ async def process_ocr_task(
                 task_id, 30, "processing", "PDF 並行辨識中..."
             )
             ocr_result = await asyncio.to_thread(
-                parallel_processor.process_pdf_parallel, actual_path, {"mode": "basic"}
+                parallel_processor.process_pdf_parallel, actual_path, {"mode": mode}
             )
         else:
             # 標準單點辨識
