@@ -102,6 +102,7 @@ app.add_middleware(
 # 任務儲存
 tasks = {}
 results = {}
+batches = {}  # 批量處理追蹤
 
 # 配置
 UPLOAD_DIR = Path("uploads")
@@ -1116,3 +1117,235 @@ async def export_searchable_pdf(task_id: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成可搜尋 PDF 失敗: {str(e)}")
+
+
+# ==================== 批量處理 API ====================
+
+@app.post("/api/batch-ocr")
+async def batch_ocr(
+    files: list[UploadFile] = File(...),
+    background_tasks: BackgroundTasks = None,
+    mode: str = "basic",
+    gemini_key: Optional[str] = None,
+    claude_key: Optional[str] = None
+):
+    """
+    批量處理多個 PDF/圖片檔案
+    
+    Args:
+        files: 上傳的檔案列表
+        mode: OCR 模式 (basic, hybrid, structure 等)
+        gemini_key: Gemini API Key（可選）
+        claude_key: Claude API Key（可選）
+    
+    Returns:
+        {
+            "batch_id": str,
+            "task_ids": List[str],
+            "total": int
+        }
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="未選擇檔案")
+    
+    if len(files) > 20:
+        raise HTTPException(status_code=400, detail="一次最多處理 20 個檔案")
+    
+    batch_id = str(uuid.uuid4())
+    task_ids = []
+    
+    print(f"=" * 60)
+    print(f"[BATCH] 批量處理請求")
+    print(f"[BATCH] Batch ID: {batch_id}")
+    print(f"[BATCH] 檔案數量: {len(files)}")
+    print(f"[BATCH] OCR 模式: {mode}")
+    print(f"=" * 60)
+    
+    try:
+        for idx, file in enumerate(files):
+            task_id = str(uuid.uuid4())
+            
+            # 儲存檔案
+            file_extension = Path(file.filename).suffix.lower()
+            file_path = UPLOAD_DIR / f"{task_id}{file_extension}"
+            
+            with open(file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+            
+            print(f"[BATCH] 檔案 {idx+1}/{len(files)}: {file.filename} -> {file_path}")
+            
+            # 建立任務
+            tasks[task_id] = {
+                "status": "queued",
+                "progress": 0,
+                "created_at": datetime.now(),
+                "batch_id": batch_id,
+                "file_name": file.filename
+            }
+            
+            # 添加背景任務
+            background_tasks.add_task(
+                process_ocr_task,
+                task_id,
+                str(file_path),
+                mode,
+                gemini_key,
+                claude_key
+            )
+            
+            task_ids.append(task_id)
+        
+        # 建立批量追蹤
+        batches[batch_id] = {
+            "task_ids": task_ids,
+            "status": "processing",
+            "completed": 0,
+            "total": len(files),
+            "created_at": datetime.now()
+        }
+        
+        print(f"[BATCH] 批量任務已建立，開始處理")
+        print(f"=" * 60)
+        
+        return {
+            "batch_id": batch_id,
+            "task_ids": task_ids,
+            "total": len(files)
+        }
+        
+    except Exception as e:
+        print(f"[BATCH ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail=f"批量處理失敗: {str(e)}")
+
+
+@app.get("/api/batch/{batch_id}/status")
+async def get_batch_status(batch_id: str):
+    """
+    查詢批量處理狀態
+    
+    Args:
+        batch_id: 批量 ID
+    
+    Returns:
+        {
+            "batch_id": str,
+            "total": int,
+            "completed": int,
+            "failed": int,
+            "processing": int,
+            "progress": float,
+            "tasks": List[dict]
+        }
+    """
+    if batch_id not in batches:
+        raise HTTPException(status_code=404, detail="批量任務不存在")
+    
+    batch = batches[batch_id]
+    task_ids = batch["task_ids"]
+    
+    # 收集所有任務狀態
+    task_statuses = []
+    completed = 0
+    failed = 0
+    processing = 0
+    
+    for task_id in task_ids:
+        task = tasks.get(task_id, {})
+        status = task.get("status", "unknown")
+        
+        if status == "completed":
+            completed += 1
+        elif status == "failed":
+            failed += 1
+        elif status in ["processing", "queued"]:
+            processing += 1
+        
+        task_statuses.append({
+            "task_id": task_id,
+            "file_name": task.get("file_name", ""),
+            "status": status,
+            "progress": task.get("progress", 0)
+        })
+    
+    # 計算整體進度
+    progress = (completed / batch["total"] * 100) if batch["total"] > 0 else 0
+    
+    # 更新批量狀態
+    if completed + failed == batch["total"]:
+        batch["status"] = "completed"
+    
+    return {
+        "batch_id": batch_id,
+        "total": batch["total"],
+        "completed": completed,
+        "failed": failed,
+        "processing": processing,
+        "progress": round(progress, 2),
+        "tasks": task_statuses
+    }
+
+
+@app.get("/api/batch/{batch_id}/results")
+async def get_batch_results(batch_id: str):
+    """
+    獲取批量處理結果
+    
+    Args:
+        batch_id: 批量 ID
+    
+    Returns:
+        {
+            "batch_id": str,
+            "results": List[dict]
+        }
+    """
+    if batch_id not in batches:
+        raise HTTPException(status_code=404, detail="批量任務不存在")
+    
+    batch = batches[batch_id]
+    task_ids = batch["task_ids"]
+    
+    # 收集所有結果
+    batch_results = []
+    for task_id in task_ids:
+        if task_id in results:
+            result = results[task_id]
+            batch_results.append({
+                "task_id": task_id,
+                "file_name": tasks.get(task_id, {}).get("file_name", ""),
+                "status": result.get("status", "unknown"),
+                "result": result.get("results", {})
+            })
+    
+    return {
+        "batch_id": batch_id,
+        "results": batch_results
+    }
+
+
+@app.delete("/api/batch/{batch_id}")
+async def delete_batch(batch_id: str):
+    """
+    刪除批量任務及相關資料
+    
+    Args:
+        batch_id: 批量 ID
+    """
+    if batch_id not in batches:
+        raise HTTPException(status_code=404, detail="批量任務不存在")
+    
+    batch = batches[batch_id]
+    task_ids = batch["task_ids"]
+    
+    # 刪除所有相關任務和結果
+    for task_id in task_ids:
+        if task_id in tasks:
+            del tasks[task_id]
+        if task_id in results:
+            del results[task_id]
+    
+    # 刪除批量記錄
+    del batches[batch_id]
+    
+    return {"message": f"批量任務 {batch_id} 已刪除"}
