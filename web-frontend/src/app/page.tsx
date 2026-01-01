@@ -10,7 +10,7 @@ import BatchUpload from "@/components/BatchUpload";
 import * as gtag from "@/lib/gtag";
 
 export default function Home() {
-  const { uploadFile, isProcessing, progress, statusText, result, error } = useOCR();
+  const { uploadFile, isProcessing, progress, statusText, result, error, reset } = useOCR();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [useGemini, setUseGemini] = useState(false);
   const [useClaude, setUseClaude] = useState(false);
@@ -18,6 +18,8 @@ export default function Home() {
   const [isTranslationOpen, setIsTranslationOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadMode, setUploadMode] = useState<'single' | 'batch'>('single');
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  const [canRetry, setCanRetry] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -41,6 +43,10 @@ export default function Home() {
     }
 
     const ocrMode = localStorage.getItem('ocr_mode') || 'hybrid';
+
+    // 記錄檔案以便重試
+    setLastFile(file);
+    setCanRetry(false);
 
     // GA 事件追蹤：檔案上傳
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'unknown';
@@ -87,6 +93,22 @@ export default function Home() {
       label: 'clipboard',
     });
   };
+
+  // 重試功能
+  const handleRetry = () => {
+    if (lastFile) {
+      setCanRetry(false);
+      reset(); // 清理錯誤狀態
+      processFile(lastFile);
+    }
+  };
+
+  // 當發生錯誤時啟用重試
+  useEffect(() => {
+    if (error && lastFile && !isProcessing) {
+      setCanRetry(true);
+    }
+  }, [error, lastFile, isProcessing]);
 
   // GA 事件追蹤：OCR 完成
   useEffect(() => {
@@ -214,7 +236,26 @@ export default function Home() {
               {/* Error Message */}
               {error && (
                 <div className="card" style={{ background: 'var(--color-error-light)', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
-                  ❌ {error}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-3)' }}>
+                    <div style={{ flex: 1 }}>
+                      ❌ {error}
+                    </div>
+                    {canRetry && (
+                      <button
+                        onClick={handleRetry}
+                        className="btn btn-primary"
+                        style={{
+                          background: 'var(--color-primary)',
+                          color: 'white',
+                          padding: 'var(--spacing-2) var(--spacing-4)',
+                          fontSize: 'var(--font-size-sm)',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        🔄 重試
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
