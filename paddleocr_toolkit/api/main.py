@@ -104,6 +104,12 @@ tasks = {}
 results = {}
 batches = {}  # 批量處理追蹤
 
+# 簡單速率限制器
+rate_limits = defaultdict(list)
+RATE_LIMIT = 10  # 每分鐘請求數
+RATE_LIMIT_BATCH = 3  # 批量處理每分鐘請求數
+RATE_WINDOW = 60  # 時間窗口（秒）
+
 # 配置
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -122,10 +128,38 @@ MAX_IMAGE_SIDE = 2500  # 像素
 ocr_engine_cache = None
 
 
+def check_rate_limit(client_ip: str, limit: int = RATE_LIMIT) -> bool:
+    """
+    檢查速率限制
+    
+    Args:
+        client_ip: 客戶端 IP
+        limit: 請求限制（預設 10/分鐘）
+    
+    Returns:
+        True 如果未超限，False 如果超限
+    """
+    now = time.time()
+    
+    # 清理舊記錄
+    rate_limits[client_ip] = [
+        t for t in rate_limits[client_ip] 
+        if now - t < RATE_WINDOW
+    ]
+    
+    # 檢查是否超限
+    if len(rate_limits[client_ip]) >= limit:
+        return False
+    
+    # 記錄請求
+    rate_limits[client_ip].append(now)
+    return True
+
+
 async def cleanup_old_tasks():
     """
-    定期清理舊任務，防止記憶體洩漏
-    每小時清理 24 小時前的任務
+    定期清理舊任務，防止記憶體洩漏和磁碟空間耗盡
+    每小時清理 24 小時前的任務和檔案
     """
     while True:
         try:
@@ -134,6 +168,7 @@ async def cleanup_old_tasks():
             cutoff = datetime.now() - timedelta(hours=24)
             removed_tasks = 0
             removed_results = 0
+            removed_files = 0
             
             # 清理舊任務
             for task_id in list(tasks.keys()):
@@ -150,8 +185,31 @@ async def cleanup_old_tasks():
                     del results[task_id]
                     removed_results += 1
             
-            if removed_tasks > 0 or removed_results > 0:
-                print(f"🧹 清理完成: 移除 {removed_tasks} 個舊任務, {removed_results} 個舊結果")
+            # 清理舊檔案（上傳和輸出）
+            cutoff_timestamp = cutoff.timestamp()
+            
+            # 清理上傳目錄
+            for file_path in UPLOAD_DIR.glob("*"):
+                if file_path.is_file():
+                    try:
+                        if file_path.stat().st_mtime < cutoff_timestamp:
+                            file_path.unlink()
+                            removed_files += 1
+                    except Exception as e:
+                        print(f"⚠️ 無法刪除檔案 {file_path}: {e}")
+           
+            # 清理輸出目錄
+            for file_path in OUTPUT_DIR.glob("*"):
+                if file_path.is_file():
+                    try:
+                        if file_path.stat().st_mtime < cutoff_timestamp:
+                            file_path.unlink()
+                            removed_files += 1
+                    except Exception as e:
+                        print(f"⚠️ 無法刪除檔案 {file_path}: {e}")
+            
+            if removed_tasks > 0 or removed_results > 0 or removed_files > 0:
+                print(f"🧹 清理完成: 移除 {removed_tasks} 個舊任務, {removed_results} 個舊結果, {removed_files} 個舊檔案")
         except Exception as e:
             print(f"⚠️ 清理任務時發生錯誤: {e}")
 
@@ -476,6 +534,7 @@ async def root():
 
 @app.post("/api/ocr", response_model=TaskResponse)
 async def upload_and_ocr(
+    request: Request,
     file: UploadFile = File(...),
     background_tasks: BackgroundTasks = None,  # type: ignore[assignment]
     mode: str = "hybrid",
@@ -493,6 +552,14 @@ async def upload_and_ocr(
     Returns:
         任务ID和状态
     """
+    # 速率限制檢查
+    client_ip = request.client.host
+    if not check_rate_limit(client_ip, RATE_LIMIT):
+        raise HTTPException(
+            status_code=429,
+            detail="請求過於頻繁，請稍後再試（限制：10 次/分鐘）"
+        )
+    
     # 生成任务ID
     task_id = str(uuid.uuid4())
     print(f"[UPLOAD] 收到上傳請求")
@@ -1123,6 +1190,7 @@ async def export_searchable_pdf(task_id: str):
 
 @app.post("/api/batch-ocr")
 async def batch_ocr(
+    request: Request,
     files: list[UploadFile] = File(...),
     background_tasks: BackgroundTasks = None,
     mode: str = "basic",
@@ -1145,6 +1213,14 @@ async def batch_ocr(
             "total": int
         }
     """
+    # 速率限制檢查（批量處理更嚴格）
+    client_ip = request.client.host
+    if not check_rate_limit(client_ip, RATE_LIMIT_BATCH):
+        raise HTTPException(
+            status_code=429,
+            detail="批量處理請求過於頻繁，請稍後再試（限制：3 次/分鐘）"
+        )
+    
     if not files:
         raise HTTPException(status_code=400, detail="未選擇檔案")
     
