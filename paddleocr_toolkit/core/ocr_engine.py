@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from paddleocr_toolkit.plugins.loader import PluginLoader
 
 try:
-    from paddleocr import PaddleOCR, PPStructureV3
+    from paddleocr import PaddleOCR, PPStructure
 
     HAS_STRUCTURE = True
 except ImportError:
@@ -156,15 +156,16 @@ class OCREngineManager:
     def _init_structure_engine(self) -> None:
         """初始化結構化引擎"""
         if not HAS_STRUCTURE:
-            raise ImportError("PPStructureV3 模組不可用，請確認 paddleocr 版本")
+            raise ImportError("PPStructure 模組不可用，請確認 paddleocr 版本")
 
-        self.engine = PPStructureV3(
-            use_doc_orientation_classify=self.config["use_doc_orientation_classify"],
-            use_doc_unwarping=self.config["use_doc_unwarping"],
-            use_textline_orientation=self.config["use_textline_orientation"],
-            device=self.device,
+        print("  載入 PPStructure 引擎...")
+        self.engine = PPStructure(
+            show_log=True,
+            layout=True,
+            table=True,
+            ocr=True
         )
-        print("[OK] PP-StructureV3 初始化完成（結構化檔案解析模式）")
+        print("[OK] PPStructure 初始化完成（結構化文件解析模式）")
 
     def _init_vl_engine(self) -> None:
         """初始化視覺語言模型引擎"""
@@ -192,19 +193,29 @@ class OCREngineManager:
     def _init_hybrid_engine(self) -> None:
         """初始化混合模式引擎"""
         if not HAS_STRUCTURE:
-            raise ImportError("PPStructureV3 模組不可用，請確認 paddleocr 版本")
+            print("[WARNING] PPStructure 不可用，降級為 Basic 模式")
+            self._init_basic_engine()
+            return
 
-        print("  載入 PP-StructureV3 引擎...")
-        self.structure_engine = PPStructureV3(
-            use_doc_orientation_classify=self.config["use_doc_orientation_classify"],
-            use_doc_unwarping=self.config["use_doc_unwarping"],
-            use_textline_orientation=self.config["use_textline_orientation"],
-            device=self.device,
-        )
-
-        # 設定 engine 為 structure_engine 以便其他方法使用
-        self.engine = self.structure_engine
-        print("[OK] Hybrid 模式初始化完成（PP-StructureV3 版面分析 + OCR）")
+        print("  載入 PPStructure 引擎...")
+        print("  - 版面分析：啟用")
+        print("  - 表格識別：啟用")
+        print("  - OCR 識別：啟用")
+        
+        try:
+            self.structure_engine = PPStructure(
+                show_log=True,
+                layout=True,
+                table=True,
+                ocr=True
+            )
+            # 設定 engine 為 structure_engine 以便其他方法使用
+            self.engine = self.structure_engine
+            print("[OK] Hybrid 模式初始化完成（PPStructure 版面分析 + 表格識別 + OCR）")
+        except Exception as e:
+            print(f"[ERROR] Hybrid 模式初始化失敗: {e}")
+            print("[WARNING] 降級為 Basic 模式")
+            self._init_basic_engine()
 
     def predict(self, input_data, **kwargs):
         """

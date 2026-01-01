@@ -116,6 +116,30 @@ plugin_loader.load_all_plugins()
 # 圖片大小限制 (避免 OCR 記憶體不足)
 MAX_IMAGE_SIDE = 2500  # 像素
 
+# 全域 OCR 引擎快取
+ocr_engine_cache = None
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    應用啟動時預載 OCR 引擎
+    """
+    global ocr_engine_cache
+    print("=" * 60)
+    print("🚀 正在預載 OCR 引擎...")
+    print("=" * 60)
+    try:
+        # 預載基礎模式引擎（最常用）
+        ocr_engine_cache = OCREngineManager(mode="basic", device="cpu", plugin_loader=plugin_loader)
+        ocr_engine_cache.init_engine()
+        print("✅ OCR 引擎預載完成 (Basic 模式)")
+        print("   首次 OCR 請求將直接使用預載引擎，無需等待模型載入")
+    except Exception as e:
+        print(f"⚠️ OCR 引擎預載失敗: {e}")
+        ocr_engine_cache = None
+    print("=" * 60)
+
 
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
     """
@@ -205,8 +229,19 @@ async def process_ocr_task(
     """
     非同步處理 OCR 任務
     """
+    # 詳細日誌：任務開始
+    print("=" * 60)
+    print(f"[OCR] 開始處理任務")
+    print(f"[OCR] 任務 ID: {task_id}")
+    print(f"[OCR] 檔案路徑: {file_path}")
+    print(f"[OCR] OCR 模式: {mode}")
+    print(f"[OCR] Gemini Key: {'已提供' if gemini_key else '未提供'}")
+    print(f"[OCR] Claude Key: {'已提供' if claude_key else '未提供'}")
+    print("=" * 60)
+    
     tasks[task_id] = {"status": "processing", "progress": 0}
     processed_path = str(Path(file_path))
+    print(f"[OCR] 處理路徑: {processed_path}")
 
     try:
         # ... (快取與處理邏輯)
@@ -363,8 +398,21 @@ async def process_ocr_task(
         error_msg = str(e)
         results[task_id] = {"status": "failed", "progress": 0, "error": error_msg}
         tasks[task_id] = {"status": "failed", "progress": 0}
+        results[task_id] = {
+            "status": "failed",
+            "progress": 0,
+            "error": error_msg
+        }
         await manager.send_error(task_id, error_msg)
-        print(f"Task {task_id} failed: {e}")
+        
+        # 詳細錯誤日誌
+        print("=" * 60)
+        print(f"[ERROR] 任務失敗: {task_id}")
+        print(f"[ERROR] 錯誤訊息: {e}")
+        print(f"[ERROR] 完整 Traceback:")
+        import traceback
+        traceback.print_exc()
+        print("=" * 60)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -403,20 +451,29 @@ async def upload_and_ocr(
     """
     # 生成任务ID
     task_id = str(uuid.uuid4())
+    print(f"[UPLOAD] 收到上傳請求")
+    print(f"[UPLOAD] 任務 ID: {task_id}")
+    print(f"[UPLOAD] 檔案名稱: {file.filename}")
+    print(f"[UPLOAD] OCR 模式: {mode}")
 
     # 保存文件
     file_path = UPLOAD_DIR / f"{task_id}_{file.filename}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
+    
+    print(f"[UPLOAD] 檔案已儲存: {file_path}")
+    print(f"[UPLOAD] 檔案大小: {len(content)} bytes")
 
     # 创建后台任务
     background_tasks.add_task(
         process_ocr_task, task_id, str(file_path), mode, gemini_key, claude_key
     )
+    print(f"[UPLOAD] 背景任務已排程: {task_id}")
 
     # 初始化任务状态
     tasks[task_id] = {"status": "queued", "progress": 0}
+    print(f"[UPLOAD] 任務狀態已初始化: queued")
 
     return TaskResponse(task_id=task_id, status="queued", message="任务已创建，正在处理...")
 
@@ -875,3 +932,77 @@ if __name__ == "__main__":
     """
     )
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
+
+@app.get("/api/export-searchable-pdf/{task_id}")
+async def export_searchable_pdf(task_id: str):
+    """
+    將 OCR 結果嵌入原始 PDF，生成可搜尋 PDF
+    
+    Args:
+        task_id: 任務 ID
+    
+    Returns:
+        FileResponse: 可下載的可搜尋 PDF 檔案
+    """
+    if task_id not in results:
+        raise HTTPException(status_code=404, detail="任務不存在")
+    
+    task_result = results[task_id]
+    if task_result.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="任務尚未完成")
+    
+    # 獲取原始檔案路徑
+    original_file = task_result.get("file_path")
+    if not original_file or not Path(original_file).exists():
+        raise HTTPException(status_code=404, detail="原始檔案不存在")
+    
+    # 只支援 PDF 檔案
+    if not original_file.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="僅支援 PDF 檔案")
+    
+    try:
+        import fitz  # PyMuPDF
+        
+        # 獲取 OCR 結果
+        ocr_results = task_result.get("results", {})
+        raw_text = ocr_results.get("raw_result", "")
+        
+        # 開啟原始 PDF
+        doc = fitz.open(original_file)
+        
+        # 為每一頁添加透明文字層
+        # 注意：這是簡化版本，將整個文字放在第一頁
+        # 完整版本需要解析 OCR 的座標資訊
+        if len(doc) > 0:
+            page = doc[0]
+            # 在頁面底部插入透明文字（不可見但可搜尋）
+            rect = page.rect
+            page.insert_textbox(
+                rect,
+                raw_text,
+                fontsize=1,  # 極小字體
+                color=(1, 1, 1),  # 白色（不可見）
+                overlay=False
+            )
+        
+        # 生成輸出檔案
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_file = OUTPUT_DIR / f"searchable_{task_id}_{int(time.time())}.pdf"
+        doc.save(str(output_file))
+        doc.close()
+        
+        # RFC 5987 編碼檔名
+        final_filename = "searchable_ocr_result.pdf"
+        encoded_filename = quote(final_filename)
+        
+        return FileResponse(
+            path=output_file,
+            filename=final_filename,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成可搜尋 PDF 失敗: {str(e)}")

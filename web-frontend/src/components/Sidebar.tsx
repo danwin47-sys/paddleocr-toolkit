@@ -1,21 +1,23 @@
+'use client';
+
 export default function Sidebar() {
     return (
-        <aside className="sidebar">
+        <aside className="app-sidebar">
             {/* Logo */}
-            <div className="logo">
+            <div className="sidebar-logo">
                 P
             </div>
 
-            {/* Nav Items */}
-            <nav className="flex flex-col items-center" style={{ gap: '2rem' }}>
-                <button className="action-btn text-white" style={{ transform: 'scale(1.1)' }}>
-                    <span className="text-2xl">🏠</span>
+            {/* Navigation */}
+            <nav className="sidebar-nav">
+                <button className="sidebar-nav-item active" title="首頁">
+                    <span>🏠</span>
                 </button>
-                <button className="action-btn">
-                    <span className="text-2xl">📁</span>
+                <button className="sidebar-nav-item" title="檔案管理">
+                    <span>📁</span>
                 </button>
-                <button className="action-btn">
-                    <span className="text-2xl">⚙️</span>
+                <button className="sidebar-nav-item" title="設定">
+                    <span>⚙️</span>
                 </button>
             </nav>
         </aside>

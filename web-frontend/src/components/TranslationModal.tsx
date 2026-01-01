@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getApiUrl } from "@/utils/api";
 
 interface TranslationModalProps {
@@ -15,22 +15,17 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
     const [translatedText, setTranslatedText] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
     const [error, setError] = useState('');
-    const [debugLogs, setDebugLogs] = useState<string[]>([]);
-    const VERSION = "1.2.1-DEBUG"; // 用於確認前端已更新
-
-    const addLog = (msg: string) => {
-        setDebugLogs(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString().split(' ')[0]} ${msg}`]);
-    };
+    const [statusText, setStatusText] = useState('');
 
     const languages = [
-        { value: 'en', label: 'English 🇬🇧', flag: '🇬🇧' },
-        { value: 'zh-TW', label: '繁體中文 🇹🇼', flag: '🇹🇼' },
-        { value: 'zh-CN', label: '简体中文 🇨🇳', flag: '🇨🇳' },
-        { value: 'ja', label: '日本語 🇯🇵', flag: '🇯🇵' },
-        { value: 'ko', label: '한국어 🇰🇷', flag: '🇰🇷' },
-        { value: 'es', label: 'Español 🇪🇸', flag: '🇪🇸' },
-        { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷' },
-        { value: 'de', label: 'Deutsch 🇩🇪', flag: '🇩🇪' }
+        { value: 'en', label: 'English 🇬🇧' },
+        { value: 'zh-TW', label: '繁體中文 🇹🇼' },
+        { value: 'zh-CN', label: '简体中文 🇨🇳' },
+        { value: 'ja', label: '日本語 🇯🇵' },
+        { value: 'ko', label: '한국어 🇰🇷' },
+        { value: 'es', label: 'Español 🇪🇸' },
+        { value: 'fr', label: 'Français 🇫🇷' },
+        { value: 'de', label: 'Deutsch 🇩🇪' }
     ];
 
     const providers = [
@@ -43,34 +38,27 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
         setIsTranslating(true);
         setError('');
         setTranslatedText('');
-        setDebugLogs([]);
-        addLog('準備翻譯請求...');
+        setStatusText('正在連線至 AI 服務...');
 
         try {
-            const body: any = {
+            const body: Record<string, string> = {
                 text: originalText,
                 target_lang: targetLang,
                 provider: provider
             };
 
-            addLog(`文字長度: ${originalText.length} 字元`);
-
-            // 如果需要 API key，從 localStorage 獲取
             if (provider === 'gemini') {
                 const apiKey = localStorage.getItem('gemini_api_key');
                 if (apiKey) body.api_key = apiKey;
-                addLog('已加載 Gemini API Key');
             } else if (provider === 'claude') {
                 const apiKey = localStorage.getItem('claude_api_key');
                 if (apiKey) body.api_key = apiKey;
-                addLog('已加載 Claude API Key');
             }
 
             const apiUrl = getApiUrl();
             const endpoint = apiUrl ? `${apiUrl}/api/translate` : '/api/translate';
 
-            addLog(`正在連線 API: ${endpoint}`);
-            addLog(`提供商: ${provider}, 文字長度: ${originalText.length}`);
+            setStatusText('正在翻譯中，請稍候...');
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -81,34 +69,21 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
                 body: JSON.stringify(body)
             });
 
-            addLog(`後端回應狀態: ${response.status} ${response.statusText}`);
-
             if (!response.ok) {
-                const text = await response.text();
-                addLog(`錯誤詳情: ${text.slice(0, 100)}...`);
                 throw new Error(`伺服器錯誤: ${response.status}`);
             }
 
-            addLog('正在解析回應數據...');
-            let data;
-            try {
-                data = await response.json();
-            } catch (jsonErr) {
-                const rawText = await response.text();
-                addLog(`JSON 解析失敗: ${rawText.slice(0, 50)}...`);
-                throw new Error(`回應格式錯誤 (非 JSON)`);
-            }
+            const data = await response.json();
 
             if (data.status === 'success') {
-                addLog('翻譯成功！');
                 setTranslatedText(data.translated_text);
+                setStatusText('');
             } else {
-                addLog(`翻譯失敗: ${data.message}`);
                 setError(data.message || '翻譯失敗');
             }
-        } catch (err: any) {
-            addLog(`發生異常: ${err.message}`);
-            setError('翻譯失敗: ' + err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : '未知錯誤';
+            setError('翻譯失敗: ' + message);
         } finally {
             setIsTranslating(false);
         }
@@ -122,204 +97,114 @@ export default function TranslationModal({ isOpen, onClose, originalText }: Tran
     if (!isOpen) return null;
 
     return (
-        <div
-            className="modal-backdrop"
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.7)',
-                backdropFilter: 'blur(4px)',
-                zIndex: 9998,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '20px'
-            }}
-            onClick={onClose}
-        >
+        <div className="modal-overlay" onClick={onClose}>
             <div
-                className="glass-card"
-                style={{
-                    width: '100%',
-                    maxWidth: '600px',
-                    maxHeight: '90vh',
-                    padding: '30px',
-                    position: 'relative',
-                    zIndex: 9999,
-                    overflowY: 'auto'
-                }}
+                className="modal-container"
+                style={{ maxWidth: '600px' }}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>🌐 AI 翻譯</h2>
-                        <span style={{ fontSize: '10px', color: '#64748b', opacity: 0.7 }}>v{VERSION}</span>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.1)',
-                            border: 'none',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            fontSize: '18px'
-                        }}
-                    >
+                <div className="modal-header">
+                    <h2 className="modal-title">🌐 AI 翻譯</h2>
+                    <button className="modal-close" onClick={onClose}>
                         ✕
                     </button>
                 </div>
 
-                {/* 語言選擇 */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#cbd5e1', fontSize: '14px' }}>
-                        目標語言
-                    </label>
-                    <select
-                        value={targetLang}
-                        onChange={(e) => setTargetLang(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#fff',
-                            fontSize: '14px'
-                        }}
-                    >
-                        {languages.map(lang => (
-                            <option key={lang.value} value={lang.value}>
-                                {lang.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {/* Body */}
+                <div className="modal-body">
+                    {/* Language Selection */}
+                    <div className="form-group">
+                        <label className="form-label">目標語言</label>
+                        <select
+                            value={targetLang}
+                            onChange={(e) => setTargetLang(e.target.value)}
+                            className="form-select"
+                        >
+                            {languages.map(lang => (
+                                <option key={lang.value} value={lang.value}>
+                                    {lang.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                {/* AI 提供商選擇 */}
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#cbd5e1', fontSize: '14px' }}>
-                        AI 提供商
-                    </label>
-                    <select
-                        value={provider}
-                        onChange={(e) => setProvider(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#fff',
-                            fontSize: '14px'
-                        }}
-                    >
-                        {providers.map(prov => (
-                            <option key={prov.value} value={prov.value}>
-                                {prov.icon} {prov.label}
-                            </option>
-                        ))}
-                    </select>
+                    {/* Provider Selection */}
+                    <div className="form-group">
+                        <label className="form-label">AI 提供商</label>
+                        <select
+                            value={provider}
+                            onChange={(e) => setProvider(e.target.value)}
+                            className="form-select"
+                        >
+                            {providers.map(prov => (
+                                <option key={prov.value} value={prov.value}>
+                                    {prov.icon} {prov.label}
+                                </option>
+                            ))}
+                        </select>
+                        {provider !== 'ollama' && (
+                            <p className="text-muted" style={{ marginTop: 'var(--spacing-2)', fontSize: 'var(--font-size-xs)' }}>
+                                ⚠️ 需要在設定中配置 API Key
+                            </p>
+                        )}
+                    </div>
 
-                    {provider !== 'ollama' && (
-                        <p style={{ marginTop: '8px', fontSize: '12px', color: '#fbbf24' }}>
-                            ⚠️ 需要在設定中配置 API Key
-                        </p>
+                    {/* Translate Button */}
+                    <button
+                        onClick={handleTranslate}
+                        disabled={isTranslating}
+                        className="btn btn-primary btn-full"
+                        style={{ marginBottom: 'var(--spacing-4)' }}
+                    >
+                        {isTranslating ? '🔄 翻譯中...' : '🚀 開始翻譯'}
+                    </button>
+
+                    {/* Status */}
+                    {statusText && (
+                        <div className="text-secondary text-center" style={{ marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
+                            {statusText}
+                        </div>
+                    )}
+
+                    {/* Error */}
+                    {error && (
+                        <div style={{
+                            padding: 'var(--spacing-4)',
+                            marginBottom: 'var(--spacing-4)',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--color-error-light)',
+                            border: '1px solid var(--color-error)',
+                            color: 'var(--color-error)'
+                        }}>
+                            ❌ {error}
+                        </div>
+                    )}
+
+                    {/* Result */}
+                    {translatedText && (
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-2)' }}>
+                                <label className="form-label" style={{ marginBottom: 0 }}>翻譯結果</label>
+                                <button className="btn btn-ghost" onClick={handleCopy} style={{ fontSize: 'var(--font-size-sm)' }}>
+                                    📋 複製
+                                </button>
+                            </div>
+                            <div style={{
+                                padding: 'var(--spacing-4)',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--color-slate-50)',
+                                border: '1px solid var(--border-color)',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: '1.7',
+                                maxHeight: '300px',
+                                overflowY: 'auto'
+                            }}>
+                                {translatedText}
+                            </div>
+                        </div>
                     )}
                 </div>
-
-                {/* 翻譯按鈕 */}
-                <button
-                    onClick={handleTranslate}
-                    disabled={isTranslating}
-                    className="action-btn"
-                    style={{
-                        width: '100%',
-                        padding: '14px',
-                        marginBottom: '10px',
-                        opacity: isTranslating ? 0.6 : 1,
-                        cursor: isTranslating ? 'wait' : 'pointer'
-                    }}
-                >
-                    {isTranslating ? '🔄 翻譯中...' : '🚀 開始翻譯'}
-                </button>
-
-                {/* Debug Logs */}
-                {debugLogs.length > 0 && (
-                    <div style={{
-                        padding: '10px',
-                        marginBottom: '20px',
-                        borderRadius: '8px',
-                        background: 'rgba(0,0,0,0.4)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        fontSize: '11px',
-                        fontFamily: 'monospace',
-                        color: '#94a3b8'
-                    }}>
-                        {debugLogs.map((log, i) => (
-                            <div key={i} style={{ marginBottom: '2px', color: log.includes('失敗') || log.includes('異常') ? '#fca5a5' : '#94a3b8' }}>
-                                {'>'} {log}
-                            </div>
-                        ))}
-                        {isTranslating && <div className="loading-dots" style={{ marginTop: '5px' }}>處理中...</div>}
-                    </div>
-                )}
-
-                {/* 錯誤訊息 */}
-                {error && (
-                    <div style={{
-                        padding: '12px',
-                        marginBottom: '20px',
-                        borderRadius: '8px',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        color: '#fca5a5'
-                    }}>
-                        ❌ {error}
-                    </div>
-                )}
-
-                {/* 翻譯結果 */}
-                {translatedText && (
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <label style={{ color: '#cbd5e1', fontSize: '14px' }}>翻譯結果</label>
-                            <button
-                                onClick={handleCopy}
-                                style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '6px',
-                                    background: 'rgba(16, 185, 129, 0.2)',
-                                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                                    color: '#10b981',
-                                    cursor: 'pointer',
-                                    fontSize: '12px'
-                                }}
-                            >
-                                📋 複製
-                            </button>
-                        </div>
-                        <div style={{
-                            padding: '16px',
-                            borderRadius: '8px',
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#fff',
-                            whiteSpace: 'pre-wrap',
-                            lineHeight: '1.6',
-                            maxHeight: '300px',
-                            overflowY: 'auto'
-                        }}>
-                            {translatedText}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

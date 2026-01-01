@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useOCR } from "@/hooks/useOCR";
 import SettingsModal from "@/components/SettingsModal";
 import TranslationModal from "@/components/TranslationModal";
 import FormatSelector from "@/components/FormatSelector";
+import * as gtag from "@/lib/gtag";
 
 export default function Home() {
   const { uploadFile, isProcessing, progress, statusText, result, error } = useOCR();
@@ -14,44 +15,92 @@ export default function Home() {
   const [useClaude, setUseClaude] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTranslationOpen, setIsTranslationOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      // 檢查是否需要 Client-side API Key 驗證
-      const gKey = localStorage.getItem('gemini_api_key') || undefined;
-      const cKey = localStorage.getItem('claude_api_key') || undefined;
-
-      if (useGemini && !gKey) {
-        alert('請先在設定 (⚙️) 中輸入 Gemini API Key');
-        setIsSettingsOpen(true);
-        return;
-      }
-      if (useClaude && !cKey) {
-        alert('請先在設定 (⚙️) 中輸入 Claude API Key');
-        setIsSettingsOpen(true);
-        return;
-      }
-
-      // 從設定讀取 OCR 模式 (預設 hybrid)
-      const ocrMode = localStorage.getItem('ocr_mode') || 'hybrid';
-
-      // 執行上傳 (僅在開關開啟時傳遞 Key)
-      uploadFile(
-        file,
-        ocrMode,
-        useGemini ? gKey : undefined,
-        useClaude ? cKey : undefined
-      );
+      processFile(e.target.files[0]);
     }
+  };
+
+  const processFile = (file: File) => {
+    const gKey = localStorage.getItem('gemini_api_key') || undefined;
+    const cKey = localStorage.getItem('claude_api_key') || undefined;
+
+    if (useGemini && !gKey) {
+      alert('請先在設定中輸入 Gemini API Key');
+      setIsSettingsOpen(true);
+      return;
+    }
+    if (useClaude && !cKey) {
+      alert('請先在設定中輸入 Claude API Key');
+      setIsSettingsOpen(true);
+      return;
+    }
+
+    const ocrMode = localStorage.getItem('ocr_mode') || 'hybrid';
+
+    // GA 事件追蹤：檔案上傳
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'unknown';
+    gtag.event({
+      action: 'upload',
+      category: 'OCR',
+      label: fileExt,
+      value: Math.round(file.size / 1024), // KB
+    });
+
+    uploadFile(file, ocrMode, useGemini ? gKey : undefined, useClaude ? cKey : undefined);
   };
 
   const triggerUpload = () => {
     fileInputRef.current?.click();
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleCopyText = () => {
+    const text = result?.results?.raw_result || '';
+    navigator.clipboard.writeText(text);
+    alert('✅ 已複製到剪貼簿');
+
+    // GA 事件追蹤：複製文字
+    gtag.event({
+      action: 'copy_text',
+      category: 'OCR',
+      label: 'clipboard',
+    });
+  };
+
+  // GA 事件追蹤：OCR 完成
+  useEffect(() => {
+    if (result && !isProcessing) {
+      const processingTime = (result as any).processing_time || 0;
+      gtag.event({
+        action: 'ocr_complete',
+        category: 'OCR',
+        label: (result as any).file_type || 'unknown',
+        value: Math.round(processingTime),
+      });
+    }
+  }, [result, isProcessing]);
+
   return (
-    <div className="flex" style={{ minHeight: '100vh' }}>
+    <div className="app-layout">
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <TranslationModal
         isOpen={isTranslationOpen}
@@ -63,34 +112,38 @@ export default function Home() {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className="app-main">
         {/* Header */}
-        <header className="flex justify-between items-center" style={{ marginBottom: '40px' }}>
-          <div>
-            <h1 className="header-title">
-              Dashboard
-            </h1>
-            <p className="text-slate-400">智慧文件辨識系統</p>
+        <header className="app-header">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1>智慧文件辨識系統</h1>
+              <p>PaddleOCR Toolkit - 快速、精準的 OCR 服務</p>
+            </div>
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: '1.5rem' }}
+              onClick={() => setIsSettingsOpen(true)}
+              title="設定"
+            >
+              ⚙️
+            </button>
           </div>
-          <button
-            className="action-btn"
-            style={{ width: '40px', height: '40px', fontSize: '1.5rem' }}
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            ⚙️
-          </button>
         </header>
 
-        {/* Dashboard Grid */}
-        <div className="dashboard-grid">
-          {/* Left Section: Upload & Features */}
-          <div className="flex flex-col" style={{ gap: '20px' }}>
+        {/* Main Grid */}
+        <div className="app-grid">
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
 
             {/* Upload Zone */}
             <div
-              className="glass-card text-center"
-              style={{ padding: '60px 20px', border: '2px dashed var(--glass-border)', cursor: isProcessing ? 'wait' : 'pointer' }}
+              className={`upload-zone ${isDragging ? 'dragging' : ''}`}
               onClick={!isProcessing ? triggerUpload : undefined}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              style={{ cursor: isProcessing ? 'wait' : 'pointer' }}
             >
               <input
                 type="file"
@@ -102,20 +155,18 @@ export default function Home() {
 
               {!isProcessing ? (
                 <>
-                  <span style={{ fontSize: '50px', display: 'block', marginBottom: '20px' }}>
-                    ☁️
-                  </span>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '10px' }}>點選上傳檔案</h2>
-                  <p className="text-slate-400">支援 PDF, PNG, JPG (最大 2500px)</p>
+                  <div className="upload-zone-icon">📄</div>
+                  <div className="upload-zone-title">點選或拖曳上傳檔案</div>
+                  <div className="upload-zone-subtitle">支援 PDF, PNG, JPG (最大 2500px)</div>
                 </>
               ) : (
-                <div className="w-full">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
-                    <span>{statusText}</span>
-                    <span>{Math.round(progress)}%</span>
+                <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-2)', fontSize: 'var(--font-size-sm)' }}>
+                    <span className="text-secondary">{statusText}</span>
+                    <span className="font-medium">{Math.round(progress)}%</span>
                   </div>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: 'var(--primary)', width: `${progress}%`, transition: 'width 0.3s' }}></div>
+                  <div className="progress-bar">
+                    <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
                   </div>
                 </div>
               )}
@@ -123,121 +174,143 @@ export default function Home() {
 
             {/* Error Message */}
             {error && (
-              <div style={{ padding: '15px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', color: '#fca5a5' }}>
+              <div className="card" style={{ background: 'var(--color-error-light)', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
                 ❌ {error}
               </div>
             )}
 
-            {/* Feature Switches */}
-            <div className="feature-card">
-              <div className="flex items-center" style={{ gap: '15px' }}>
-                <div style={{ width: '32px', height: '32px', background: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e1b4b', fontWeight: 'bold' }}>
-                  G
-                </div>
-                <div>
-                  <p className="font-bold">Gemini 3 語義校正</p>
-                  <p className="text-slate-400" style={{ fontSize: '12px' }}>使用 Google AI 修復辨識錯誤</p>
-                </div>
+            {/* Feature Toggles */}
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title">AI 智慧校正</span>
               </div>
-              <div
-                onClick={() => setUseGemini(!useGemini)}
-                style={{ width: '48px', height: '24px', background: useGemini ? 'var(--primary)' : 'rgba(255,255,255,0.1)', borderRadius: '34px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
-              >
-                <div style={{ width: '18px', height: '18px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: useGemini ? '27px' : '3px', transition: '0.3s' }}></div>
-              </div>
-            </div>
 
-            <div className="feature-card">
-              <div className="flex items-center" style={{ gap: '15px' }}>
-                <div style={{ width: '32px', height: '32px', background: '#f97316', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-                  C
+              {/* Gemini Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-4) 0', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+                  <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #4285f4, #34a853)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600' }}>
+                    G
+                  </div>
+                  <div>
+                    <div className="font-medium">Gemini 語義校正</div>
+                    <div className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>使用 Google AI 修復辨識錯誤</div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold">Claude 3.5 語義校正</p>
-                  <p className="text-slate-400" style={{ fontSize: '12px' }}>使用 Anthropic AI 深度解析</p>
-                </div>
+                <button
+                  onClick={() => setUseGemini(!useGemini)}
+                  style={{
+                    width: '48px',
+                    height: '26px',
+                    background: useGemini ? 'var(--color-primary)' : 'var(--color-slate-300)',
+                    borderRadius: '13px',
+                    border: 'none',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'background var(--transition-fast)'
+                  }}
+                >
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    background: 'white',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '3px',
+                    left: useGemini ? '25px' : '3px',
+                    transition: 'left var(--transition-fast)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}></div>
+                </button>
               </div>
-              <div
-                onClick={() => setUseClaude(!useClaude)}
-                style={{ width: '48px', height: '24px', background: useClaude ? 'var(--primary)' : 'rgba(255,255,255,0.1)', borderRadius: '34px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
-              >
-                <div style={{ width: '18px', height: '18px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: useClaude ? '27px' : '3px', transition: '0.3s' }}></div>
+
+              {/* Claude Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-4) 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+                  <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #d97706, #ea580c)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600' }}>
+                    C
+                  </div>
+                  <div>
+                    <div className="font-medium">Claude 語義校正</div>
+                    <div className="text-secondary" style={{ fontSize: 'var(--font-size-sm)' }}>使用 Anthropic AI 深度解析</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setUseClaude(!useClaude)}
+                  style={{
+                    width: '48px',
+                    height: '26px',
+                    background: useClaude ? 'var(--color-primary)' : 'var(--color-slate-300)',
+                    borderRadius: '13px',
+                    border: 'none',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'background var(--transition-fast)'
+                  }}
+                >
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    background: 'white',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '3px',
+                    left: useClaude ? '25px' : '3px',
+                    transition: 'left var(--transition-fast)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}></div>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Right Section: Results & Recent Files */}
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                {result ? '辨識結果' : '最近處理檔案'}
-              </h3>
+          {/* Right Column: Results */}
+          <div className="results-card">
+            <div className="results-header">
+              <span className="results-title">
+                {result ? '辨識結果' : '處理結果'}
+              </span>
               {result?.results?.confidence && (
-                <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent)' }}>
+                <span className="badge badge-success">
                   信心度: {Math.round(result.results.confidence * 100)}%
                 </span>
               )}
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '20px', whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.6', color: '#cbd5e1', minHeight: '300px' }}>
-              {result ? (
-                <>
-                  {/* Action Buttons */}
-                  <div style={{ marginBottom: '20px' }}>
-                    {/* Format Selector */}
-                    <FormatSelector taskId={result.task_id} />
+            {result ? (
+              <>
+                {/* Action Buttons */}
+                <div style={{ padding: 'var(--spacing-4) var(--spacing-6)', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+                  <FormatSelector taskId={result.task_id} />
+                  <button className="btn btn-secondary" onClick={handleCopyText}>
+                    📋 複製文字
+                  </button>
+                  <button className="btn btn-primary" onClick={() => setIsTranslationOpen(true)}>
+                    🌐 翻譯
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const apiUrl = localStorage.getItem('api_url') || '';
+                      const endpoint = apiUrl ? `${apiUrl}/api/export-searchable-pdf/${result.task_id}` : `/api/export-searchable-pdf/${result.task_id}`;
+                      window.open(endpoint, '_blank');
+                    }}
+                    title="下載可搜尋 PDF（僅支援 PDF 檔案）"
+                  >
+                    📄 可搜尋 PDF
+                  </button>
+                </div>
 
-                    {/* Other Actions */}
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <button
-                        className="action-btn"
-                        style={{ flex: 1, minWidth: '120px' }}
-                        onClick={() => {
-                          const text = result.results?.raw_result || '';
-                          navigator.clipboard.writeText(text);
-                          alert('✅ 已複製到剪貼簿');
-                        }}
-                      >
-                        📋 複製文字
-                      </button>
-                      <button
-                        className="action-btn"
-                        style={{ flex: 1, minWidth: '120px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-                        onClick={() => setIsTranslationOpen(true)}
-                      >
-                        🌐 翻譯
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: '20px' }}>
-                    {result.results?.raw_result || "⚠️ raw_result 為空"}
-                  </div>
-
-                  {/* Debug Panel */}
-                  <details style={{ marginTop: '20px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '12px' }}>
-                    <summary style={{ cursor: 'pointer', color: '#fbbf24', fontWeight: 'bold' }}>🔍 除錯資訊 (Debug)</summary>
-                    <div style={{ marginTop: '10px', color: '#94a3b8' }}>
-                      <p><strong>Task ID:</strong> {result.task_id}</p>
-                      <p><strong>Status:</strong> {result.status}</p>
-                      <p><strong>Progress:</strong> {result.progress}%</p>
-                      <p><strong>Error:</strong> {result.error || 'null'}</p>
-                      <hr style={{ margin: '10px 0', borderColor: 'rgba(255,255,255,0.1)' }} />
-                      <p><strong>Results Object:</strong></p>
-                      <pre style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '4px', overflow: 'auto', maxHeight: '200px' }}>
-                        {JSON.stringify(result.results, null, 2)}
-                      </pre>
-                      <hr style={{ margin: '10px 0', borderColor: 'rgba(255,255,255,0.1)' }} />
-                      <p><strong>完整回應:</strong></p>
-                      <pre style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '4px', overflow: 'auto', maxHeight: '200px' }}>
-                        {JSON.stringify(result, null, 2)}
-                      </pre>
-                    </div>
-                  </details>
-                </>
-              ) : (
-                <p className="text-center text-slate-400" style={{ padding: '20px' }}>尚無資料</p>
-              )}
-            </div>
+                {/* Result Content */}
+                <div className="results-content">
+                  {result.results?.raw_result || "⚠️ 無辨識結果"}
+                </div>
+              </>
+            ) : (
+              <div className="results-empty">
+                <div className="results-empty-icon">📝</div>
+                <div>上傳檔案後，辨識結果將顯示於此</div>
+              </div>
+            )}
           </div>
         </div>
       </main>

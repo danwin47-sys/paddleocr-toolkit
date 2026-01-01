@@ -8,9 +8,8 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [geminiKey, setGeminiKey] = useState('');
     const [claudeKey, setClaudeKey] = useState('');
-    const [ocrMode, setOcrMode] = useState('hybrid'); // 預設使用 Hybrid
+    const [ocrMode, setOcrMode] = useState('hybrid');
 
-    // Load keys from localStorage on mount
     useEffect(() => {
         if (isOpen) {
             setGeminiKey(localStorage.getItem('gemini_api_key') || '');
@@ -30,110 +29,116 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="glass-card w-[90%] max-w-md relative" style={{ background: 'rgba(30, 41, 59, 0.9)' }}>
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-white"
-                >
-                    ✕
-                </button>
+        <div className="modal-overlay">
+            <div className="modal-container">
+                {/* Header */}
+                <div className="modal-header">
+                    <h2 className="modal-title">系統設定</h2>
+                    <button className="modal-close" onClick={onClose}>
+                        ✕
+                    </button>
+                </div>
 
-                <h2 className="text-xl font-bold mb-6 text-white">系統設定</h2>
-
-                <div className="space-y-6">
-                    {/* OCR Mode Setting */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                            OCR 模式
-                        </label>
-                        <div className="flex gap-4">
-                            <label className={`flex-1 p-3 rounded-lg border ${ocrMode === 'hybrid' ? 'border-blue-500 bg-blue-500/10' : 'border-slate-600 bg-slate-800/50'} cursor-pointer transition-all hover:bg-slate-700/50`}>
-                                <div className="flex items-center gap-2 mb-1">
+                {/* Body */}
+                <div className="modal-body">
+                    {/* OCR Mode */}
+                    <div className="form-group">
+                        <label className="form-label">OCR 模式</label>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-3)' }}>
+                            <label
+                                style={{
+                                    flex: 1,
+                                    padding: 'var(--spacing-4)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: `2px solid ${ocrMode === 'hybrid' ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                                    background: ocrMode === 'hybrid' ? 'var(--color-primary-light)' : 'var(--bg-surface)',
+                                    cursor: 'pointer',
+                                    transition: 'all var(--transition-fast)'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-1)' }}>
                                     <input
                                         type="radio"
                                         name="ocr_mode"
                                         value="hybrid"
                                         checked={ocrMode === 'hybrid'}
                                         onChange={(e) => setOcrMode(e.target.value)}
-                                        className="text-blue-500"
                                     />
-                                    <span className="font-bold text-white">智能混合 (Hybrid)</span>
+                                    <span className="font-semibold">智能混合 (Hybrid)</span>
                                 </div>
-                                <p className="text-xs text-slate-400 pl-6">
+                                <p className="text-secondary" style={{ fontSize: 'var(--font-size-xs)', paddingLeft: 'var(--spacing-5)' }}>
                                     推薦使用。保留排版結構、表格與段落。
                                 </p>
                             </label>
 
-                            <label className={`flex-1 p-3 rounded-lg border ${ocrMode === 'basic' ? 'border-blue-500 bg-blue-500/10' : 'border-slate-600 bg-slate-800/50'} cursor-pointer transition-all hover:bg-slate-700/50`}>
-                                <div className="flex items-center gap-2 mb-1">
+                            <label
+                                style={{
+                                    flex: 1,
+                                    padding: 'var(--spacing-4)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: `2px solid ${ocrMode === 'basic' ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                                    background: ocrMode === 'basic' ? 'var(--color-primary-light)' : 'var(--bg-surface)',
+                                    cursor: 'pointer',
+                                    transition: 'all var(--transition-fast)'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-1)' }}>
                                     <input
                                         type="radio"
                                         name="ocr_mode"
                                         value="basic"
                                         checked={ocrMode === 'basic'}
                                         onChange={(e) => setOcrMode(e.target.value)}
-                                        className="text-blue-500"
                                     />
-                                    <span className="font-bold text-white">極速模式 (Basic)</span>
+                                    <span className="font-semibold">極速模式 (Basic)</span>
                                 </div>
-                                <p className="text-xs text-slate-400 pl-6">
+                                <p className="text-secondary" style={{ fontSize: 'var(--font-size-xs)', paddingLeft: 'var(--spacing-5)' }}>
                                     僅擷取純文字，速度最快。
                                 </p>
                             </label>
                         </div>
                     </div>
 
-                    {/* Gemini Setting */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Gemini API Key (Google)
-                        </label>
+                    {/* Gemini API Key */}
+                    <div className="form-group">
+                        <label className="form-label">Gemini API Key (Google)</label>
                         <input
                             type="password"
                             value={geminiKey}
                             onChange={(e) => setGeminiKey(e.target.value)}
                             placeholder="AIzaSy..."
-                            className="glass-input"
+                            className="form-input"
                         />
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-muted" style={{ fontSize: 'var(--font-size-xs)', marginTop: 'var(--spacing-1)' }}>
                             用於免費且快速的語義校正。
-                            <a href="https://makersuite.google.com/app/apikey" target="_blank" className="text-indigo-400 hover:text-indigo-300 ml-1">
+                            <a href="https://makersuite.google.com/app/apikey" target="_blank" style={{ color: 'var(--color-primary)', marginLeft: 'var(--spacing-1)' }}>
                                 取得 Key
                             </a>
                         </p>
                     </div>
 
-                    {/* Claude Setting */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Claude API Key (Anthropic)
-                        </label>
+                    {/* Claude API Key */}
+                    <div className="form-group">
+                        <label className="form-label">Claude API Key (Anthropic)</label>
                         <input
                             type="password"
                             value={claudeKey}
                             onChange={(e) => setClaudeKey(e.target.value)}
                             placeholder="sk-ant-api03..."
-                            className="glass-input"
+                            className="form-input"
                         />
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-muted" style={{ fontSize: 'var(--font-size-xs)', marginTop: 'var(--spacing-1)' }}>
                             用於高品質的深度校正 (需付費)。
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-8 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-slate-300 hover:bg-white/10 transition-colors"
-                    >
+                {/* Footer */}
+                <div className="modal-footer">
+                    <button className="btn btn-secondary" onClick={onClose}>
                         取消
                     </button>
-                    <button
-                        onClick={handleSave}
-                        className="btn-primary"
-                        style={{ width: 'auto' }}
-                    >
+                    <button className="btn btn-primary" onClick={handleSave}>
                         儲存設定
                     </button>
                 </div>

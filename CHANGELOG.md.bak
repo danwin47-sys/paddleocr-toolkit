@@ -3,26 +3,6 @@
 本文件記錄 PaddleOCR Toolkit 的所有重要變更。
 
 ---
-## [3.4.0] - 2025-12-31
-
-### 新增 ✨
-- 🎨 **全新 Clean Slate UI**：從暗色玻璃擬態改為明亮極簡風格
-  - 重寫 `globals.css`，建立完整的設計系統（變數、排版、間距）
-  - 語意化 CSS 類別（`.app-sidebar`, `.upload-zone`, `.modal-overlay` 等）
-  - 支援明亮模式，提升可讀性與專業感
-- 📊 **Google Analytics 整合**：追蹤使用者行為與關鍵事件
-
-### 改進 ��
-- ⚡ **模型管理優化**：新增 `preload_models.py` 腳本
-- 🐛 **問題修復**：修復 Hybrid 模式首次執行卡住問題、Settings Modal z-index 重疊問題
-- 🧹 **程式碼清理**：移除 DEBUG 標籤和除錯面板
-
-### 變更 🔧
-- 重構所有主要 React 元件使用新設計系統
-- 移除舊的「假 Tailwind」utility classes
-
----
-
 
 ## [3.3.0] - 2025-12-30 ✨
 
