@@ -9,6 +9,7 @@ import asyncio
 import os
 import time
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import quote
@@ -120,10 +121,44 @@ MAX_IMAGE_SIDE = 2500  # 像素
 ocr_engine_cache = None
 
 
+async def cleanup_old_tasks():
+    """
+    定期清理舊任務，防止記憶體洩漏
+    每小時清理 24 小時前的任務
+    """
+    while True:
+        try:
+            await asyncio.sleep(3600)  # 每小時執行一次
+            
+            cutoff = datetime.now() - timedelta(hours=24)
+            removed_tasks = 0
+            removed_results = 0
+            
+            # 清理舊任務
+            for task_id in list(tasks.keys()):
+                task = tasks.get(task_id, {})
+                task_time = task.get('created_at')
+                
+                if task_time and isinstance(task_time, datetime) and task_time < cutoff:
+                    del tasks[task_id]
+                    removed_tasks += 1
+            
+            # 清理舊結果
+            for task_id in list(results.keys()):
+                if task_id not in tasks:
+                    del results[task_id]
+                    removed_results += 1
+            
+            if removed_tasks > 0 or removed_results > 0:
+                print(f"🧹 清理完成: 移除 {removed_tasks} 個舊任務, {removed_results} 個舊結果")
+        except Exception as e:
+            print(f"⚠️ 清理任務時發生錯誤: {e}")
+
+
 @app.on_event("startup")
 async def startup_event():
     """
-    應用啟動時預載 OCR 引擎
+    應用啟動時預載 OCR 引擎並啟動清理任務
     """
     global ocr_engine_cache
     print("=" * 60)
@@ -138,6 +173,10 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ OCR 引擎預載失敗: {e}")
         ocr_engine_cache = None
+    
+    # 啟動定期清理任務
+    asyncio.create_task(cleanup_old_tasks())
+    print("🧹 已啟動定期任務清理（每小時執行）")
     print("=" * 60)
 
 
@@ -239,7 +278,11 @@ async def process_ocr_task(
     print(f"[OCR] Claude Key: {'已提供' if claude_key else '未提供'}")
     print("=" * 60)
     
-    tasks[task_id] = {"status": "processing", "progress": 0}
+    tasks[task_id] = {
+        "status": "processing",
+        "progress": 0,
+        "created_at": datetime.now()
+    }
     processed_path = str(Path(file_path))
     print(f"[OCR] 處理路徑: {processed_path}")
 
@@ -966,25 +1009,92 @@ async def export_searchable_pdf(task_id: str):
         
         # 獲取 OCR 結果
         ocr_results = task_result.get("results", {})
-        raw_text = ocr_results.get("raw_result", "")
+        raw_result = ocr_results.get("raw_result")
         
         # 開啟原始 PDF
         doc = fitz.open(original_file)
         
-        # 為每一頁添加透明文字層
-        # 注意：這是簡化版本，將整個文字放在第一頁
-        # 完整版本需要解析 OCR 的座標資訊
-        if len(doc) > 0:
-            page = doc[0]
-            # 在頁面底部插入透明文字（不可見但可搜尋）
-            rect = page.rect
-            page.insert_textbox(
-                rect,
-                raw_text,
-                fontsize=1,  # 極小字體
-                color=(1, 1, 1),  # 白色（不可見）
-                overlay=False
-            )
+        # 增強版：使用 OCR 座標資訊進行精確定位
+        if raw_result and isinstance(raw_result, list):
+            # PaddleOCR 格式：[[page1_results], [page2_results], ...]
+            for page_idx, page_ocr in enumerate(raw_result):
+                if page_idx >= len(doc):
+                    break
+                
+                page = doc[page_idx]
+                page_rect = page.rect
+                page_height = page_rect.height
+                page_width = page_rect.width
+                
+                if not page_ocr:
+                    continue
+                
+                # 處理每個文字區塊
+                for line in page_ocr:
+                    if not line or len(line) < 2:
+                        continue
+                    
+                    # line[0] = 座標, line[1] = (文字, 信心度)
+                    coords = line[0]  # [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+                    text_info = line[1]  # (text, confidence)
+                    
+                    if not coords or not text_info:
+                        continue
+                    
+                    text = text_info[0] if isinstance(text_info, (tuple, list)) else str(text_info)
+                    
+                    if not text.strip():
+                        continue
+                    
+                    # 計算邊界框
+                    try:
+                        x_coords = [p[0] for p in coords]
+                        y_coords = [p[1] for p in coords]
+                        x1, x2 = min(x_coords), max(x_coords)
+                        y1, y2 = min(y_coords), max(y_coords)
+                        
+                        # 計算字體大小（基於高度）
+                        height = y2 - y1
+                        font_size = max(1, int(height * 0.8))  # 稍微小一點以確保不溢出
+                        
+                        # 插入透明文字（使用 insert_text 而非 insert_textbox）
+                        # 位置使用左下角座標
+                        try:
+                            page.insert_text(
+                                (x1, y2),
+                                text,
+                                fontsize=font_size,
+                                color=(1, 1, 1),  # 白色（不可見）
+                                overlay=False
+                            )
+                        except:
+                            # 如果插入失敗，嘗試用更小的字體
+                            page.insert_text(
+                                (x1, y2),
+                                text,
+                                fontsize=max(1, font_size // 2),
+                                color=(1, 1, 1),
+                                overlay=False
+                            )
+                    except (IndexError, ValueError, TypeError) as e:
+                        # 座標格式不正確，跳過這個區塊
+                        continue
+        else:
+            # 降級方案：如果沒有座標資訊，使用舊方法
+            raw_text = ocr_results.get("raw_result", "")
+            if isinstance(raw_text, str) and raw_text and len(doc) > 0:
+                page = doc[0]
+                rect = page.rect
+                try:
+                    page.insert_textbox(
+                        rect,
+                        raw_text,
+                        fontsize=1,
+                        color=(1, 1, 1),
+                        overlay=False
+                    )
+                except:
+                    pass
         
         # 生成輸出檔案
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
