@@ -18,10 +18,12 @@ if TYPE_CHECKING:
 
 try:
     from paddleocr import PaddleOCR, PPStructure
-
+    # Export as PPStructureV3 for backward compatibility and tests
+    PPStructureV3 = PPStructure
     HAS_STRUCTURE = True
 except ImportError:
     HAS_STRUCTURE = False
+    PPStructureV3 = None  # type: ignore
 
 try:
     from paddleocr import PaddleOCRVL
