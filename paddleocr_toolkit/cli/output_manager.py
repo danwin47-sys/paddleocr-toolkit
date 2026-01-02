@@ -236,7 +236,6 @@ class OutputPathManager:
         Args:
             args: 命令列引數
         """
-        """
         logger.info("Input: %s", self.input_path)
         logger.info("Mode: %s", self.mode)
 

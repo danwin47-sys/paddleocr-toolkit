@@ -64,7 +64,10 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         # ?理PDF
         logger.info("  Processing PDF...")
         process_start = time.time()
-        all_results, _ = ocr_tool.process_pdf(
+        
+        # Use facade.process() instead of deprecated process_pdf
+        # Note: Facade returns a dict, not a tuple
+        benchmark_result = ocr_tool.process(
             str(pdf_file),
             dpi=scenario["dpi"],
         )
@@ -74,8 +77,12 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         peak_memory = process.memory_info().rss / 1024 / 1024
 
         # ??
-        total_pages = len(all_results)
-        total_texts = sum(len(page) for page in all_results)
+        total_pages = benchmark_result.get('pages_processed', 0)
+        
+        # Estimate text volume (chars) instead of blocks
+        total_texts = 0
+        if 'text_content' in benchmark_result:
+             total_texts = sum(len(t) for t in benchmark_result['text_content'])
 
         result = {
             "scenario": scenario["name"],
