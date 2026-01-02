@@ -5,7 +5,18 @@
 
 set -e  # 遇到錯誤立即退出
 
+# 解析命令行參數
+RUN_PYTEST=false
+for arg in "$@"; do
+    if [ "$arg" = "--with-pytest" ] || [ "$arg" = "-p" ]; then
+        RUN_PYTEST=true
+    fi
+done
+
 echo "🚀 開始本地 CI/CD 測試..."
+if [ "$RUN_PYTEST" = true ]; then
+    echo "📊 pytest 單元測試：已啟用"
+fi
 echo ""
 
 # 顏色定義
@@ -49,6 +60,23 @@ except Exception as e:
 else
     echo -e "  ${RED}✗${NC} Python imports 失敗"
     ((TESTS_FAILED++))
+fi
+
+# 1.3 檢查 Python 單元測試 (可選)
+if [ "$RUN_PYTEST" = true ]; then
+    echo "  → 執行 pytest 單元測試..."
+    if command -v pytest &> /dev/null; then
+        if pytest tests/ -v --tb=short 2>&1 | tee /tmp/pytest_output.txt | tail -20; then
+            echo -e "  ${GREEN}✓${NC} pytest 測試通過"
+            ((TESTS_PASSED++))
+        else
+            echo -e "  ${RED}✗${NC} pytest 測試失敗"
+            ((TESTS_FAILED++))
+        fi
+    else
+        echo -e "  ${YELLOW}⚠${NC} pytest 未安裝，跳過測試"
+        echo "  提示：安裝 pytest: pip install pytest pytest-cov"
+    fi
 fi
 
 # ==================== 2. 前端測試 ====================
