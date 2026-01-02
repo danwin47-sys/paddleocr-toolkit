@@ -13,6 +13,11 @@ import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
+from paddleocr_toolkit.utils.logger import logger
+from paddleocr_toolkit.core.config import settings
+
+from paddleocr_toolkit.utils.logger import logger
+
 if TYPE_CHECKING:
     from paddleocr_toolkit.plugins.loader import PluginLoader
 
@@ -119,10 +124,10 @@ class OCREngineManager:
             Exception: 初始化失敗時
         """
         if self._is_initialized:
-            logging.warning("引擎已初始化，跳過")
+            logger.warning("Engine already initialized, skipping")
             return
 
-        print(f"正在初始化 PaddleOCR 3.x (模式: {self.mode.value})...")
+        logger.info("Initializing PaddleOCR 3.x (Mode: %s)...", self.mode.value)
 
         try:
             if self.mode == OCRMode.STRUCTURE:
@@ -143,66 +148,66 @@ class OCREngineManager:
             self._is_initialized = True
 
         except Exception as e:
-            print(f"初始化失敗: {e}")
+            logger.error("Initialization failed: %s", e)
             raise
 
     def _init_basic_engine(self) -> None:
         """初始化基本 OCR 引擎"""
         self.engine = PaddleOCR(
-            use_doc_orientation_classify=self.config["use_doc_orientation_classify"],
-            use_doc_unwarping=self.config["use_doc_unwarping"],
-            use_textline_orientation=self.config["use_textline_orientation"],
+            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_unwarping=self.config.get("use_doc_unwarping", True),
+            use_textline_orientation=self.config.get("use_textline_orientation", True),
         )
-        print("[OK] PP-OCRv5 初始化完成（基本文字識別模式）")
+        logger.info("[OK] PP-OCRv5 initialized (Basic Mode)")
 
     def _init_structure_engine(self) -> None:
         """初始化結構化引擎"""
         if not HAS_STRUCTURE:
-            raise ImportError("PPStructureV3 模組不可用，請確認 paddleocr 版本")
+            raise ImportError("PPStructureV3 not available")
 
-        print("  載入 PPStructure 引擎...")
+        logger.info("  Loading PPStructure engine...")
         self.engine = PPStructureV3(
             show_log=True,
             layout=True,
             table=True,
             ocr=True
         )
-        print("[OK] PPStructure 初始化完成（結構化文件解析模式）")
+        logger.info("[OK] PPStructure initialized (Structure Mode)")
 
     def _init_vl_engine(self) -> None:
         """初始化視覺語言模型引擎"""
         if not HAS_VL:
-            raise ImportError("PaddleOCRVL 模組不可用，請確認 paddleocr 版本")
+            raise ImportError("PaddleOCRVL not available")
 
         self.engine = PaddleOCRVL(
-            use_doc_orientation_classify=self.config["use_doc_orientation_classify"],
-            use_doc_unwarping=self.config["use_doc_unwarping"],
+            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_unwarping=self.config.get("use_doc_unwarping", True),
         )
-        print("[OK] PaddleOCR-VL 初始化完成（視覺語言模型模式）")
+        logger.info("[OK] PaddleOCR-VL initialized (VL Mode)")
 
     def _init_formula_engine(self) -> None:
         """初始化公式識別引擎"""
         if not HAS_FORMULA:
-            raise ImportError("FormulaRecPipeline 模組不可用，請確認 paddleocr 版本")
+            raise ImportError("FormulaRecPipeline not available")
 
         self.engine = FormulaRecPipeline(
-            use_doc_orientation_classify=self.config["use_doc_orientation_classify"],
-            use_doc_unwarping=self.config["use_doc_unwarping"],
+            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_unwarping=self.config.get("use_doc_unwarping", True),
             device=self.device,
         )
-        print("[OK] PP-FormulaNet 初始化完成（公式識別模式）")
+        logger.info("[OK] PP-FormulaNet initialized (Formula Mode)")
 
     def _init_hybrid_engine(self) -> None:
         """初始化混合模式引擎"""
         if not HAS_STRUCTURE:
-            print("[WARNING] PPStructure 不可用，降級為 Basic 模式")
+            logger.warning("PPStructure unavailable, downgrading to Basic mode")
             self._init_basic_engine()
             return
 
-        print("  載入 PPStructure 引擎...")
-        print("  - 版面分析：啟用")
-        print("  - 表格識別：啟用")
-        print("  - OCR 識別：啟用")
+        logger.info("  Loading PPStructure engine...")
+        logger.info("  - Layout Analysis: Enabled")
+        logger.info("  - Table Recognition: Enabled")
+        logger.info("  - OCR Recognition: Enabled")
         
         try:
             self.structure_engine = PPStructure(
@@ -213,10 +218,10 @@ class OCREngineManager:
             )
             # 設定 engine 為 structure_engine 以便其他方法使用
             self.engine = self.structure_engine
-            print("[OK] Hybrid 模式初始化完成（PPStructure 版面分析 + 表格識別 + OCR）")
+            logger.info("[OK] Hybrid Mode initialized (PPStructure Layout + Table + OCR)")
         except Exception as e:
-            print(f"[ERROR] Hybrid 模式初始化失敗: {e}")
-            print("[WARNING] 降級為 Basic 模式")
+            logger.error("Hybrid mode initialization failed: %s", e)
+            logger.warning("Downgrading to Basic mode")
             self._init_basic_engine()
 
     def predict(self, input_data, **kwargs):
