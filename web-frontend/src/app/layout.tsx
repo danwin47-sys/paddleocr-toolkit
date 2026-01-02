@@ -35,6 +35,14 @@ export default function RootLayout({
             `}
           </Script>
         )}
+
+        {/* Google AdSense - 廣告營利 */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7077085475180219"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </head>
       <body>{children}</body>
     </html>
