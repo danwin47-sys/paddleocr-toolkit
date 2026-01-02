@@ -280,13 +280,13 @@ class HybridPDFProcessor:
         result_summary["text_content"] = all_text
 
         # === 5. 翻譯處理（如果啟用）===
+        # 注意：翻譯功能需要 pdf_translator 套件
+        # 如需使用，請安裝： pip install pdf-translator
         if translate_config and HAS_TRANSLATOR:
             if self.debug_mode:
-                print(f"[DEBUG] Debug 模式已啟用，跳過翻譯處理")
-                logging.info("Debug 模式已啟用，跳過翻譯處理")
+                logging.info("偵錯模式已啟用，跳過翻譯處理")
             else:
-                # TODO: 整合 TranslationProcessor
-                logging.warning("翻譯功能尚未整合到 HybridPDFProcessor")
+                logging.info("翻譯功能已配置，但需手動整合 TranslationProcessor")
 
         # === 6. 完成統計 ===
         print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
@@ -477,10 +477,83 @@ class HybridPDFProcessor:
             result_summary["markdown_file"] = markdown_output
             print(f"[OK] Markdown 已儲存：{markdown_output}")
 
-        # TODO: 儲存 JSON
+        # 儲存 JSON
         if json_output:
-            logging.warning("JSON 輸出尚未實作")
+            import json
+            try:
+                # 將 OCR 結果轉換為可序列化格式
+                json_data = {
+                    "source": pdf_path,
+                    "total_pages": len(all_ocr_results),
+                    "pages": [
+                        {
+                            "page_num": i + 1,
+                            "text_blocks": [
+                                {
+                                    "text": result.text,
+                                    "bbox": result.bbox,
+                                    "confidence": getattr(result, 'confidence', 1.0)
+                                }
+                                for result in page_results
+                            ]
+                        }
+                        for i, page_results in enumerate(all_ocr_results)
+                    ]
+                }
+                
+                with open(json_output, "w", encoding="utf-8") as f:
+                    json.dump(json_data, f, ensure_ascii=False, indent=2)
+                result_summary["json_file"] = json_output
+                print(f"[OK] JSON 已儲存：{json_output}")
+            except Exception as e:
+                logging.error(f"JSON 輸出失敗: {e}")
 
-        # TODO: 儲存 HTML
+        # 儲存 HTML
         if html_output:
-            logging.warning("HTML 輸出尚未實作")
+            try:
+                # 建立簡單的 HTML 輸出
+                html_content = [
+                    "<!DOCTYPE html>",
+                    '<html lang="zh-TW">',
+                    "<head>",
+                    '    <meta charset="UTF-8">',
+                    '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+                    f"    <title>OCR 結果 - {Path(pdf_path).name}</title>",
+                    "    <style>",
+                    "        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.8; }",
+                    "        h1 { color: #333; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }",
+                    "        h2 { color: #4f46e5; margin-top: 40px; border-left: 4px solid #4f46e5; padding-left: 15px; }",
+                    "        .page { margin-bottom: 40px; padding: 20px; background: #f9fafb; border-radius: 8px; }",
+                    "        .text-block { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }",
+                    "    </style>",
+                    "</head>",
+                    "<body>",
+                    f"    <h1>OCR 識別結果: {Path(pdf_path).name}</h1>",
+                ]
+                
+                # 加入每頁內容
+                for i, markdown in enumerate(all_markdown):
+                    html_content.append(f'    <div class="page">')
+                    html_content.append(f"        <h2>第 {i + 1} 頁</h2>")
+                    
+                    # 將 Markdown 轉換為 HTML (簡單處理)
+                    lines = markdown.split(
+
+"\n")
+                    for line in lines:
+                        if line.strip():
+                            html_content.append(f'        <div class="text-block">{line}</div>')
+                    
+                    html_content.append("    </div>")
+                
+                html_content.extend([
+                    "</body>",
+                    "</html>"
+                ])
+                
+                with open(html_output, "w", encoding="utf-8") as f:
+                    f.write("\n".join(html_content))
+                result_summary["html_file"] = html_output
+                print(f"[OK] HTML 已儲存：{html_output}")
+            except Exception as e:
+                logging.error(f"HTML 輸出失敗: {e}")
