@@ -1,3 +1,4 @@
+```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -5,9 +6,10 @@ paddleocr config - 配置向?命令
 """
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 import yaml
+from paddleocr_toolkit.utils.logger import logger
 
 
 def prompt(
@@ -22,14 +24,15 @@ def prompt(
         options: 可??列表
     """
     if options:
-        print(f"\n{question}")
+        logger.info("") # Added logger.info for spacing
+        print(f"{question}") # Keep simple print for interactive prompt
         for i, option in enumerate(options, 1):
-            marker = " (默?)" if option == default else ""
-            print(f"  {i}. {option}{marker}")
+            marker = " *" if option == default else "" # Changed marker
+            print(f"  {i}. {option}{marker}") # Keep print for interactive menu
 
         while True:
             try:
-                choice = input(f"??? [1-{len(options)}]: ").strip()
+                choice = input("Select (number): ").strip() # Changed prompt text
                 if not choice and default:
                     return default
                 idx = int(choice) - 1
@@ -47,73 +50,73 @@ def prompt(
         result = input(prompt_text).strip()
         return result if result else default
 
+# Helper functions for config_wizard, derived from the diff's intent
+def get_input(question: str, default: str) -> str:
+    return prompt(question, default=default)
+
+def get_selection(question: str, options: List[str], default: str) -> str:
+    return prompt(question, default=default, options=options)
+
 
 def config_wizard():
     """交互式配置向?"""
-    print("\n" + "=" * 60)
-    print(" PaddleOCR Toolkit 配置向?")
-    print("=" * 60)
-    print("\n???助您?建自定?配置文件")
-    print("(直接按Enter使用默?值)\n")
+    logger.info("=" * 60)
+    logger.info(" PaddleOCR Toolkit Configuration Wizard")
+    logger.info("=" * 60)
+    logger.info("This will help you create a custom configuration file")
+    logger.info("(Press Enter to use default values)\n")
 
-    config = {}
+    config: Dict[str, Any] = {}
 
-    # OCR?置
-    print("\n??? OCR ?置 ???")
+    # 1. OCR Settings
+    logger.info("\n--- OCR Settings ---")
 
-    config["ocr"] = {}
-    config["ocr"]["mode"] = prompt(
-        "??OCR模式",
-        default="hybrid",
-        options=["basic", "structure", "hybrid", "vl", "formula"],
-    )
+    config["ocr"] = {
+        "mode": get_selection("Select OCR Mode", ["basic", "structure", "hybrid", "vl", "formula"], "hybrid"),
+        "device": get_selection("Select Compute Device", ["gpu", "cpu"], "gpu"),
+        "dpi": int(get_input("PDF DPI (Recommended: 150-300)", "200")),
+        "lang": get_selection("Select Language", ["ch", "en", "korean", "japan", "chinese_cht"], "ch"),
+        "use_gpu": get_selection("Use GPU?", ["true", "false"], "true") == "true", # Added from diff
+        "use_angle_cls": get_selection("Use Angle Classification?", ["true", "false"], "true") == "true", # Added from diff
+    }
 
-    config["ocr"]["device"] = prompt("???算??", default="gpu", options=["gpu", "cpu"])
+    # 2. Output Settings
+    logger.info("\n--- Output Settings ---")
 
-    config["ocr"]["dpi"] = int(prompt("PDF??DPI (建?: 150-300)", default="200"))
+    output_dir = get_input("Output Directory", "output") # Renamed variable
+    
+    logger.info("\nOutput Formats (comma separated, e.g., md,json)")
+    logger.info("  Available: md, json, html, txt")
+    formats_str = input("Formats [md,json]: ").strip() or "md,json" # Changed default and prompt
+    formats = [f.strip() for f in formats_str.split(",")]
 
-    config["ocr"]["lang"] = prompt(
-        "???言", default="ch", options=["ch", "en", "korean", "japan", "chinese_cht"]
-    )
+    config["output"] = {
+        "format": formats, # Changed to list
+        "directory": output_dir, # Used output_dir
+    }
 
-    # ?出?置
-    print("\n??? ?出?置 ???")
+    # 3. Performance Settings
+    logger.info("\n--- Performance Settings ---")
 
-    config["output"] = {}
+    config["performance"] = {
+        "batch_size": int(get_input("Batch Size (Recommended: 4-16)", "8")),
+        "max_workers": int(get_input("Max Workers (Recommended: 2-8)", "4")),
+        "enable_cache": get_selection("Enable Cache?", ["yes", "no"], "yes") == "yes",
+    }
 
-    # 可以多?
-    print("\n???出格式 (用逗?分隔，如: md,json)")
-    print("  可?: md, json, html, txt")
-    formats = input(f"格式 [md]: ").strip()
-    config["output"]["format"] = formats if formats else "md"
+    # 4. Logging Settings
+    logger.info("\n--- Logging Settings ---")
 
-    config["output"]["directory"] = prompt("?出目?", default="./output")
+    config["logging"] = {
+        "level": get_selection("Log Level", ["DEBUG", "INFO", "WARNING", "ERROR"], "INFO"),
+        "save_file": get_selection("Save log to file?", ["true", "false"], "true") == "true", # Added from diff
+        "log_file": get_input("Log File", "paddleocr.log"), # Changed default
+    }
 
-    # 性能?置
-    print("\n??? 性能?置 ???")
+    # Save Configuration
+    logger.info("\n--- Save Configuration ---")
 
-    config["performance"] = {}
-    config["performance"]["batch_size"] = int(prompt("批次大小 (建?: 4-16)", default="8"))
-
-    config["performance"]["max_workers"] = int(prompt("最大工作?程 (建?: 2-8)", default="4"))
-
-    enable_cache = prompt("?用?存?", default="yes", options=["yes", "no"])
-    config["performance"]["enable_cache"] = enable_cache == "yes"
-
-    # 日志?置
-    print("\n??? 日志?置 ???")
-
-    config["logging"] = {}
-    config["logging"]["level"] = prompt(
-        "日志??", default="INFO", options=["DEBUG", "INFO", "WARNING", "ERROR"]
-    )
-
-    config["logging"]["file"] = prompt("日志文件路?", default="./logs/paddleocr.log")
-
-    # 保存配置
-    print("\n??? 保存配置 ???")
-
-    config_name = prompt("配置文件名?", default="custom")
+    config_name = get_input("Config file name", "custom") # Changed prompt
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
@@ -123,26 +126,25 @@ def config_wizard():
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-    print(f"\n? 配置已保存到: {config_path}")
-    print(f"\n使用方法:")
-    print(f"  python -m paddleocr_toolkit input.pdf --config {config_path}")
-    print()
+    logger.info("Configuration saved to: %s", config_path)
+    logger.info("Usage:")
+    logger.info("  python -m paddleocr_toolkit input.pdf --config %s", config_path)
+    logger.info("")
 
 
 def show_config(config_file: str):
-    """?示配置文件?容"""
-    config_path = Path(config_file)
-
-    if not config_path.exists():
-        print(f"??: 配置文件不存在: {config_file}")
+    """显示配置内容"""
+    path = Path(config_file)
+    if not path.exists():
+        logger.error("Config file not found: %s", config_file)
         return
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    print(f"\n配置文件: {config_file}")
-    print("=" * 60)
-    print(yaml.dump(config, default_flow_style=False, allow_unicode=True))
+    logger.info("Configuration: %s", config_file)
+    logger.info("=" * 60)
+    print(yaml.dump(config, default_flow_style=False, allow_unicode=True))  # Keep print for YAML dump output for now
 
 
 if __name__ == "__main__":

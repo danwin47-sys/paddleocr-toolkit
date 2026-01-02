@@ -10,6 +10,8 @@ from typing import Any, Dict, Optional, Set
 
 from fastapi import WebSocket
 
+from paddleocr_toolkit.utils.logger import logger
+
 
 class ConnectionManager:
     """WebSocket連線管理器"""
@@ -32,7 +34,7 @@ class ConnectionManager:
             self.active_connections[task_id] = set()
 
         self.active_connections[task_id].add(websocket)
-        print(f"WebSocket連線建立: 任務 {task_id}")
+        logger.info("WebSocket connected: Task %s", task_id)
 
     def disconnect(self, websocket: WebSocket, task_id: str):
         """
@@ -79,7 +81,7 @@ class ConnectionManager:
             try:
                 await connection.send_json(message)
             except Exception as e:
-                print(f"傳送失敗: {e}")
+                logger.error("Send failed: %s", e)
                 disconnected.add(connection)
 
         # 移除斷開的連線

@@ -43,6 +43,8 @@ try:
 except ImportError:
     from ..core.models import OCRResult
 
+from paddleocr_toolkit.utils.logger import logger
+
 
 class EnhancedTranslationProcessor:
     """
@@ -97,12 +99,12 @@ class EnhancedTranslationProcessor:
         if result_summary is None:
             result_summary = {}
 
-        print(f"\n[翻譯] 開始翻譯處理...")
+        logger.info("[Translation] Starting translation process...")
         logging.info(f"開始翻譯處理: {erased_pdf_path}")
 
-        print(f"   來源語言: {translate_config.get('source_lang', 'auto')}")
-        print(f"   目標語言: {translate_config.get('target_lang', 'en')}")
-        print(f"   Ollama 模型: {translate_config.get('ollama_model', 'qwen2.5:7b')}")
+        logger.info("   Source Lang: %s", translate_config.get('source_lang', 'auto'))
+        logger.info("   Target Lang: %s", translate_config.get('target_lang', 'en'))
+        logger.info("   Ollama Model: %s", translate_config.get('ollama_model', 'qwen2.5:7b'))
 
         try:
             # === 1. 初始化工具 ===
@@ -176,14 +178,14 @@ class EnhancedTranslationProcessor:
                 mono_gen, bilingual_gen, trans_path, bi_path, result_summary
             )
 
-            print(f"[OK] 翻譯處理完成")
+            logger.info("[OK] Translation process complete")
             return result_summary
 
         except Exception as e:
             error_msg = f"翻譯處理失敗: {str(e)}"
             logging.error(error_msg)
             logging.error(traceback.format_exc())
-            print(f"錯誤：{error_msg}")
+            # print(f"錯誤：{error_msg}") # Removed redundant print
             result_summary["translation_error"] = str(e)
             return result_summary
 
@@ -385,7 +387,7 @@ class EnhancedTranslationProcessor:
             try:
                 mono_gen.save(trans_path)
                 result_summary["translated_pdf"] = trans_path
-                print(f"[OK] 純翻譯 PDF: {trans_path}")
+                logger.info("[OK] Translated PDF: %s", trans_path)
             except Exception as e:
                 logging.error(f"儲存純翻譯 PDF 失敗: {e}")
 
@@ -393,7 +395,7 @@ class EnhancedTranslationProcessor:
             try:
                 bilingual_gen.save(bi_path)
                 result_summary["bilingual_pdf"] = bi_path
-                print(f"[OK] 雙語對照 PDF: {bi_path}")
+                logger.info("[OK] Bilingual PDF: %s", bi_path)
             except Exception as e:
                 logging.error(f"儲存雙語 PDF 失敗: {e}")
 

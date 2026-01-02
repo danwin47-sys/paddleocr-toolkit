@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 import psutil
+from paddleocr_toolkit.utils.logger import logger
 
 
 def run_benchmark(pdf_path: str, output: Optional[str] = None):
@@ -23,15 +24,15 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     """
     from paddle_ocr_tool import PaddleOCRTool
 
-    print("\n" + "=" * 70)
-    print(" PaddleOCR Toolkit 性能基准??")
-    print("=" * 70)
-    print(f"\n??文件: {pdf_path}")
-    print()
+    logger.info("=" * 70)
+    logger.info(" PaddleOCR Toolkit Benchmark")
+    logger.info("=" * 70)
+    logger.info("Target file: %s", pdf_path)
+    logger.info("")
 
     pdf_file = Path(pdf_path)
     if not pdf_file.exists():
-        print(f"??: 文件不存在: {pdf_path}")
+        logger.error("File not found: %s", pdf_path)
         return
 
     # ???景
@@ -46,14 +47,14 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     process = psutil.Process(os.getpid())
 
     for i, scenario in enumerate(scenarios, 1):
-        print(f"\n[{i}/{len(scenarios)}] ??: {scenario['name']}")
-        print("─" * 70)
+        logger.info("[%d/%d] Scenario: %s", i, len(scenarios), scenario['name'])
+        logger.info("-" * 70)
 
         # ??初始?存
         initial_memory = process.memory_info().rss / 1024 / 1024
 
         # 初始化OCR
-        print("  初始化OCR引擎...")
+        logger.info("  Initializing OCR engine...")
         init_start = time.time()
         ocr_tool = PaddleOCRTool(mode=scenario["mode"])
         init_time = time.time() - init_start
@@ -61,7 +62,7 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         post_init_memory = process.memory_info().rss / 1024 / 1024
 
         # ?理PDF
-        print("  ?理PDF...")
+        logger.info("  Processing PDF...")
         process_start = time.time()
         all_results, _ = ocr_tool.process_pdf(
             str(pdf_file),
@@ -96,37 +97,39 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         results.append(result)
 
         # ?示?果
-        print(f"  ? 完成")
-        print(f"    ??: {total_pages}")
-        print(f"    文字: {total_texts}")
-        print(f"    ??: {result['total_time']}s ({result['time_per_page']}s/?)")
-        print(f"    ?存: {result['memory_used']}MB")
+        # ?示?果
+        logger.info("  Done")
+        logger.info("    Pages: %d", total_pages)
+        logger.info("    Texts: %d", total_texts)
+        logger.info("    Time: %.2fs (%.2fs/page)", result['total_time'], result['time_per_page'])
+        logger.info("    Memory: %.1fMB", result['memory_used'])
 
     # ?示??
-    print("\n" + "=" * 70)
-    print(" ???果??")
-    print("=" * 70)
-    print()
-    print(f"{'?景':<25} {'???':>10} {'速度':>12} {'?存':>10}")
-    print("─" * 70)
+    logger.info("=" * 70)
+    logger.info(" Benchmark Summary")
+    logger.info("=" * 70)
+    logger.info("")
+    logger.info("%-25s %10s %12s %10s", "Scenario", "Time", "Speed", "Memory")
+    logger.info("-" * 70)
 
     for result in results:
-        print(
-            f"{result['scenario']:<25} "
-            f"{result['total_time']:>9.2f}s "
-            f"{result['time_per_page']:>9.2f}s/? "
-            f"{result['memory_used']:>9.1f}MB"
+        logger.info(
+            "%-25s %9.2fs %9.2fs/p %9.1fMB",
+            result['scenario'],
+            result['total_time'],
+            result['time_per_page'],
+            result['memory_used']
         )
 
-    print("=" * 70)
+    logger.info("=" * 70)
 
     # 最快的scene
     fastest = min(results, key=lambda x: x["time_per_page"])
-    print(f"\n最快: {fastest['scenario']} ({fastest['time_per_page']}s/?)")
+    logger.info("Fastest: %s (%.2fs/page)", fastest['scenario'], fastest['time_per_page'])
 
     # 最省?存
     lightest = min(results, key=lambda x: x["memory_used"])
-    print(f"最省?存: {lightest['scenario']} ({lightest['memory_used']}MB)")
+    logger.info("Lowest Memory: %s (%.1fMB)", lightest['scenario'], lightest['memory_used'])
 
     # 保存?果
     if output:
@@ -137,16 +140,16 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
-    print(f"\n?告已保存: {output_path}")
-    print()
+    logger.info("Report saved: %s", output_path)
+    logger.info("")
 
 
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("使用方法: python benchmark.py <pdf文件> [?出文件]")
-        print("范例: python benchmark.py test.pdf results.json")
+        logger.info("Usage: python benchmark.py <pdf_file> [output_file]")
+        logger.info("Example: python benchmark.py test.pdf results.json")
     else:
         pdf_path = sys.argv[1]
         output = sys.argv[2] if len(sys.argv) > 2 else None

@@ -7,6 +7,7 @@ paddleocr init - ?目初始化命令
 from pathlib import Path
 
 import yaml
+from paddleocr_toolkit.utils.logger import logger
 
 
 def create_project_structure(directory: Path):
@@ -20,7 +21,7 @@ def create_project_structure(directory: Path):
 
     for dir_path in directories:
         dir_path.mkdir(parents=True, exist_ok=True)
-        print(f"  ?建目?: {dir_path.name}/")
+        logger.info("  Created directory: %s/", dir_path.name)
 
     # ?建.gitignore
     gitignore_content = """# PaddleOCR Toolkit
@@ -34,7 +35,7 @@ __pycache__/
 
     gitignore_path = directory / ".gitignore"
     gitignore_path.write_text(gitignore_content, encoding="utf-8")
-    print(f"  ?建檔案: .gitignore")
+    logger.info("  Created file: .gitignore")
 
 
 def create_config_file(directory: Path):
@@ -111,7 +112,7 @@ python -m paddleocr_toolkit input/
 
     readme_path = directory / "README.md"
     readme_path.write_text(readme_content, encoding="utf-8")
-    print(f"  ?建文?: README.md")
+    logger.info("  Created file: README.md")
 
 
 def init_command(directory: str = "."):
@@ -121,37 +122,45 @@ def init_command(directory: str = "."):
     Args:
         directory: ?目目?路?
     """
-    print("\n?始初始化 PaddleOCR Toolkit ?目...")
-    print("=" * 50)
+    logger.info("")
+    logger.info("Starting PaddleOCR Toolkit project initialization...")
+    logger.info("=" * 50)
 
     project_dir = Path(directory).absolute()
 
-    # 1. ?建目??構
-    print("\n[1/4] ?建?目?構...")
+    # 1. Project Structure
+    logger.info("")
+    logger.info("[1/4] Creating project structure...")
     create_project_structure(project_dir)
 
-    # 2. ?建配置檔案
-    print("\n[2/4] ?建配置檔案...")
+    # 2. Config File
+    logger.info("")
+    logger.info("[2/4] Creating configuration file...")
     create_config_file(project_dir)
 
-    # 3. ?建README
-    print("\n[3/4] ?建?目文?...")
+    # 3. README
+    logger.info("")
+    logger.info("[3/4] Creating documentation...")
     create_readme(project_dir)
 
-    # 4. 模型提示
-    print("\n[4/4] 模型?查...")
-    print("  提示: 首次?行??自?下?PaddleOCR模型")
-    print("  大小: ?100MB")
-    print("  位置: ~/.paddleocr/")
+    # 4. Model Check
+    logger.info("")
+    logger.info("[4/4] Model check...")
+    logger.info("  Note: First run will automatically download PaddleOCR models")
+    logger.info("  Size: ~100MB")
+    logger.info("  Location: ~/.paddleocr/")
 
-    print("\n" + "=" * 50)
-    print("? ?目初始化完成！")
-    print(f"\n?目目?: {project_dir}")
-    print("\n下一步:")
-    print("  1. ?PDF檔案放入 input/ 目?")
-    print("  2. ?行: python -m paddleocr_toolkit input/your.pdf")
-    print("  3. 檢視?果: output/")
-    print()
+    logger.info("")
+    logger.info("=" * 50)
+    logger.info(" Project initialization complete!")
+    logger.info("")
+    logger.info("Project Directory: %s", project_dir)
+    logger.info("")
+    logger.info("Next steps:")
+    logger.info("  1. Put PDF files in input/ directory")
+    logger.info("  2. Run: python -m paddleocr_toolkit input/your.pdf")
+    logger.info("  3. Check results: output/")
+    logger.info("")
 
 
 if __name__ == "__main__":
