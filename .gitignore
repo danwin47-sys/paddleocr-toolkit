@@ -79,7 +79,9 @@ artifacts/logs/
 fix_pytest_encoding.py
 web-frontend/node_modules/
 web-frontend/.next/
+web-frontend/out/
 uploads/
 outputs/
 .env
 .DS_Store
+.cache/
