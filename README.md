@@ -1,5 +1,10 @@
 # PaddleOCR Toolkit
 
+> [!IMPORTANT]
+> **本地啟動必讀**：如果您要配合 Vercel 前端使用，請務必先閱讀 [**BACKEND_GUIDE.md**](./BACKEND_GUIDE.md) 來啟動本地 OCR 服務。
+
+---
+
 [![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-581%20passed-success)](https://github.com/danwin47-sys/paddleocr-toolkit/actions)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-green)](https://codecov.io/gh/danwin47-sys/paddleocr-toolkit)

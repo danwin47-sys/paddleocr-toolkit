@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // 移除 output: 'standalone' - Vercel 有自己的優化
+    output: 'export',  // 啟用靜態HTML導出
 };
 
 export default nextConfig;

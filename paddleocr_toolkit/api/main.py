@@ -39,9 +39,9 @@ from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
-# 找到 web 目錄
-WEB_DIR = Path(__file__).parent.parent.parent / "web"
-STATIC_DIR = WEB_DIR  # 目前 index.html 直接在 web 根目錄
+# Next.js 前端輸出目錄
+NEXT_OUT_DIR = Path(__file__).parent.parent.parent / "web-frontend" / "out"
+STATIC_DIR = NEXT_OUT_DIR
 
 app = FastAPI(
     title="PaddleOCR Toolkit API",
@@ -88,9 +88,20 @@ async def log_requests(request, call_next):
 # 掛載路由
 app.include_router(file_router)
 
-# 靜態檔案服務 (如果目錄存在)
-if WEB_DIR.exists():
-    app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
+# 靜態檔案服務 - 使用 Next.js 編譯輸出
+if NEXT_OUT_DIR.exists():
+    # 掛載 Next.js 的 _next 目錄（CSS、JS 等）
+    next_static_dir = NEXT_OUT_DIR / "_next"
+    if next_static_dir.exists():
+        app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
+        print(f"[靜態服務] 掛載 Next.js 靜態資源: {next_static_dir}")
+    
+    # 掛載其他靜態檔案（圖片、SVG 等）
+    app.mount("/static", StaticFiles(directory=str(NEXT_OUT_DIR)), name="nextjs_root")
+    print(f"[靜態服務] 使用 Next.js 編譯輸出: {NEXT_OUT_DIR}")
+else:
+    print(f"[警告] Next.js 編譯輸出不存在: {NEXT_OUT_DIR}")
+    print("請執行：cd web-frontend && npm run build")
 
 # CORS設定
 app.add_middleware(
@@ -101,6 +112,22 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],  # 允許前端讀取自訂 header
 )
+
+# 網頁前端路由
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    """提供前端網頁"""
+    if NEXT_OUT_DIR.exists():
+        index_file = NEXT_OUT_DIR / "index.html"
+        if index_file.exists():
+            return index_file.read_text(encoding="utf-8")
+    
+    return """
+    <html><body>
+    <h1>PaddleOCR Toolkit</h1>
+    <p>前端檔案未找到。請執行：<code>cd web-frontend && npm run build</code></p>
+    </body></html>
+    """
 
 # 任務儲存
 tasks = {}
@@ -330,31 +357,17 @@ async def process_ocr_task(
     """
     非同步處理 OCR 任務
     """
-    # 詳細日誌：任務開始
-    print("=" * 60)
-    print(f"[OCR] 開始處理任務")
-    print(f"[OCR] 任務 ID: {task_id}")
-    print(f"[OCR] 檔案路徑: {file_path}")
-    print(f"[OCR] OCR 模式: {mode}")
-    print(f"[OCR] Gemini Key: {'已提供' if gemini_key else '未提供'}")
-    print(f"[OCR] Claude Key: {'已提供' if claude_key else '未提供'}")
-    print("=" * 60)
-    
     tasks[task_id] = {
         "status": "processing",
         "progress": 0,
         "created_at": datetime.now()
     }
     processed_path = str(Path(file_path))
-    print(f"[OCR] 處理路徑: {processed_path}")
 
     try:
         # ... (快取與處理邏輯)
-        # 0. 檢查快取
-        await manager.send_progress_update(task_id, 5, "processing", "檢查快取...")
         cached_result = ocr_cache.get(processed_path, mode)
         if cached_result:
-            await manager.send_progress_update(task_id, 100, "completed", "快取命中")
             results[task_id] = {
                 "status": "completed",
                 "progress": 100,
@@ -376,12 +389,10 @@ async def process_ocr_task(
         ext = Path(processed_path).suffix.lower()
         if ext == ".pdf":
             # PDF 使用並行處理器
-            await manager.send_progress_update(
-                task_id, 30, "processing", "PDF 並行辨識中..."
-            )
             ocr_result = await asyncio.to_thread(
                 parallel_processor.process_pdf_parallel, actual_path, {"mode": mode}
             )
+            print(f"[OCR] [{task_id}] PDF 辨識完成，頁數: {len(ocr_result) if isinstance(ocr_result, list) else 'N/A'}")
         else:
             # 標準單點辨識
             await manager.send_progress_update(task_id, 30, "processing", "正在辨識...")
@@ -487,6 +498,7 @@ async def process_ocr_task(
             "raw_result": current_text,
             "pages": len(ocr_result) if isinstance(ocr_result, list) else 1,
             "confidence": 0.95,
+            "structured_data": ocr_result if isinstance(ocr_result, list) else None
         }
 
         # 4. 存入快取與完成
@@ -495,6 +507,7 @@ async def process_ocr_task(
             "status": "completed",
             "progress": 100,
             "results": final_result,
+            "file_path": str(processed_path),
         }
         tasks[task_id] = {"status": "completed", "progress": 100}
         await manager.send_completion(task_id, final_result)
@@ -1080,7 +1093,7 @@ async def export_searchable_pdf(task_id: str):
         
         # 獲取 OCR 結果
         ocr_results = task_result.get("results", {})
-        raw_result = ocr_results.get("raw_result")
+        raw_result = ocr_results.get("structured_data")
         
         # 開啟原始 PDF
         doc = fitz.open(original_file)

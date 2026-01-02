@@ -87,47 +87,10 @@ class ParallelPDFProcessor:
 
             result = engine.predict(img)
 
-            # 解析並簡化結果，只保留可序列化的數據 (避免 pickle 錯誤)
-            safe_result = []
-            if isinstance(result, list):
-                for item in result:
-                    if isinstance(item, dict):
-                        # PaddleX 格式: 提取 rec_texts, rec_scores
-                        safe_item = {}
-                        if "rec_texts" in item:
-                            safe_item["rec_texts"] = item["rec_texts"]
-                        if "rec_scores" in item:
-                            safe_item["rec_scores"] = item["rec_scores"]
-                        if "rec_boxes" in item and hasattr(item["rec_boxes"], "tolist"):
-                            safe_item["rec_boxes"] = item["rec_boxes"].tolist()
-
-                        # 如果沒有標準鍵，嘗試保留所有字串/數字類型的鍵
-                        if not safe_item:
-                            for k, v in item.items():
-                                if isinstance(
-                                    v, (str, int, float, list, dict)
-                                ) and k not in ["vis_fonts", "doc_preprocessor_res"]:
-                                    safe_item[k] = v
-                        safe_result.append(safe_item)
-                    elif isinstance(item, (list, tuple)):
-                        # 標準 PaddleOCR 格式: [box, (text, score)]
-                        # 這通常是可序列化的，但為了安全可以檢查
-                        safe_result.append(item)
-                    else:
-                        safe_result.append(str(item))
-            elif isinstance(result, dict):
-                # 單個字典結果
-                safe_item = {}
-                if "rec_texts" in result:
-                    safe_item["rec_texts"] = result["rec_texts"]
-                if "rec_scores" in result:
-                    safe_item["rec_scores"] = result["rec_scores"]
-                # 避免返回大圖片或不可序列化的對象
-                safe_result = [safe_item]
-            else:
-                safe_result = str(result)
-
-            return (page_num, safe_result)
+            if isinstance(result, list) and len(result) > 0:
+                return (page_num, result[0])
+            
+            return (page_num, result)
         except Exception as e:
             return (page_num, f"Error on page {page_num}: {str(e)}")
 
@@ -150,7 +113,7 @@ class ParallelPDFProcessor:
         config = ocr_config or {"mode": "basic", "device": "cpu"}
 
         start_time = time.time()
-        print(f"開始並行處理: {Path(pdf_path).name}")
+        print(f"開始處理 PDF: {Path(pdf_path).name}")
 
         # 1. 將 PDF 轉換為圖片對列
         doc = fitz.open(pdf_path)
@@ -167,16 +130,29 @@ class ParallelPDFProcessor:
 
         doc.close()
 
-        # 2. 啟動進程池
-        print(f"啟動進程池 (Workers: {self.workers})...")
-        with Pool(processes=self.workers) as pool:
-            results = pool.map(self._process_single_page, task_args)
+        # 2. 判斷是否需要並行處理
+        # 在 macOS 或小檔案上，直接序列處理通常更穩定且快
+        if total_pages <= 2 or self.workers <= 1:
+            results = []
+            for arg in task_args:
+                res = self._process_single_page(arg)
+                results.append(res)
+        else:
+            # 啟動進程池
+            print(f"啟動進程池 (Workers: {self.workers})...")
+            try:
+                # 註：在 macOS 上使用 'spawn' 可能更穩定，但這裡優先修正邏輯
+                with Pool(processes=self.workers) as pool:
+                    results = pool.map(self._process_single_page, task_args)
+            except Exception as e:
+                print(f"⚠️ 並行處理失敗，切換至序列處理: {e}")
+                results = [self._process_single_page(arg) for arg in task_args]
 
         # 3. 排序結果
         results.sort(key=lambda x: x[0])
 
         elapsed = time.time() - start_time
-        print(f"並行處理完成！總耗時: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/頁)")
+        print(f"PDF 處理完成！總耗時: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/頁)")
 
         return [r[1] for r in results]
 
