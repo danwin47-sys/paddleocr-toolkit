@@ -43,11 +43,12 @@ try:
 except Exception as e:
     print(f'Import error: {e}')
     sys.exit(1)
-"; then
+" 2>&1 | grep -v "INTEL MKL"; then
     echo -e "  ${GREEN}✓${NC} Python imports 正常"
     ((TESTS_PASSED++))
 else
-    echo -e "  ${YELLOW}⚠${NC} Python imports 有警告（可能是正常的）"
+    echo -e "  ${RED}✗${NC} Python imports 失敗"
+    ((TESTS_FAILED++))
 fi
 
 # ==================== 2. 前端測試 ====================
