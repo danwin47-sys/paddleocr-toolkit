@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 import fitz  # PyMuPDF
 import numpy as np
 
+from paddleocr_toolkit.utils.logger import logger
+
 if TYPE_CHECKING:
     from paddleocr_toolkit.core import OCREngineManager
 
@@ -156,16 +158,16 @@ class HybridPDFProcessor:
                     input_path_obj.parent / f"{input_path_obj.stem}_hybrid.md"
                 )
 
-            print(f"正在處理（混合模式）: {pdf_path}")
+            logger.info("Processing (hybrid mode): %s", pdf_path)
             logging.info(f"開始混合模式處理: {pdf_path}")
 
             # 自動偵測 PDF 品質並調整 DPI
             quality = detect_pdf_quality(pdf_path)
-            print(f"[偵測] {quality['reason']}")
+            logger.info("[Detection] %s", quality['reason'])
             if quality["is_scanned"] or quality["is_blurry"]:
                 if quality["recommended_dpi"] > dpi:
                     dpi = quality["recommended_dpi"]
-            print(f"   使用 DPI: {dpi}")
+            logger.info("Using DPI: %d", dpi)
 
             return self._process_pdf_internal(
                 pdf_path,
@@ -205,7 +207,7 @@ class HybridPDFProcessor:
         pdf_doc = fitz.open(pdf_path)
         total_pages = len(pdf_doc)
 
-        print(f"PDF 共 {total_pages} 頁")
+        logger.info("PDF: %d pages", total_pages)
         logging.info(f"PDF 共 {total_pages} 頁")
 
         # 設定生成器
@@ -260,11 +262,11 @@ class HybridPDFProcessor:
         # === 3. 儲存 PDF ===
         if pdf_gen.save():
             result_summary["searchable_pdf"] = output_path
-            print(f"[OK] 可搜尋 PDF 已儲存：{output_path}")
+            logger.info("[OK] Searchable PDF saved: %s", output_path)
 
         if erased_gen.save():
             result_summary["erased_pdf"] = erased_path
-            print(f"[OK] 擦除版 PDF 已儲存：{erased_path}")
+            logger.info("[OK] Erased PDF saved: %s", erased_path)
 
         # === 4. 儲存其他輸出 ===
         self._save_outputs(
@@ -289,7 +291,7 @@ class HybridPDFProcessor:
                 logging.info("翻譯功能已配置，但需手動整合 TranslationProcessor")
 
         # === 6. 完成統計 ===
-        print(f"[OK] 混合模式處理完成：{result_summary['pages_processed']} 頁")
+        logger.info("[OK] Hybrid mode processing complete: %d pages", result_summary['pages_processed'])
 
         final_stats = stats_collector.finish()
         final_stats.print_summary()
@@ -475,7 +477,7 @@ class HybridPDFProcessor:
             with open(markdown_output, "w", encoding="utf-8") as f:
                 f.write(combined_markdown)
             result_summary["markdown_file"] = markdown_output
-            print(f"[OK] Markdown 已儲存：{markdown_output}")
+            logger.info("[OK] Markdown saved: %s", markdown_output)
 
         # 儲存 JSON
         if json_output:
@@ -504,7 +506,7 @@ class HybridPDFProcessor:
                 with open(json_output, "w", encoding="utf-8") as f:
                     json.dump(json_data, f, ensure_ascii=False, indent=2)
                 result_summary["json_file"] = json_output
-                print(f"[OK] JSON 已儲存：{json_output}")
+                logger.info("[OK] JSON saved: %s", json_output)
             except Exception as e:
                 logging.error(f"JSON 輸出失敗: {e}")
 
@@ -554,6 +556,6 @@ class HybridPDFProcessor:
                 with open(html_output, "w", encoding="utf-8") as f:
                     f.write("\n".join(html_content))
                 result_summary["html_file"] = html_output
-                print(f"[OK] HTML 已儲存：{html_output}")
+                logger.info("[OK] HTML saved: %s", html_output)
             except Exception as e:
                 logging.error(f"HTML 輸出失敗: {e}")

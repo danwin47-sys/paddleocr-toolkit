@@ -26,6 +26,8 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
+from paddleocr_toolkit.utils.logger import logger
+
 
 class ParallelPDFProcessor:
     """
@@ -51,7 +53,7 @@ class ParallelPDFProcessor:
             default_workers = max(1, cpu_count() - 1)
 
         self.workers = workers or default_workers
-        print(f"初始化並行處理器: 使用 {self.workers} 個工作進程")
+        logger.info("Initialized parallel processor with %d workers", self.workers)
 
     @staticmethod
     def _process_single_page(
@@ -113,12 +115,12 @@ class ParallelPDFProcessor:
         config = ocr_config or {"mode": "basic", "device": "cpu"}
 
         start_time = time.time()
-        print(f"開始處理 PDF: {Path(pdf_path).name}")
+        logger.info("Starting PDF processing: %s", Path(pdf_path).name)
 
         # 1. 將 PDF 轉換為圖片對列
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
-        print(f"總頁數: {total_pages}")
+        logger.info("Total pages: %d", total_pages)
 
         task_args = []
         for i in range(total_pages):
@@ -139,20 +141,20 @@ class ParallelPDFProcessor:
                 results.append(res)
         else:
             # 啟動進程池
-            print(f"啟動進程池 (Workers: {self.workers})...")
+            logger.debug("Starting process pool with %d workers", self.workers)
             try:
                 # 註：在 macOS 上使用 'spawn' 可能更穩定，但這裡優先修正邏輯
                 with Pool(processes=self.workers) as pool:
                     results = pool.map(self._process_single_page, task_args)
             except Exception as e:
-                print(f"⚠️ 並行處理失敗，切換至序列處理: {e}")
+                logger.warning("Parallel processing failed, switching to serial: %s", e)
                 results = [self._process_single_page(arg) for arg in task_args]
 
         # 3. 排序結果
         results.sort(key=lambda x: x[0])
 
         elapsed = time.time() - start_time
-        print(f"PDF 處理完成！總耗時: {elapsed:.2f}s ({elapsed/total_pages:.2f}s/頁)")
+        logger.info("PDF processing complete! Total time: %.2fs (%.2fs/page)", elapsed, elapsed/total_pages)
 
         return [r[1] for r in results]
 
@@ -160,34 +162,34 @@ class ParallelPDFProcessor:
         """
         執行效能比較：並行 vs 序列
         """
-        print("\n" + "=" * 50)
-        print("🚀 效能基準測試：並行 vs 序列")
-        print("=" * 50)
+        logger.info("=" * 50)
+        logger.info("Performance Benchmark: Parallel vs Serial")
+        logger.info("=" * 50)
 
         config = ocr_config or {"mode": "basic", "device": "cpu"}
 
         # 序列測試
-        print("\n[1/2] 正在進行序列處理...")
+        logger.info("[1/2] Running serial processing...")
         start_serial = time.time()
         # 簡單模擬序列邏輯
         doc = fitz.open(pdf_path)
         for i in range(min(5, len(doc))):  # 僅測試前 5 頁以節省時間
             self._process_single_page((i, b"fake_data", config))
         serial_time = (time.time() - start_serial) * (len(doc) / 5)
-        print(f"預估序列總耗時: {serial_time:.2f}s")
+        logger.info("Estimated serial time: %.2fs", serial_time)
 
         # 並行測試
-        print("\n[2/2] 正在進行並行處理...")
+        logger.info("[2/2] Running parallel processing...")
         start_parallel = time.time()
         self.process_pdf_parallel(pdf_path, config)
         parallel_time = time.time() - start_parallel
-        print(f"實際並行總耗時: {parallel_time:.2f}s")
+        logger.info("Actual parallel time: %.2fs", parallel_time)
 
         speedup = serial_time / parallel_time if parallel_time > 0 else 0
-        print("\n" + "-" * 30)
-        print(f"加速比: {speedup:.2f}x")
-        print(f"核心利用率: {(speedup/self.workers)*100:.1f}%")
-        print("-" * 30)
+        logger.info("-" * 30)
+        logger.info("Speedup: %.2fx", speedup)
+        logger.info("Core utilization: %.1f%%", (speedup/self.workers)*100)
+        logger.info("-" * 30)
 
 
 if __name__ == "__main__":
@@ -197,4 +199,4 @@ if __name__ == "__main__":
         processor = ParallelPDFProcessor()
         processor.benchmark(test_pdf)
     else:
-        print("請提供測試用的 PDF 檔案以執行 benchmark")
+        logger.warning("Please provide a test PDF file to run benchmark")
