@@ -244,9 +244,10 @@ class GPUBatchProcessor:
 
 
 # 使用示例
+# 使用示例
 if __name__ == "__main__":
-    print("\n使用方法:")
-    print(
+    logger.info("Usage:")
+    logger.info(
         """
 from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
 

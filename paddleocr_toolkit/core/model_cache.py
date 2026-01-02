@@ -207,7 +207,7 @@ class ResultCache:
         for cache_file in self.cache_dir.glob("*.pkl"):
             cache_file.unlink()
 
-        print("缓存已清理")
+        logger.info("Cache cleared")
 
     def get_stats(self) -> Dict:
         """获取缓存统计"""
@@ -270,11 +270,12 @@ def cached_ocr_result(mode: str):
 
 
 # 使用示例
+# 使用示例
 if __name__ == "__main__":
-    print("缓存系统")
-    print("预期性能提升: 10x+ (重复文件)")
-    print("\n使用方法:")
-    print(
+    logger.info("Cache System")
+    logger.info("Expected Performance Gain: 10x+ (Duplicate Files)")
+    logger.info("Usage:")
+    logger.info(
         """
 # 1. 模型缓存
 from paddleocr_toolkit.core.model_cache import ModelCache

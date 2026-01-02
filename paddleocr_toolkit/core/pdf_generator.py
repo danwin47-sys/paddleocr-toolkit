@@ -14,6 +14,7 @@ try:
     HAS_FITZ = True
 except ImportError:
     HAS_FITZ = False
+from paddleocr_toolkit.utils.logger import logger
 
 try:
     from PIL import Image
@@ -71,7 +72,7 @@ class PDFGenerator:
             bool: 是否成功新增頁面
         """
         if not HAS_PIL:
-            print("警告：Pillow 未安裝")
+            logger.warning("Pillow not installed")
             return False
 
         try:
@@ -112,7 +113,7 @@ class PDFGenerator:
             return True
 
         except Exception as e:
-            print(f"警告：新增頁面失敗 ({image_path}): {e}")
+            logger.warning("Failed to add page (%s): %s", image_path, e)
             return False
 
     def add_page_from_pixmap(self, pixmap, ocr_results: List[OCRResult]) -> bool:
@@ -166,7 +167,7 @@ class PDFGenerator:
             return True
 
         except Exception as e:
-            print(f"警告：新增頁面失敗: {e}")
+            logger.warning("Failed to add page from pixmap: %s", e)
             return False
 
     def _insert_invisible_text(self, page, result: OCRResult) -> None:
@@ -293,14 +294,15 @@ class PDFGenerator:
         """
         try:
             if self.page_count == 0:
-                print("警告：沒有頁面可儲存")
+                logger.warning("No pages to save")
                 return False
 
             self.doc.save(self.output_path)
+            self.doc.save(self.output_path)
             self.doc.close()
-            print(f"[OK] PDF 已儲存：{self.output_path} ({self.page_count} 頁)")
+            logger.info("[OK] PDF saved: %s (%d pages)", self.output_path, self.page_count)
             return True
 
         except Exception as e:
-            print(f"錯誤：儲存 PDF 失敗: {e}")
+            logger.error("Failed to save PDF: %s", e)
             return False

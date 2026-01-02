@@ -207,10 +207,13 @@ class PluginLoader:
 
 
 # 使用範例
+# 使用範例
 if __name__ == "__main__":
-    print("插件載入器")
-    print("\n使用方法:")
-    print(
+    from paddleocr_toolkit.utils.logger import logger
+    
+    logger.info("Plugin Loader Example")
+    logger.info("Usage:")
+    logger.info(
         """
 from paddleocr_toolkit.plugins.loader import PluginLoader
 
@@ -222,7 +225,7 @@ loader.load_all_plugins()
 
 # 列出插件
 for info in loader.list_plugins():
-    print(f"- {info['name']} v{info['version']}")
+    logger.info("- %s v%s", info['name'], info['version'])
 
 # 使用插件
 plugin = loader.get_plugin('MyPlugin')
