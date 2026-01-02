@@ -4,6 +4,7 @@
 FastAPI后端 - Web界面
 v1.2.0新增 - REST API服务
 """
+from __future__ import annotations  # Python 3.8 兼容性
 
 import asyncio
 import os
