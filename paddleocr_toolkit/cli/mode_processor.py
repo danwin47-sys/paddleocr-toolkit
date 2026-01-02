@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from paddle_ocr_tool import PaddleOCRTool
+    
+from paddleocr_toolkit.utils.logger import logger
 
 # 需要从 paddle_ocr_tool.py 导入的常量
 SUPPORTED_PDF_FORMAT = ".pdf"
@@ -71,11 +73,11 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            logger.error("Processing error: %s", result['error'])
         else:
-            print(f"\n[OK] 公式识别完成！共识别 {len(result['formulas'])} 个公式")
+            logger.info("Formula recognition complete! %d formulas recognized", len(result['formulas']))
             if result.get("latex_file"):
-                print(f"  LaTeX 文件: {result['latex_file']}")
+                logger.info("LaTeX file: %s", result['latex_file'])
 
         return result
 
@@ -94,17 +96,17 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            logger.error("Processing error: %s", result['error'])
         else:
-            print(f"\n[OK] 处理完成！共处理 {result['pages_processed']} 页")
+            logger.info("Processing complete! %s pages processed", result['pages_processed'])
             if result.get("markdown_files"):
-                print(f"  Markdown 文件: {', '.join(result['markdown_files'])}")
+                logger.info("Markdown files: %s", ', '.join(result['markdown_files']))
             if result.get("json_files"):
-                print(f"  JSON 文件: {', '.join(result['json_files'])}")
+                logger.info("JSON files: %s", ', '.join(result['json_files']))
             if result.get("excel_files"):
-                print(f"  Excel 文件: {', '.join(result['excel_files'])}")
+                logger.info("Excel files: %s", ', '.join(result['excel_files']))
             if result.get("html_files"):
-                print(f"  HTML 文件: {', '.join(result['html_files'])}")
+                logger.info("HTML files: %s", ', '.join(result['html_files']))
 
         return result
 
@@ -130,17 +132,17 @@ class ModeProcessor:
         from paddle_ocr_tool import HAS_TRANSLATOR
 
         if not HAS_TRANSLATOR:
-            print("错误：翻译模块不可用")
-            print("请确认 pdf_translator.py 存在且依赖已安装")
+            logger.error("Translator module not available")
+            logger.error("Please ensure pdf_translator.py exists and dependencies are installed")
             sys.exit(1)
 
-        print(f"[翻译功能] 启用")
-        print(f"   来源语言：{self.args.source_lang}")
-        print(f"   目标语言：{self.args.target_lang}")
-        print(f"   Ollama 模型：{self.args.ollama_model}")
-        print(f"   纯翻译 PDF：{'停用' if self.args.no_mono else '启用'}")
-        print(
-            f"   双语对照 PDF：{'停用' if self.args.no_dual else f'启用 ({self.args.dual_mode})'}"
+        logger.info("[Translation] Enabled")
+        logger.info("   Source Lang: %s", self.args.source_lang)
+        logger.info("   Target Lang: %s", self.args.target_lang)
+        logger.info("   Ollama Model: %s", self.args.ollama_model)
+        logger.info("   Mono PDF: %s", 'Disabled' if self.args.no_mono else 'Enabled')
+        logger.info(
+            "   Dual PDF: %s", 'Disabled' if self.args.no_dual else f'Enabled ({self.args.dual_mode})'
         )
 
         result = self.tool.process_translate(
@@ -163,21 +165,21 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            logger.error("Processing error: %s", result['error'])
         else:
-            print(f"\n[OK] 翻译处理完成！共处理 {result['pages_processed']} 页")
+            logger.info("Translation complete! %s pages processed", result['pages_processed'])
             if result.get("searchable_pdf"):
-                print(f"  [可搜寻 PDF] {result['searchable_pdf']}")
+                logger.info("  [Searchable PDF] %s", result['searchable_pdf'])
             if result.get("markdown_file"):
-                print(f"  [Markdown] {result['markdown_file']}")
+                logger.info("  [Markdown] %s", result['markdown_file'])
             if result.get("json_file"):
-                print(f"  [JSON] {result['json_file']}")
+                logger.info("  [JSON] %s", result['json_file'])
             if result.get("html_file"):
-                print(f"  [HTML] {result['html_file']}")
+                logger.info("  [HTML] %s", result['html_file'])
             if result.get("translated_pdf"):
-                print(f"  [翻译PDF] {result['translated_pdf']}")
+                logger.info("  [Translated PDF] %s", result['translated_pdf'])
             if result.get("bilingual_pdf"):
-                print(f"  [双语PDF] {result['bilingual_pdf']}")
+                logger.info("  [Bilingual PDF] %s", result['bilingual_pdf'])
 
         return result
 
@@ -198,13 +200,13 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            print(f"处理过程中发生错误: {result['error']}")
+            logger.error("Processing error: %s", result['error'])
         else:
-            print(f"\n[OK] 混合模式处理完成！共处理 {result['pages_processed']} 页")
+            logger.info("Hybrid processing complete! %s pages processed", result['pages_processed'])
             if result.get("searchable_pdf"):
-                print(f"  可搜寻 PDF: {result['searchable_pdf']}")
+                logger.info("  Searchable PDF: %s", result['searchable_pdf'])
             if result.get("markdown_file"):
-                print(f"  Markdown 文件: {result['markdown_file']}")
+                logger.info("  Markdown file: %s", result['markdown_file'])
 
         return result
 
@@ -267,7 +269,7 @@ class ModeProcessor:
                 all_text.append(text)
 
         else:
-            print(f"错误：不支持的文件格式: {self.input_path.suffix}")
+            logger.error("Unsupported file format: %s", self.input_path.suffix)
             sys.exit(1)
 
         # 输出结果
@@ -282,15 +284,15 @@ class ModeProcessor:
             # 保存到文件
             with open(text_output_path, "w", encoding="utf-8") as f:
                 f.write(combined_text)
-            print(f"[OK] 文字已保存：{text_output_path}")
+            logger.info("Text saved to: %s", text_output_path)
 
-        # 如果两个输出都停用，则输出到终端
+        # 如果兩個輸出都停用，則輸出到終端（這裡保留 print，因為這是用戶要求的直接輸出）
         if not self.args.text_output and not self.args.searchable and combined_text:
             print("\n" + "=" * 50)
             print("OCR 识别结果：")
             print("=" * 50)
             print(combined_text)
 
-        print("\n[OK] 处理完成！")
+        logger.info("Processing complete!")
 
         return {"status": "success", "text": combined_text}
