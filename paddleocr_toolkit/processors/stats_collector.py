@@ -150,7 +150,7 @@ class ProcessingStats:
 
     def print_summary(self):
         """列印摘要報告"""
-        print(self.to_summary())
+        logger.info("\n%s", self.to_summary())
 
     def save_report(self, output_path: str, format: str = "txt"):
         """
