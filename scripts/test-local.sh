@@ -5,17 +5,19 @@
 
 set -e  # 遇到錯誤立即退出
 
-# 解析命令行參數
-RUN_PYTEST=false
+# 解析命令行參數 - 默認運行 pytest
+RUN_PYTEST=true
 for arg in "$@"; do
-    if [ "$arg" = "--with-pytest" ] || [ "$arg" = "-p" ]; then
-        RUN_PYTEST=true
+    if [ "$arg" = "--skip-pytest" ] || [ "$arg" = "-s" ]; then
+        RUN_PYTEST=false
+        echo "⚡ 快速模式：跳過 pytest 單元測試"
     fi
 done
 
 echo "🚀 開始本地 CI/CD 測試..."
 if [ "$RUN_PYTEST" = true ]; then
-    echo "📊 pytest 單元測試：已啟用"
+    echo "📊 pytest 單元測試：已啟用（默認）"
+    echo "   提示：使用 --skip-pytest 跳過以加快速度"
 fi
 echo ""
 
