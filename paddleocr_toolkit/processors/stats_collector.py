@@ -1,15 +1,16 @@
 ﻿# -*- coding: utf-8 -*-
 """
 PaddleOCR Toolkit - 處理統計報告
-
-提供 OCR 處理的統計資訊和報告功能。
+統計收集器模組
+用於收集和分析 OCR 處理統計數據
 """
 
-import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from paddleocr_toolkit.utils.logger import logger
 
 
 @dataclass
