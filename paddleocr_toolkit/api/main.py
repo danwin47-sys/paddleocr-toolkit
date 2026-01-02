@@ -38,6 +38,7 @@ from paddleocr_toolkit.api.file_manager import router as file_router
 from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
+from paddleocr_toolkit.utils.logger import logger
 
 # Next.js 前端輸出目錄
 NEXT_OUT_DIR = Path(__file__).parent.parent.parent / "web-frontend" / "out"
@@ -57,8 +58,8 @@ app = FastAPI(
 async def global_exception_handler(request, exc):
     import traceback
     error_detail = traceback.format_exc()
-    print(f"[CRITICAL ERROR] {exc}")
-    print(error_detail)
+    logger.error("CRITICAL ERROR: %s", exc)
+    logger.error(error_detail)
     return JSONResponse(
         status_code=500,
         content={"status": "error", "message": f"伺服器內部錯誤: {str(exc)}", "detail": error_detail}
@@ -72,17 +73,20 @@ async def log_requests(request, call_next):
     start_time = time.time()
     path = request.url.path
     method = request.method
-    print(f"[HTTP] {method} {path} - 收到請求")
+    logger.debug("HTTP %s %s - Request received", method, path)
     
     try:
         response = await call_next(request)
         duration = time.time() - start_time
-        print(f"[HTTP] {method} {path} - 完成處理 ({duration:.2f}s) - Status: {response.status_code}")
+        logger.info(
+            "HTTP %s %s - Completed (%.2fs) - Status: %d",
+            method, path, duration, response.status_code
+        )
         return response
     except Exception as e:
-        print(f"[HTTP] {method} {path} - 處理時發生異常: {e}")
+        logger.error("HTTP %s %s - Error during processing: %s", method, path, e)
         import traceback
-        print(traceback.format_exc())
+        logger.error(traceback.format_exc())
         raise e
 
 # 掛載路由
@@ -94,14 +98,14 @@ if NEXT_OUT_DIR.exists():
     next_static_dir = NEXT_OUT_DIR / "_next"
     if next_static_dir.exists():
         app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
-        print(f"[靜態服務] 掛載 Next.js 靜態資源: {next_static_dir}")
+        logger.info("Mounted Next.js static assets: %s", next_static_dir)
     
     # 掛載其他靜態檔案（圖片、SVG 等）
     app.mount("/static", StaticFiles(directory=str(NEXT_OUT_DIR)), name="nextjs_root")
-    print(f"[靜態服務] 使用 Next.js 編譯輸出: {NEXT_OUT_DIR}")
+    logger.info("Using Next.js build output: %s", NEXT_OUT_DIR)
 else:
-    print(f"[警告] Next.js 編譯輸出不存在: {NEXT_OUT_DIR}")
-    print("請執行：cd web-frontend && npm run build")
+    logger.warning("Next.js build output not found: %s", NEXT_OUT_DIR)
+    logger.warning("Please run: cd web-frontend && npm run build")
 
 # CORS設定
 app.add_middleware(
@@ -236,12 +240,15 @@ async def cleanup_old_tasks():
                             file_path.unlink()
                             removed_files += 1
                     except Exception as e:
-                        print(f"⚠️ 無法刪除檔案 {file_path}: {e}")
+                        logger.warning("Failed to delete file %s: %s", file_path, e)
             
             if removed_tasks > 0 or removed_results > 0 or removed_files > 0:
-                print(f"🧹 清理完成: 移除 {removed_tasks} 個舊任務, {removed_results} 個舊結果, {removed_files} 個舊檔案")
+                logger.info(
+                    "Cleanup completed: removed %d tasks, %d results, %d files",
+                    removed_tasks, removed_results, removed_files
+                )
         except Exception as e:
-            print(f"⚠️ 清理任務時發生錯誤: {e}")
+            logger.error("Error during cleanup: %s", e)
 
 
 @app.on_event("startup")
@@ -250,23 +257,23 @@ async def startup_event():
     應用啟動時預載 OCR 引擎並啟動清理任務
     """
     global ocr_engine_cache
-    print("=" * 60)
-    print("🚀 正在預載 OCR 引擎...")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Starting OCR engine preload...")
+    logger.info("=" * 60)
     try:
         # 預載基礎模式引擎（最常用）
         ocr_engine_cache = OCREngineManager(mode="basic", device="cpu", plugin_loader=plugin_loader)
         ocr_engine_cache.init_engine()
-        print("✅ OCR 引擎預載完成 (Basic 模式)")
-        print("   首次 OCR 請求將直接使用預載引擎，無需等待模型載入")
+        logger.info("OCR engine preloaded successfully (Basic mode)")
+        logger.info("First OCR request will use preloaded engine without delay")
     except Exception as e:
-        print(f"⚠️ OCR 引擎預載失敗: {e}")
+        logger.error("OCR engine preload failed: %s", e)
         ocr_engine_cache = None
     
     # 啟動定期清理任務
     asyncio.create_task(cleanup_old_tasks())
-    print("🧹 已啟動定期任務清理（每小時執行）")
-    print("=" * 60)
+    logger.info("Started periodic cleanup task (runs every hour)")
+    logger.info("=" * 60)
 
 
 def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> str:
