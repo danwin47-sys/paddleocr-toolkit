@@ -13,7 +13,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 from urllib.parse import quote
 
 from fastapi import (
@@ -1194,7 +1194,7 @@ async def export_searchable_pdf(task_id: str):
 @app.post("/api/batch-ocr")
 async def batch_ocr(
     request: Request,
-    files: list[UploadFile] = File(...),
+    files: List[UploadFile] = File(...),
     background_tasks: BackgroundTasks = None,
     mode: str = "basic",
     gemini_key: Optional[str] = None,
