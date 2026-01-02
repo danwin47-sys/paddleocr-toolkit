@@ -161,7 +161,7 @@ class OCREngineManager:
             raise ImportError("PPStructureV3 模組不可用，請確認 paddleocr 版本")
 
         print("  載入 PPStructure 引擎...")
-        self.engine = PPStructure(
+        self.engine = PPStructureV3(
             show_log=True,
             layout=True,
             table=True,
