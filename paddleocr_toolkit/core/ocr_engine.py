@@ -158,7 +158,7 @@ class OCREngineManager:
     def _init_structure_engine(self) -> None:
         """初始化結構化引擎"""
         if not HAS_STRUCTURE:
-            raise ImportError("PPStructure 模組不可用，請確認 paddleocr 版本")
+            raise ImportError("PPStructureV3 模組不可用，請確認 paddleocr 版本")
 
         print("  載入 PPStructure 引擎...")
         self.engine = PPStructure(
