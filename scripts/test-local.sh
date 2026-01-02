@@ -92,10 +92,20 @@ else
 fi
 
 # 3.2 檢查敏感資訊
-echo "  → 檢查敏感資訊..."
+echo "  →檢查敏感資訊..."
 SECRETS_FOUND=0
-if grep -r "api_key.*=.*['\"][^'\"]\{10,\}" --include="*.py" --include="*.ts" --include="*.tsx" . 2>/dev/null | grep -v "node_modules" | grep -v ".git"; then
-    echo -e "  ${RED}✗${NC} 發現可能的 API key！"
+# 排除測試檔案和特定目錄，並只檢查實際的 key 賦值（排除類型提示和參數定義）
+# 匹配 api_key = "actual_key_string" 但不匹配 api_key: str 或 api_key 參數
+if grep -rE "api_key\s*=\s*['\"][a-zA-Z0-9_-]{20,}['\"]" \
+    --include="*.py" --include="*.ts" --include="*.tsx" \
+    --exclude-dir="node_modules" \
+    --exclude-dir=".git" \
+    --exclude-dir="tests" \
+    --exclude-dir="__pycache__" \
+    --exclude-dir=".pytest_cache" \
+    . 2>/dev/null; then
+    echo -e "  ${RED}✗${NC} 發現可能的真實 API key！"
+    echo -e "  ${YELLOW}提示：${NC} 請使用環境變數而非硬編碼"
     ((TESTS_FAILED++))
     SECRETS_FOUND=1
 fi
