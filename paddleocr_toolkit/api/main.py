@@ -39,9 +39,10 @@ from paddleocr_toolkit.api.websocket_manager import manager
 from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 from paddleocr_toolkit.plugins.loader import PluginLoader
 from paddleocr_toolkit.utils.logger import logger
+from paddleocr_toolkit.core.config import settings
 
 # Next.js 前端輸出目錄
-NEXT_OUT_DIR = Path(__file__).parent.parent.parent / "web-frontend" / "out"
+NEXT_OUT_DIR = settings.BASE_DIR / "web-frontend" / "out"
 STATIC_DIR = NEXT_OUT_DIR
 
 app = FastAPI(
@@ -145,11 +146,10 @@ RATE_LIMIT_BATCH = 3  # 批量處理每分鐘請求數
 RATE_WINDOW = 60  # 時間窗口（秒）
 
 # 配置
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
-OUTPUT_DIR = Path("outputs")
-OUTPUT_DIR.mkdir(exist_ok=True)
-PLUGIN_DIR = Path("paddleocr_toolkit/plugins")
+# 配置
+UPLOAD_DIR = settings.UPLOAD_DIR
+OUTPUT_DIR = settings.OUTPUT_DIR
+PLUGIN_DIR = settings.BASE_DIR / "paddleocr_toolkit" / "plugins"
 
 # 初始化插件載入器
 plugin_loader = PluginLoader(str(PLUGIN_DIR))
@@ -230,7 +230,7 @@ async def cleanup_old_tasks():
                             file_path.unlink()
                             removed_files += 1
                     except Exception as e:
-                        print(f"⚠️ 無法刪除檔案 {file_path}: {e}")
+                        logger.warning("Failed to delete file %s: %s", file_path, e)
            
             # 清理輸出目錄
             for file_path in OUTPUT_DIR.glob("*"):
@@ -295,7 +295,7 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> st
             max_dim = max(width, height)
 
             if max_dim <= max_side:
-                print(f"圖片大小 {width}x{height} 在限制內，不需要縮小")
+                logger.debug("Image size %dx%d within limits, no resize needed", width, height)
                 return file_path
 
             # 計算縮放比例
@@ -303,7 +303,7 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> st
             new_width = int(width * scale)
             new_height = int(height * scale)
 
-            print(f"圖片太大 ({width}x{height})，縮小為 {new_width}x{new_height}")
+            logger.info("圖片太大 (%dx%d)，縮小為 %dx%d", width, height, new_width, new_height)
 
             # 縮小圖片
             resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
@@ -313,11 +313,11 @@ def resize_image_if_needed(file_path: str, max_side: int = MAX_IMAGE_SIDE) -> st
             new_path = path.parent / f"{path.stem}_resized{path.suffix}"
             resized_img.save(str(new_path), quality=95)
 
-            print(f"縮小後圖片已儲存: {new_path}")
+            logger.info("縮小後圖片已儲存: %s", new_path)
             return str(new_path)
 
     except Exception as e:
-        print(f"縮小圖片時發生錯誤: {e}，使用原始圖片")
+        logger.error("縮小圖片時發生錯誤: %s，使用原始圖片", e)
         return file_path
 
 
@@ -399,7 +399,7 @@ async def process_ocr_task(
             ocr_result = await asyncio.to_thread(
                 parallel_processor.process_pdf_parallel, actual_path, {"mode": mode}
             )
-            print(f"[OCR] [{task_id}] PDF 辨識完成，頁數: {len(ocr_result) if isinstance(ocr_result, list) else 'N/A'}")
+            logger.info("[OCR] [%s] PDF 辨識完成，頁數: %s", task_id, len(ocr_result) if isinstance(ocr_result, list) else 'N/A')
         else:
             # 標準單點辨識
             await manager.send_progress_update(task_id, 30, "processing", "正在辨識...")
@@ -499,7 +499,7 @@ async def process_ocr_task(
                         if corrected:
                             current_text = corrected
                 except Exception as e:
-                    print(f"{provider} 校正失敗: {e}")
+                    logger.error("%s 校正失敗: %s", provider, e)
 
         final_result = {
             "raw_result": current_text,
@@ -531,13 +531,14 @@ async def process_ocr_task(
         await manager.send_error(task_id, error_msg)
         
         # 詳細錯誤日誌
-        print("=" * 60)
-        print(f"[ERROR] 任務失敗: {task_id}")
-        print(f"[ERROR] 錯誤訊息: {e}")
-        print(f"[ERROR] 完整 Traceback:")
         import traceback
-        traceback.print_exc()
-        print("=" * 60)
+        error_detail = traceback.format_exc()
+        logger.error("=" * 60)
+        logger.error("[ERROR] 任務失敗: %s", task_id)
+        logger.error("[ERROR] 錯誤訊息: %s", e)
+        logger.error("[ERROR] 完整 Traceback:")
+        logger.error(error_detail)
+        logger.error("=" * 60)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -585,10 +586,10 @@ async def upload_and_ocr(
     
     # 生成任务ID
     task_id = str(uuid.uuid4())
-    print(f"[UPLOAD] 收到上傳請求")
-    print(f"[UPLOAD] 任務 ID: {task_id}")
-    print(f"[UPLOAD] 檔案名稱: {file.filename}")
-    print(f"[UPLOAD] OCR 模式: {mode}")
+    logger.info("[UPLOAD] Upload request received")
+    logger.info("[UPLOAD] Task ID: %s", task_id)
+    logger.info("[UPLOAD] Filename: %s", file.filename)
+    logger.info("[UPLOAD] OCR Mode: %s", mode)
 
     # 保存文件
     file_path = UPLOAD_DIR / f"{task_id}_{file.filename}"
@@ -596,18 +597,18 @@ async def upload_and_ocr(
         content = await file.read()
         f.write(content)
     
-    print(f"[UPLOAD] 檔案已儲存: {file_path}")
-    print(f"[UPLOAD] 檔案大小: {len(content)} bytes")
+    logger.info("[UPLOAD] File saved: %s", file_path)
+    logger.info("[UPLOAD] Size: %d bytes", len(content))
 
     # 创建后台任务
     background_tasks.add_task(
         process_ocr_task, task_id, str(file_path), mode, gemini_key, claude_key
     )
-    print(f"[UPLOAD] 背景任務已排程: {task_id}")
+    logger.info("[UPLOAD] 背景任務已排程: %s", task_id)
 
     # 初始化任务状态
     tasks[task_id] = {"status": "queued", "progress": 0}
-    print(f"[UPLOAD] 任務狀態已初始化: queued")
+    logger.info("[UPLOAD] 任務狀態已初始化: queued")
 
     return TaskResponse(task_id=task_id, status="queued", message="任务已创建，正在处理...")
 
@@ -855,16 +856,16 @@ async def translate_text(request: TranslationRequest):
     api_key = request.api_key
     model = request.model
     
-    print(f"[DEBUG] 開始處理翻譯請求. 提供商: {provider}, 目標語言: {target_lang}")
-    print(f"[DEBUG] 文字長度: {len(text)} 字元")
+    logger.debug("開始處理翻譯請求. 提供商: %s, 目標語言: %s", provider, target_lang)
+    logger.debug("文字長度: %d 字元", len(text))
     
     try:
-        print("[DEBUG] 正在導入 LLM 客戶端...")
+        logger.debug("正在導入 LLM 客戶端...")
         from paddleocr_toolkit.llm.llm_client import create_llm_client
-        print("[DEBUG] 導入成功")
+        logger.debug("導入成功")
         
         # 設定提示詞
-        print("[DEBUG] 正在準備提示詞...")
+        logger.debug("正在準備提示詞...")
         lang_map = {
             "en": "English",
             "zh-TW": "Traditional Chinese (繁體中文)",
@@ -885,10 +886,10 @@ async def translate_text(request: TranslationRequest):
 
 翻譯："""
         
-        print(f"[DEBUG] 提示詞準備完成. 目標語言名稱: {target_language}")
+        logger.debug("提示詞準備完成. 目標語言名稱: %s", target_language)
         
         # 創建 LLM 客戶端
-        print(f"[DEBUG] 正在創建 {provider} 客戶端...")
+        logger.debug("正在創建 %s 客戶端...", provider)
         kwargs = {}
         if api_key:
             kwargs["api_key"] = api_key
@@ -899,32 +900,32 @@ async def translate_text(request: TranslationRequest):
             kwargs["base_url"] = "http://localhost:11434"
         
         llm = create_llm_client(provider=provider, **kwargs)
-        print(f"[DEBUG] 客戶端創建成功")
+        logger.debug("客戶端創建成功")
         
         # 檢查服務是否可用
-        print(f"[DEBUG] 正在檢查 {provider} 服務可用性...")
+        logger.debug("正在檢查 %s 服務可用性...", provider)
         if not llm.is_available():
-            print(f"[ERROR] {provider} 服務檢查失敗 (不可用)")
+            logger.error("%s 服務檢查失敗 (不可用)", provider)
             return {
                 "status": "error",
                 "message": f"{provider} 服務不可用，請確認已啟動相關服務"
             }
         
-        print(f"[DEBUG] 服務可用性檢查通過")
+        logger.debug("服務可用性檢查通過")
         
         # 生成翻譯
-        print(f"[DEBUG] 正在向 {provider} 發送生成請求 (此步驟可能需要一段時間)...")
+        logger.debug("正在向 %s 發送生成請求 (此步驟可能需要一段時間)...", provider)
         translated = llm.generate(prompt, temperature=0.3, max_tokens=4096)
-        print(f"[DEBUG] 生成請求完成")
+        logger.debug("生成請求完成")
         
         if not translated:
-            print(f"[WARNING] 翻譯結果為空")
+            logger.warning("翻譯結果為空")
             return {
                 "status": "error",
                 "message": "翻譯失敗，請重試"
             }
         
-        print(f"[SUCCESS] 翻譯完成，長度: {len(translated)}")
+        logger.info("翻譯完成，長度: %d", len(translated))
         return {
             "status": "success",
             "translated_text": translated,
@@ -935,8 +936,8 @@ async def translate_text(request: TranslationRequest):
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
-        print(f"[ERROR] 翻譯錯誤: {e}")
-        print(error_detail)
+        logger.error("翻譯錯誤: %s", e)
+        logger.error(error_detail)
         return {
             "status": "error",
             "message": f"翻譯失敗: {str(e)}"
@@ -1022,7 +1023,7 @@ async def convert_format(request: ConvertRequest):
         )
     
     except Exception as e:
-        print(f"格式轉換失敗: {e}")
+        logger.error("格式轉換失敗: %s", e)
         raise HTTPException(status_code=500, detail=f"轉換失敗: {str(e)}")
 
 
@@ -1043,14 +1044,14 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, task_id)
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        logger.error("WebSocket error: %s", e)
         manager.disconnect(websocket, task_id)
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    print(
+    logger.info(
         """
     ╔═══════════════════════════════════════════════════════╗
     ║                                                       ║
@@ -1253,12 +1254,12 @@ async def batch_ocr(
     batch_id = str(uuid.uuid4())
     task_ids = []
     
-    print(f"=" * 60)
-    print(f"[BATCH] 批量處理請求")
-    print(f"[BATCH] Batch ID: {batch_id}")
-    print(f"[BATCH] 檔案數量: {len(files)}")
-    print(f"[BATCH] OCR 模式: {mode}")
-    print(f"=" * 60)
+    logger.info("=" * 60)
+    logger.info("[BATCH] 批量處理請求")
+    logger.info("[BATCH] Batch ID: %s", batch_id)
+    logger.info("[BATCH] 檔案數量: %d", len(files))
+    logger.info("[BATCH] OCR 模式: %s", mode)
+    logger.info("=" * 60)
     
     try:
         for idx, file in enumerate(files):
@@ -1272,7 +1273,7 @@ async def batch_ocr(
                 content = await file.read()
                 f.write(content)
             
-            print(f"[BATCH] 檔案 {idx+1}/{len(files)}: {file.filename} -> {file_path}")
+            logger.info("[BATCH] 檔案 %d/%d: %s -> %s", idx+1, len(files), file.filename, file_path)
             
             # 建立任務
             tasks[task_id] = {
@@ -1304,8 +1305,8 @@ async def batch_ocr(
             "created_at": datetime.now()
         }
         
-        print(f"[BATCH] 批量任務已建立，開始處理")
-        print(f"=" * 60)
+        logger.info("[BATCH] 批量任務已建立，開始處理")
+        logger.info("=" * 60)
         
         return {
             "batch_id": batch_id,
@@ -1314,7 +1315,7 @@ async def batch_ocr(
         }
         
     except Exception as e:
-        print(f"[BATCH ERROR] {str(e)}")
+        logger.error("[BATCH ERROR] %s", e)
         raise HTTPException(status_code=500, detail=f"批量處理失敗: {str(e)}")
 
 
