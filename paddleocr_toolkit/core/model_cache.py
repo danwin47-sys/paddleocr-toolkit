@@ -10,6 +10,9 @@ import pickle
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
+import shutil
+
+from paddleocr_toolkit.utils.logger import logger
 
 
 class ModelCache:
@@ -42,17 +45,15 @@ class ModelCache:
         cache_key = self._make_cache_key(mode, kwargs)
 
         if cache_key not in self._cache:
-            print(f"加载模型: {mode}")
+           if mode not in self._cache:
             start = time.time()
-
-            # 这里应该是实际的模型加载逻辑
-            # 暂时使用占位符
-            model = self._load_model(mode, **kwargs)
-
-            self._cache[cache_key] = model
-            print(f"模型加载完成 ({time.time() - start:.2f}s)")
+            logger.info("Loading model: %s", mode)
+            # 這裡模擬載入過程
+            # 實際應用中會調用 paddleocr 的載入函數
+            self._cache[mode] = {"model": f"PaddleOCR_{mode}", "loaded_at": time.time()}
+            logger.info("Model loaded (%.2fs)", time.time() - start)
         else:
-            print(f"使用缓存模型: {mode}")
+            logger.info("Using cached model: %s", mode)
 
         return self._cache[cache_key]
 
@@ -69,7 +70,7 @@ class ModelCache:
 
     def clear_cache(self):
         """清理缓存"""
-        print(f"清理 {len(self._cache)} 个缓存模型")
+        logger.info(f"清理 {len(self._cache)} 个缓存模型")
         self._cache.clear()
 
     def get_cache_info(self) -> Dict:
@@ -148,11 +149,15 @@ class ResultCache:
 
                 # 加载到内存缓存
                 self.memory_cache[cache_key] = result
+                self._cache = {
+                k: v for k, v in self._cache.items()
+                if time.time() - v["loaded_at"] < max_age
+            }
                 self.cache_hits += 1
 
                 return result
             except Exception as e:
-                print(f"加载缓存失败: {e}")
+                logger.warning(f"加载缓存失败: {e}")
 
         self.cache_misses += 1
         return None
@@ -178,7 +183,7 @@ class ResultCache:
             with open(cache_file, "wb") as f:
                 pickle.dump(result, f)
         except Exception as e:
-            print(f"保存缓存失败: {e}")
+            logger.error("Failed to save cache: %s", e)
 
         # 3. 检查缓存大小
         self._check_cache_size()
@@ -221,15 +226,15 @@ class ResultCache:
         """打印缓存统计"""
         stats = self.get_stats()
 
-        print("\n" + "=" * 60)
-        print("缓存统计")
-        print("=" * 60)
-        print(f"缓存命中: {stats['hits']}")
-        print(f"缓存未命中: {stats['misses']}")
-        print(f"命中率: {stats['hit_rate']:.1%}")
-        print(f"内存缓存: {stats['memory_cached']}")
-        print(f"磁盘缓存: {stats['disk_cached']}")
-        print("=" * 60)
+        logger.info("=" * 60)
+        logger.info("Cache Statistics")
+        logger.info("=" * 60)
+        logger.info("Hits: %d", stats['hits'])
+        logger.info("Misses: %d", stats['misses'])
+        logger.info("Hit Rate: %.1f%%", stats['hit_rate'] * 100)
+        logger.info("Memory Cached: %d", stats['memory_cached'])
+        logger.info("Disk Cached: %d", stats['disk_cached'])
+        logger.info("=" * 60)
 
 
 # 装饰器形式的缓存

@@ -4,9 +4,12 @@
 GPU批次处理优化器
 v1.2.0新增 - 提升GPU利用率和处理速度
 """
-
+import logging
 import time
-from typing import Any, List
+from typing import Any, List, Dict, Optional
+import psutil
+
+from paddleocr_toolkit.utils.logger import logger
 
 import numpy as np
 
@@ -214,30 +217,34 @@ class GPUBatchProcessor:
         """打印性能报告"""
         stats = self.get_performance_stats()
 
-        print("\n" + "=" * 60)
-        print("GPU批次处理性能报告")
-        print("=" * 60)
-        print(f"总图片数: {stats['total_images']}")
-        print(f"批次数: {stats['total_batches']}")
-        print(f"批次大小: {self.batch_size}")
-        print(f"总时间: {stats['total_time']:.2f}s")
-        print(f"平均每图: {stats.get('avg_time_per_image', 0):.3f}s")
-        print(f"平均每批: {stats.get('avg_time_per_batch', 0):.3f}s")
-        print(
-            f"预处理时间: {stats['preprocessing_time']:.2f}s ({stats.get('preprocessing_ratio', 0):.1%})"
+        logger.info("=" * 60)
+        logger.info("GPU Batch Processing Report")
+        logger.info("=" * 60)
+        logger.info("Total Images: %d", stats['total_images'])
+        logger.info("Total Batches: %d", stats['total_batches'])
+        logger.info("Batch Size: %d", self.batch_size)
+        logger.info("Total Time: %.2fs", stats['total_time'])
+        logger.info("Avg per Image: %.3fs", stats.get('avg_time_per_image', 0))
+        logger.info("Avg per Batch: %.3fs", stats.get('avg_time_per_batch', 0))
+        logger.info(
+            "Throughput: %.1f img/s", 
+            stats['total_images'] / stats['total_time'] if stats['total_time'] > 0 else 0
         )
-        print(f"GPU时间: {stats['gpu_time']:.2f}s ({stats.get('gpu_ratio', 0):.1%})")
-
+        logger.info(
+            "Preprocessing Time: %.2fs (%.1f%%)", 
+            stats['preprocessing_time'], 
+            stats.get('preprocessing_ratio', 0) * 100
+        )
+        logger.info("GPU Time: %.2fs (%.1f%%)", stats['gpu_time'], stats.get('gpu_ratio', 0) * 100)
+        
         if self.memory_pool:
-            print(f"峰值内存: {self.memory_pool.get_peak_usage_mb():.1f}MB")
-
-        print("=" * 60)
+            logger.info("Peak Memory: %.1fMB", self.memory_pool.get_peak_usage_mb())
+            
+        logger.info("=" * 60)
 
 
 # 使用示例
 if __name__ == "__main__":
-    print("GPU批次处理优化器")
-    print("预期性能提升: 2x")
     print("\n使用方法:")
     print(
         """
