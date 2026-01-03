@@ -10,38 +10,20 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 from paddleocr_toolkit.utils.logger import logger
-import Levenshtein
+from paddleocr_toolkit.utils.logger import logger
 
-
-def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
-    """
-    ?算字元準確率
-
-    Args:
-        predicted: ??文字
-        ground_truth: 真?文字
-
-    Returns:
-        準確率 (0-1)
-    """
-    if not ground_truth:
-        return 0.0
-
-    # 使用??距離
-    distance = Levenshtein.distance(predicted, ground_truth)
-    max_len = max(len(predicted), len(ground_truth))
-
-    if max_len == 0:
-        return 1.0
-
-    accuracy = 1.0 - (distance / max_len)
-    return max(0.0, accuracy)
+try:
+    import Levenshtein
+    HAS_LEVENSHTEIN = True
+except ImportError:
+    HAS_LEVENSHTEIN = False
 
 
 def edit_distance(s1: str, s2: str) -> int:
-    """?算??距離 (Levenshtein distance)"""
-    # This function is now redundant if Levenshtein library is used directly.
-    # Keeping it as per the original code, but the new logic uses Levenshtein.distance
+    """計算編輯距離 (Levenshtein distance)"""
+    if HAS_LEVENSHTEIN:
+        return Levenshtein.distance(s1, s2)
+
     if len(s1) < len(s2):
         return edit_distance(s2, s1)
 
@@ -52,7 +34,6 @@ def edit_distance(s1: str, s2: str) -> int:
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
-            # 插入、?除、替?
             insertions = previous_row[j + 1] + 1
             deletions = current_row[j] + 1
             substitutions = previous_row[j] + (c1 != c2)
@@ -60,6 +41,31 @@ def edit_distance(s1: str, s2: str) -> int:
         previous_row = current_row
 
     return previous_row[-1]
+
+
+def calculate_character_accuracy(predicted: str, ground_truth: str) -> float:
+    """
+    計算字元準確率
+
+    Args:
+        predicted: 預測文字
+        ground_truth: 真實文字
+
+    Returns:
+        準確率 (0-1)
+    """
+    if not ground_truth:
+        return 0.0
+
+    # 使用編輯距離
+    distance = edit_distance(predicted, ground_truth)
+    max_len = max(len(predicted), len(ground_truth))
+
+    if max_len == 0:
+        return 1.0
+
+    accuracy = 1.0 - (distance / max_len)
+    return max(0.0, accuracy)
 
 
 def calculate_word_accuracy(
@@ -135,8 +141,8 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     word_accuracy = calculate_word_accuracy(ocr_words, gt_words)
     logger.info("Word Accuracy: %.2f%%", word_accuracy * 100)
 
-    # 3. ??距離
-    distance = Levenshtein.distance(ocr_text, gt_text)
+    # 3. 編輯距離
+    distance = edit_distance(ocr_text, gt_text)
     logger.info("Levenshtein Distance: %d", distance)
 
     # 4. ?度??
@@ -156,15 +162,7 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
     if ocr_preview == gt_preview:
         logger.info("✅ Perfect Match!")
     else:
-        diff = Levenshtein.editops(ocr_preview, gt_preview)
-        # 這裡簡化顯示，只顯示前幾個差異
-        # The original code used difflib.unified_diff, this part of the diff
-        # seems to remove that and just use Levenshtein.editops without
-        # actually printing the diff in a user-friendly way.
-        # I will keep the original difflib output for clarity, as the diff
-        # provided doesn't show how to print Levenshtein.editops.
-        # If the user intended to remove the diff printing, the diff should
-        # have explicitly removed those lines.
+        # 使用 difflib 顯示差異
         diff_lines = list(
             difflib.unified_diff(
                 gt_text[:300].splitlines(),

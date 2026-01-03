@@ -528,7 +528,8 @@ class HybridPDFProcessor:
                     '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
                     f"    <title>OCR 結果 - {Path(pdf_path).name}</title>",
                     "    <style>",
-                    "        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.8; }",
+                    "        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 900px; "
+                    "margin: 40px auto; padding: 20px; line-height: 1.8; }",
                     "        h1 { color: #333; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }",
                     "        h2 { color: #4f46e5; margin-top: 40px; border-left: 4px solid #4f46e5; "
                     "padding-left: 15px; }",
