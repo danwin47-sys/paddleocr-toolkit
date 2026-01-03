@@ -30,6 +30,7 @@ pyyaml>=5.0.0
 # ============ Data Handling ============
 psutil>=5.9.0
 python-docx>=0.8.11
+python-Levenshtein>=0.12.0
 markdown<3.4.0
 
 # ============ Development Dependencies ============
