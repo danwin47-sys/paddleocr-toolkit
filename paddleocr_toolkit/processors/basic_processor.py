@@ -27,6 +27,7 @@ except ImportError:
 from paddleocr_toolkit.core import OCRResult, PDFGenerator
 from paddleocr_toolkit.core.pdf_utils import pixmap_to_numpy
 from paddleocr_toolkit.core.result_parser import OCRResultParser
+from paddleocr_toolkit.processors.image_preprocessor import auto_preprocess
 
 
 class BasicProcessor:
@@ -108,8 +109,11 @@ class BasicProcessor:
             if image is None:
                 return {"error": f"無法讀取圖片: {image_path}"}
 
+            # 影像前處理
+            processed_image = auto_preprocess(image)
+
             # 執行 OCR
-            ocr_output = self.engine_manager.predict(image)
+            ocr_output = self.engine_manager.predict(processed_image)
 
             # 解析結果
             ocr_results = self.result_parser.parse_basic_result(ocr_output)
@@ -224,8 +228,11 @@ class BasicProcessor:
                     pixmap = page.get_pixmap(dpi=dpi)
                     img_array = pixmap_to_numpy(pixmap)
 
+                    # 影像前處理
+                    processed_img_array = auto_preprocess(img_array, is_scanned=True)
+
                     # OCR
-                    ocr_output = self.engine_manager.predict(img_array)
+                    ocr_output = self.engine_manager.predict(processed_img_array)
                     ocr_results = self.result_parser.parse_basic_result(ocr_output)
 
                     # 加入 PDF

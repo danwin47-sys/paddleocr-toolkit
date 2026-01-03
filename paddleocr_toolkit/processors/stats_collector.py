@@ -9,6 +9,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+import logging
 
 from paddleocr_toolkit.utils.logger import logger
 

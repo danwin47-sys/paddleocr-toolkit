@@ -1,0 +1,10 @@
+{
+  "source": "test.pdf",
+  "total_pages": 1,
+  "pages": [
+    {
+      "page_num": 1,
+      "text_blocks": []
+    }
+  ]
+}

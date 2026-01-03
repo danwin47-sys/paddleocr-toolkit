@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 try:
     from paddleocr import PaddleOCR, PPStructure
+
     # Export as PPStructureV3 for backward compatibility and tests
     PPStructureV3 = PPStructure
     HAS_STRUCTURE = True
@@ -154,7 +155,9 @@ class OCREngineManager:
     def _init_basic_engine(self) -> None:
         """初始化基本 OCR 引擎"""
         self.engine = PaddleOCR(
-            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_orientation_classify=self.config.get(
+                "use_doc_orientation_classify", True
+            ),
             use_doc_unwarping=self.config.get("use_doc_unwarping", True),
             use_textline_orientation=self.config.get("use_textline_orientation", True),
         )
@@ -166,12 +169,7 @@ class OCREngineManager:
             raise ImportError("PPStructureV3 not available")
 
         logger.info("  Loading PPStructure engine...")
-        self.engine = PPStructureV3(
-            show_log=True,
-            layout=True,
-            table=True,
-            ocr=True
-        )
+        self.engine = PPStructureV3(show_log=True, layout=True, table=True, ocr=True)
         logger.info("[OK] PPStructure initialized (Structure Mode)")
 
     def _init_vl_engine(self) -> None:
@@ -180,7 +178,9 @@ class OCREngineManager:
             raise ImportError("PaddleOCRVL not available")
 
         self.engine = PaddleOCRVL(
-            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_orientation_classify=self.config.get(
+                "use_doc_orientation_classify", True
+            ),
             use_doc_unwarping=self.config.get("use_doc_unwarping", True),
         )
         logger.info("[OK] PaddleOCR-VL initialized (VL Mode)")
@@ -191,7 +191,9 @@ class OCREngineManager:
             raise ImportError("FormulaRecPipeline not available")
 
         self.engine = FormulaRecPipeline(
-            use_doc_orientation_classify=self.config.get("use_doc_orientation_classify", True),
+            use_doc_orientation_classify=self.config.get(
+                "use_doc_orientation_classify", True
+            ),
             use_doc_unwarping=self.config.get("use_doc_unwarping", True),
             device=self.device,
         )
@@ -208,17 +210,16 @@ class OCREngineManager:
         logger.info("  - Layout Analysis: Enabled")
         logger.info("  - Table Recognition: Enabled")
         logger.info("  - OCR Recognition: Enabled")
-        
+
         try:
             self.structure_engine = PPStructure(
-                show_log=True,
-                layout=True,
-                table=True,
-                ocr=True
+                show_log=True, layout=True, table=True, ocr=True
             )
             # 設定 engine 為 structure_engine 以便其他方法使用
             self.engine = self.structure_engine
-            logger.info("[OK] Hybrid Mode initialized (PPStructure Layout + Table + OCR)")
+            logger.info(
+                "[OK] Hybrid Mode initialized (PPStructure Layout + Table + OCR)"
+            )
         except Exception as e:
             logger.error("Hybrid mode initialization failed: %s", e)
             logger.warning("Downgrading to Basic mode")

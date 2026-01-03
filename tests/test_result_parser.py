@@ -201,3 +201,65 @@ class TestOCRResultParser:
         assert len(formulas) == 1
         assert formulas[0]["latex"] == "E = mc^2"
         assert formulas[0]["confidence"] == 0.92
+
+    def test_parse_basic_result_error_strict(self):
+        """測試解析錯誤（嚴格模式）"""
+        parser = OCRResultParser(strict_mode=True)
+
+        # 模擬會導致 AttributeError 的輸入
+        with pytest.raises(ValueError, match="解析基本 OCR 結果失敗"):
+            parser.parse_basic_result(None)
+
+    def test_parse_structure_result_fallback_logic(self):
+        """測試結構化解析的後備邏輯"""
+        parser = OCRResultParser()
+
+        # 情況 1: 只有 parsing_res_list
+        mock_block = Mock()
+        mock_block.bbox = [0, 0, 100, 100]
+        mock_block.content = "Fallback Content"
+
+        mock_res = Mock()
+        del mock_res.overall_ocr_res  # 確保沒有 overall result
+        mock_res.parsing_res_list = [mock_block]
+
+        results = parser.parse_structure_result([mock_res])
+        assert len(results) == 1
+        assert results[0].text == "Fallback Content"
+
+        # 情況 2: 禁止提取 OCR
+        mock_res.overall_ocr_res = Mock(rec_texts=["Should Not Be Used"])
+        results_no_ocr = parser.parse_structure_result([mock_res], extract_ocr=False)
+        # 如果只有 OCR 而被禁用，且 parsing_list 也空，則應為空
+        assert len(results_no_ocr) == 1  # 還是會解析 parsing_list
+        assert results_no_ocr[0].text == "Fallback Content"
+
+    def test_create_ocr_result_failure(self):
+        """測試建立 OCRResult 失敗的情況"""
+        parser = OCRResultParser()
+        # 傳入無法轉換為 bbox 的物件 (例如 int，無法被 list() 轉換)
+        result = parser._create_ocr_result("text", 0.9, 12345)
+        assert result is None
+
+    def test_parse_formula_result_dict_input(self):
+        """測試字典格式的公式結果"""
+        parser = OCRResultParser()
+        input_data = [{"latex": "a+b=c", "score": 0.99, "bbox": [0, 0, 10, 10]}]
+
+        results = parser.parse_formula_result(input_data)
+        assert len(results) == 1
+        assert results[0]["latex"] == "a+b=c"
+        # 字典輸入時，key 不會被改變
+        assert results[0]["score"] == 0.99
+
+    def test_parse_structure_result_error_strict(self):
+        """測試結構化解析錯誤（嚴格模式）"""
+        parser = OCRResultParser(strict_mode=True)
+        with pytest.raises(ValueError, match="解析結構化結果失敗"):
+            parser.parse_structure_result(None)
+
+    def test_parse_formula_result_error_strict(self):
+        """測試公式解析錯誤（嚴格模式）"""
+        parser = OCRResultParser(strict_mode=True)
+        with pytest.raises(ValueError, match="解析公式結果失敗"):
+            parser.parse_formula_result(None)

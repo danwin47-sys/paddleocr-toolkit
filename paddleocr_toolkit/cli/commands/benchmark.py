@@ -47,7 +47,7 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     process = psutil.Process(os.getpid())
 
     for i, scenario in enumerate(scenarios, 1):
-        logger.info("[%d/%d] Scenario: %s", i, len(scenarios), scenario['name'])
+        logger.info("[%d/%d] Scenario: %s", i, len(scenarios), scenario["name"])
         logger.info("-" * 70)
 
         # ??初始?存
@@ -64,7 +64,7 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         # ?理PDF
         logger.info("  Processing PDF...")
         process_start = time.time()
-        
+
         # Use facade.process() instead of deprecated process_pdf
         # Note: Facade returns a dict, not a tuple
         benchmark_result = ocr_tool.process(
@@ -77,12 +77,12 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         peak_memory = process.memory_info().rss / 1024 / 1024
 
         # ??
-        total_pages = benchmark_result.get('pages_processed', 0)
-        
+        total_pages = benchmark_result.get("pages_processed", 0)
+
         # Estimate text volume (chars) instead of blocks
         total_texts = 0
-        if 'text_content' in benchmark_result:
-             total_texts = sum(len(t) for t in benchmark_result['text_content'])
+        if "text_content" in benchmark_result:
+            total_texts = sum(len(t) for t in benchmark_result["text_content"])
 
         result = {
             "scenario": scenario["name"],
@@ -108,8 +108,12 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
         logger.info("  Done")
         logger.info("    Pages: %d", total_pages)
         logger.info("    Texts: %d", total_texts)
-        logger.info("    Time: %.2fs (%.2fs/page)", result['total_time'], result['time_per_page'])
-        logger.info("    Memory: %.1fMB", result['memory_used'])
+        logger.info(
+            "    Time: %.2fs (%.2fs/page)",
+            result["total_time"],
+            result["time_per_page"],
+        )
+        logger.info("    Memory: %.1fMB", result["memory_used"])
 
     # ?示??
     logger.info("=" * 70)
@@ -122,21 +126,25 @@ def run_benchmark(pdf_path: str, output: Optional[str] = None):
     for result in results:
         logger.info(
             "%-25s %9.2fs %9.2fs/p %9.1fMB",
-            result['scenario'],
-            result['total_time'],
-            result['time_per_page'],
-            result['memory_used']
+            result["scenario"],
+            result["total_time"],
+            result["time_per_page"],
+            result["memory_used"],
         )
 
     logger.info("=" * 70)
 
     # 最快的scene
     fastest = min(results, key=lambda x: x["time_per_page"])
-    logger.info("Fastest: %s (%.2fs/page)", fastest['scenario'], fastest['time_per_page'])
+    logger.info(
+        "Fastest: %s (%.2fs/page)", fastest["scenario"], fastest["time_per_page"]
+    )
 
     # 最省?存
     lightest = min(results, key=lambda x: x["memory_used"])
-    logger.info("Lowest Memory: %s (%.1fMB)", lightest['scenario'], lightest['memory_used'])
+    logger.info(
+        "Lowest Memory: %s (%.1fMB)", lightest["scenario"], lightest["memory_used"]
+    )
 
     # 保存?果
     if output:

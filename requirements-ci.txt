@@ -2,13 +2,13 @@
 # GitHub Actions 測試環境專用 - 相容 Python 3.8+
 
 # ============ PDF Processing ============
-pymupdf>=1.23.0  # 降低版本以支援 Python 3.8
+pymupdf>=1.22.5  # 降低版本以支援 Python 3.7+
 pdf2image>=1.16.0
 pillow>=9.0.0
 
 # ============ Image Processing ============
-opencv-python>=4.5.0
-numpy>=1.21.0,<2.0.0  # Python 3.8 相容
+opencv-python-headless<4.8.0
+numpy>=1.21.0,<1.22.0  # Python 3.8 相容, MKL fix
 
 # ============ Translation ============
 requests>=2.31.0
@@ -25,11 +25,11 @@ httpx>=0.24.0  # Required for starlette.testclient
 
 # ============ CLI Enhancement ============
 rich>=12.0.0
-pyyaml>=6.0.0
+pyyaml>=5.0.0
 
 # ============ Data Handling ============
 python-docx>=0.8.11
-markdown>=3.4.0
+markdown<3.4.0
 
 # ============ Development Dependencies ============
 pytest>=7.0.0
@@ -37,11 +37,11 @@ pytest-cov>=4.0.0
 pytest-env>=0.8.0
 pytest-mock>=3.10.0
 pytest-flask>=1.2.0
-pytest-asyncio>=0.23.0
-black>=23.0.0
-isort>=5.12.0
-flake8>=6.0.0
-mypy>=1.0.0
+pytest-asyncio>=0.21.0
+black>=22.0.0,<24.0.0
+isort>=5.0.0,<5.12.0
+flake8>=5.0.0,<6.0.0
+mypy>=0.900,<1.5.0
 
 # ============ PaddleOCR Mock (用於測試) ============
 # 在 CI 環境中，我們 mock paddleocr，所以不需要真正安裝

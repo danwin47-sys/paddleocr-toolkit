@@ -154,3 +154,45 @@ class TestLLMClient:
 
         with pytest.raises(ValueError, match="不支援的 LLM 提供商"):
             create_llm_client("unsupported_provider")
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.semantic_processor import SemanticProcessor
+from unittest.mock import MagicMock, patch
+
+
+class TestSemanticExceptions:
+    def test_summarize_exception(self):
+        proc = SemanticProcessor()
+        mock_llm = MagicMock()
+        mock_llm.generate.side_effect = Exception("Summarization error")
+        proc.llm_client = mock_llm
+        res = proc.summarize_document("Long text", max_length=5)
+        assert res == "Long ..."
+
+
+class TestSemanticUltra:
+    def test_semantic_fallbacks_and_markdown(self):
+        with patch(
+            "paddleocr_toolkit.processors.semantic_processor.create_llm_client"
+        ) as mock_create:
+            mock_llm = MagicMock()
+            mock_llm.is_available.return_value = False
+            mock_create.return_value = mock_llm
+            proc = SemanticProcessor(llm_provider="ollama")
+            proc.llm_client = None
+            assert proc.extract_structured_data("text", {}) == {}
+            assert proc.summarize_document("Long text") == "Long text..."
+        proc = SemanticProcessor()
+        mock_llm = MagicMock()
+        proc.llm_client = mock_llm
+        mock_llm.generate.return_value = '```json\n{"key": "value"}\n```'
+        res = proc.extract_structured_data("text", {})
+        assert res == {"key": "value"}
+
+    def test_correction_prompts(self):
+        proc = SemanticProcessor()
+        p1 = proc._build_chinese_correction_prompt("text", "ctx")
+        assert "上下文資訊" in p1
+        p2 = proc._build_english_correction_prompt("text", "ctx")
+        assert "Context:" in p2

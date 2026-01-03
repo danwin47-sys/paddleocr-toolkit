@@ -260,3 +260,47 @@ class TestOCRMode:
         assert OCRMode.VL in modes
         assert OCRMode.FORMULA in modes
         assert OCRMode.HYBRID in modes
+
+    @patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR")
+    def test_predict_with_plugins(self, mock_ocr):
+        """測試帶外掛的預測流程"""
+        # Mock PluginLoader and Plugins
+        mock_plugin = Mock()
+        mock_plugin.process_before_ocr.return_value = "processed_input"
+        mock_plugin.process_after_ocr.return_value = "processed_result"
+
+        mock_loader = Mock()
+        mock_loader.get_all_plugins.return_value = {"test_plugin": mock_plugin}
+
+        # Mock Engine
+        mock_engine = Mock()
+        mock_engine.ocr.return_value = "raw_result"
+        mock_ocr.return_value = mock_engine
+
+        manager = OCREngineManager(mode="basic", plugin_loader=mock_loader)
+        manager.init_engine()
+
+        result = manager.predict("input")
+
+        # Verify plugin calls
+        mock_plugin.process_before_ocr.assert_called_with("input")
+        mock_engine.ocr.assert_called_with("processed_input")
+        mock_plugin.process_after_ocr.assert_called_with("raw_result")
+        assert result == "processed_result"
+
+    @patch("paddleocr_toolkit.core.ocr_engine.PaddleOCR")
+    @patch("paddleocr_toolkit.core.ocr_engine.PPStructure")
+    @patch("paddleocr_toolkit.core.ocr_engine.HAS_STRUCTURE", True)
+    def test_init_hybrid_engine_fallback(self, mock_structure, mock_ocr):
+        """測試 Hybrid 模式初始化失敗降級"""
+        # 模擬 PPStructure 初始化失敗
+        mock_structure.side_effect = Exception("Structure Init Failed")
+
+        manager = OCREngineManager(mode="hybrid")
+        manager.init_engine()
+
+        # 驗證是否降級到 Basic Mode 初始化
+        assert manager.is_initialized()
+        mock_structure.assert_called_once()
+        mock_ocr.assert_called_once()  # Basic engine init called
+        assert manager.engine == mock_ocr.return_value

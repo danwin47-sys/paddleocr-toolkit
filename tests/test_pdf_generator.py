@@ -6,6 +6,7 @@ PDF Generator 單元測試（擴充套件版）
 import os
 import sys
 import tempfile
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -535,6 +536,78 @@ class TestTextInsertionEdgeCases:
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+
+
+class TestErrorHandling:
+    """測試錯誤處理與降級機制"""
+
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_text_insertion_font_fallback(self):
+        """測試文字插入的字型降級"""
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            gen = PDFGenerator(temp_path)
+
+            # Mock page object
+            page = Mock()
+
+            # 讓第一次 insert_text 失敗, 第二次成功
+            page.insert_text.side_effect = [Exception("Font Error"), None]
+
+            result = OCRResult(
+                text="Fallback",
+                confidence=0.9,
+                bbox=[[0, 0], [100, 0], [100, 20], [0, 20]],
+            )
+
+            # 這裡我們不可避免地會依賴內部實作細節，但為了測試覆蓋率這是必要的
+            # 直接呼叫 _insert_invisible_text
+            gen._insert_invisible_text(page, result)
+
+            # 應該嘗試兩次 (第一次失敗, 第二次重試)
+            assert page.insert_text.call_count == 2
+
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_text_insertion_all_fonts_fail(self):
+        """測試所有字型都失敗"""
+        gen = PDFGenerator("out.pdf")
+        page = Mock()
+        page.insert_text.side_effect = Exception("All Fonts Failed")
+
+        result = OCRResult(
+            text="Fail", confidence=0.9, bbox=[[0, 0], [100, 0], [100, 20], [0, 20]]
+        )
+
+        # 應該捕捉異常並記錄警告，不丟擲錯誤
+        gen._insert_invisible_text(page, result)
+        assert page.insert_text.call_count >= 3  # at least tries all fonts
+
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_save_generated_exception(self):
+        """測試儲存時發生例外"""
+        gen = PDFGenerator("out.pdf")
+        gen.page_count = 1  # Fake page count
+
+        # Mock doc.save throwing exception
+        gen.doc = Mock()
+        gen.doc.save.side_effect = Exception("Save Error")
+
+        assert gen.save() is False
+
+    @pytest.mark.skipif(not HAS_PIL, reason="Pillow not installed")
+    def test_add_page_image_open_error(self):
+        """測試圖片開啟失敗"""
+        gen = PDFGenerator("out.pdf")
+
+        with patch("PIL.Image.open", side_effect=Exception("Open Error")):
+            result = gen.add_page("bad_image.png", [])
+            assert result is False
 
 
 # 執行測試

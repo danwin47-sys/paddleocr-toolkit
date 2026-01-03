@@ -161,3 +161,29 @@ class TestProcessingStats:
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.stats_collector import ProcessingStats, StatsCollector
+from unittest.mock import MagicMock, patch
+from datetime import datetime
+
+
+class TestStatsUltra:
+    def test_stats_edge_cases(self):
+        with patch("paddleocr_toolkit.processors.stats_collector.datetime") as mock_dt:
+            now = datetime.now()
+            mock_dt.now.return_value = now
+            stats = ProcessingStats(input_file="test")
+            stats.start_time = now
+            stats.end_time = now
+            assert stats.pages_per_second == 0.0
+        stats = ProcessingStats(input_file="test")
+        for i in range(10):
+            stats.add_error(f"error {i}")
+        summary = stats.to_summary()
+        assert "還有 5 個錯誤" in summary
+        collector = StatsCollector("test")
+        mock_res = MagicMock()
+        mock_res.confidence = 0.9
+        collector.finish_page(0, "text", ocr_results=[mock_res])
+        assert collector.stats.avg_confidence == 0.9

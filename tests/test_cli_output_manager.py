@@ -4,6 +4,8 @@ Tests for CLI output path manager
 """
 
 import argparse
+import logging
+import json
 from pathlib import Path
 
 import pytest
@@ -211,33 +213,33 @@ class TestProcessModeOutputs:
 class TestPrintOutputSummary:
     """Test print_output_summary method"""
 
-    def test_basic_mode_summary(self, tmp_path, capsys):
+    def test_basic_mode_summary(self, tmp_path, caplog):
         """Test basic mode summary"""
         input_file = tmp_path / "test.pdf"
         manager = OutputPathManager(str(input_file), mode="basic")
 
         args = argparse.Namespace(
-            output="/out/test.pdf", text_output="/out/test.txt", searchable=True
+            output="/out/test.pdf", text_output="/out/text.txt", searchable=True
         )
 
-        manager.print_output_summary(args)
+        with caplog.at_level(logging.INFO):
+            manager.print_output_summary(args)
 
-        captured = capsys.readouterr()
-        assert len(captured.out) > 0
+        assert "Mode: basic" in caplog.text
 
-    def test_formula_mode_summary(self, tmp_path, capsys):
+    def test_formula_mode_summary(self, tmp_path, caplog):
         """Test formula mode summary"""
         input_file = tmp_path / "math.png"
         manager = OutputPathManager(str(input_file), mode="formula")
 
         args = argparse.Namespace(latex_output="/out/formula.tex")
 
-        manager.print_output_summary(args)
+        with caplog.at_level(logging.INFO):
+            manager.print_output_summary(args)
 
-        captured = capsys.readouterr()
-        assert len(captured.out) > 0
+        assert "LaTeX Output" in caplog.text
 
-    def test_structure_mode_summary(self, tmp_path, capsys):
+    def test_structure_mode_summary(self, tmp_path, caplog):
         """Test structure mode summary"""
         input_file = tmp_path / "doc.pdf"
         manager = OutputPathManager(str(input_file), mode="structure")
@@ -249,12 +251,12 @@ class TestPrintOutputSummary:
             html_output="/out/page.html",
         )
 
-        manager.print_output_summary(args)
+        with caplog.at_level(logging.INFO):
+            manager.print_output_summary(args)
 
-        captured = capsys.readouterr()
-        assert len(captured.out) > 0
+        assert "Markdown Output" in caplog.text
 
-    def test_hybrid_mode_summary(self, tmp_path, capsys):
+    def test_hybrid_mode_summary(self, tmp_path, caplog):
         """Test hybrid mode summary"""
         input_file = tmp_path / "test.pdf"
         manager = OutputPathManager(str(input_file), mode="hybrid")
@@ -266,12 +268,12 @@ class TestPrintOutputSummary:
             html_output="/out/test.html",
         )
 
-        manager.print_output_summary(args)
+        with caplog.at_level(logging.INFO):
+            manager.print_output_summary(args)
 
-        captured = capsys.readouterr()
-        assert len(captured.out) > 0
+        assert "Hybrid Mode" in caplog.text
 
-    def test_vl_mode_summary(self, tmp_path, capsys):
+    def test_vl_mode_summary(self, tmp_path, caplog):
         """Test vl mode summary"""
         input_file = tmp_path / "doc.pdf"
         manager = OutputPathManager(str(input_file), mode="vl")
@@ -283,7 +285,7 @@ class TestPrintOutputSummary:
             html_output=None,
         )
 
-        manager.print_output_summary(args)
+        with caplog.at_level(logging.INFO):
+            manager.print_output_summary(args)
 
-        captured = capsys.readouterr()
-        assert len(captured.out) > 0
+        assert "Markdown Output" in caplog.text

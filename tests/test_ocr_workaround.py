@@ -226,3 +226,64 @@ class TestShouldUseOcrWorkaround:
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.ocr_workaround import (
+    OCRWorkaround,
+    TextBlock,
+    detect_scanned_document,
+    should_use_ocr_workaround,
+)
+from unittest.mock import MagicMock, patch
+import pytest
+
+
+class TestOCRWorkaroundUltra:
+    def test_workaround_branches(self):
+        worker = OCRWorkaround()
+        block_small = TextBlock("t", 0, 0, 10, 5)
+        mock_page = MagicMock()
+        worker.add_text_with_mask(mock_page, block_small, "t")
+        mock_page.insert_text.assert_called()
+        assert mock_page.insert_text.call_args[1]["fontsize"] == 6
+        block_large = TextBlock("t", 0, 0, 100, 100)
+        worker.add_text_with_mask(mock_page, block_large, "t")
+        assert mock_page.insert_text.call_args[1]["fontsize"] == 50
+        with patch.object(mock_page, "new_shape", side_effect=Exception("Crash")):
+            res = worker.add_text_with_mask(mock_page, block_small, "t")
+            assert res is False
+
+        # Call process_page (lines 147-153)
+        assert worker.process_page(mock_page, [(block_small, "t")]) == 1
+        mock_doc = MagicMock()
+        mock_doc.__len__.return_value = 0
+        with patch("fitz.open", return_value=mock_doc):
+            assert detect_scanned_document("test.pdf") is False
+
+        # Success path (lines 182-207)
+        mock_doc.__len__.return_value = 1
+        mock_page = MagicMock()
+        mock_page.get_text.return_value = "short"
+        mock_page.get_images.return_value = [1]
+        mock_doc.__getitem__.return_value = mock_page
+        with patch("fitz.open", return_value=mock_doc), patch(
+            "paddleocr_toolkit.processors.ocr_workaround.HAS_FITZ", True
+        ):
+            assert detect_scanned_document("scanned.pdf") is True
+
+            # Exception (line 205-207)
+            mock_doc.__len__.side_effect = Exception("Crash")
+            assert detect_scanned_document("bad.pdf") is False
+
+    def test_should_use_workaround(self):
+        assert should_use_ocr_workaround("any.pdf", auto_enable=False) is False
+        with patch(
+            "paddleocr_toolkit.processors.ocr_workaround.detect_scanned_document",
+            return_value=True,
+        ):
+            assert should_use_ocr_workaround("any.pdf", auto_enable=True) is True
+
+    def test_workaround_init_error(self):
+        with patch("paddleocr_toolkit.processors.ocr_workaround.HAS_FITZ", False):
+            with pytest.raises(ImportError):
+                OCRWorkaround()

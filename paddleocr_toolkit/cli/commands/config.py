@@ -23,15 +23,15 @@ def prompt(
         options: 可??列表
     """
     if options:
-        logger.info("") # Added logger.info for spacing
-        print(f"{question}") # Keep simple print for interactive prompt
+        logger.info("")  # Added logger.info for spacing
+        print(f"{question}")  # Keep simple print for interactive prompt
         for i, option in enumerate(options, 1):
-            marker = " *" if option == default else "" # Changed marker
-            print(f"  {i}. {option}{marker}") # Keep print for interactive menu
+            marker = " *" if option == default else ""  # Changed marker
+            print(f"  {i}. {option}{marker}")  # Keep print for interactive menu
 
         while True:
             try:
-                choice = input("Select (number): ").strip() # Changed prompt text
+                choice = input("Select (number): ").strip()  # Changed prompt text
                 if not choice and default:
                     return default
                 idx = int(choice) - 1
@@ -49,9 +49,11 @@ def prompt(
         result = input(prompt_text).strip()
         return result if result else default
 
+
 # Helper functions for config_wizard, derived from the diff's intent
 def get_input(question: str, default: str) -> str:
     return prompt(question, default=default)
+
 
 def get_selection(question: str, options: List[str], default: str) -> str:
     return prompt(question, default=default, options=options)
@@ -71,27 +73,39 @@ def config_wizard():
     logger.info("\n--- OCR Settings ---")
 
     config["ocr"] = {
-        "mode": get_selection("Select OCR Mode", ["basic", "structure", "hybrid", "vl", "formula"], "hybrid"),
+        "mode": get_selection(
+            "Select OCR Mode",
+            ["basic", "structure", "hybrid", "vl", "formula"],
+            "hybrid",
+        ),
         "device": get_selection("Select Compute Device", ["gpu", "cpu"], "gpu"),
         "dpi": int(get_input("PDF DPI (Recommended: 150-300)", "200")),
-        "lang": get_selection("Select Language", ["ch", "en", "korean", "japan", "chinese_cht"], "ch"),
-        "use_gpu": get_selection("Use GPU?", ["true", "false"], "true") == "true", # Added from diff
-        "use_angle_cls": get_selection("Use Angle Classification?", ["true", "false"], "true") == "true", # Added from diff
+        "lang": get_selection(
+            "Select Language", ["ch", "en", "korean", "japan", "chinese_cht"], "ch"
+        ),
+        "use_gpu": get_selection("Use GPU?", ["true", "false"], "true")
+        == "true",  # Added from diff
+        "use_angle_cls": get_selection(
+            "Use Angle Classification?", ["true", "false"], "true"
+        )
+        == "true",  # Added from diff
     }
 
     # 2. Output Settings
     logger.info("\n--- Output Settings ---")
 
-    output_dir = get_input("Output Directory", "output") # Renamed variable
-    
+    output_dir = get_input("Output Directory", "output")  # Renamed variable
+
     logger.info("\nOutput Formats (comma separated, e.g., md,json)")
     logger.info("  Available: md, json, html, txt")
-    formats_str = input("Formats [md,json]: ").strip() or "md,json" # Changed default and prompt
+    formats_str = (
+        input("Formats [md,json]: ").strip() or "md,json"
+    )  # Changed default and prompt
     formats = [f.strip() for f in formats_str.split(",")]
 
     config["output"] = {
-        "format": formats, # Changed to list
-        "directory": output_dir, # Used output_dir
+        "format": formats,  # Changed to list
+        "directory": output_dir,  # Used output_dir
     }
 
     # 3. Performance Settings
@@ -107,15 +121,18 @@ def config_wizard():
     logger.info("\n--- Logging Settings ---")
 
     config["logging"] = {
-        "level": get_selection("Log Level", ["DEBUG", "INFO", "WARNING", "ERROR"], "INFO"),
-        "save_file": get_selection("Save log to file?", ["true", "false"], "true") == "true", # Added from diff
-        "log_file": get_input("Log File", "paddleocr.log"), # Changed default
+        "level": get_selection(
+            "Log Level", ["DEBUG", "INFO", "WARNING", "ERROR"], "INFO"
+        ),
+        "save_file": get_selection("Save log to file?", ["true", "false"], "true")
+        == "true",  # Added from diff
+        "log_file": get_input("Log File", "paddleocr.log"),  # Changed default
     }
 
     # Save Configuration
     logger.info("\n--- Save Configuration ---")
 
-    config_name = get_input("Config file name", "custom") # Changed prompt
+    config_name = get_input("Config file name", "custom")  # Changed prompt
 
     config_dir = Path("config")
     config_dir.mkdir(exist_ok=True)
@@ -143,7 +160,9 @@ def show_config(config_file: str):
 
     logger.info("Configuration: %s", config_file)
     logger.info("=" * 60)
-    print(yaml.dump(config, default_flow_style=False, allow_unicode=True))  # Keep print for YAML dump output for now
+    print(
+        yaml.dump(config, default_flow_style=False, allow_unicode=True)
+    )  # Keep print for YAML dump output for now
 
 
 if __name__ == "__main__":

@@ -178,14 +178,20 @@ class TestBasicProcessorProcessPDF:
             pdf_path = tmp.name
 
         try:
-            with patch("paddleocr_toolkit.processors.basic_processor.pixmap_to_numpy"):
+            with patch(
+                "paddleocr_toolkit.processors.basic_processor.pixmap_to_numpy"
+            ) as mock_p2n:
+                mock_p2n.return_value = np.zeros((100, 100, 3), dtype=np.uint8)
                 result = processor.process_pdf(pdf_path, show_progress=False)
 
                 assert result["mode"] == "basic"
                 assert result["pages_processed"] == 1
                 assert result["searchable_pdf"] is not None
         finally:
-            Path(pdf_path).unlink(missing_ok=True)
+            import os
+
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
 
 
 class TestBasicProcessorUtilityMethods:
@@ -230,3 +236,46 @@ class TestBasicProcessorUtilityMethods:
 
         assert len(filtered) == 1
         assert filtered[0].text == "高"
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.basic_processor import BasicProcessor
+from unittest.mock import MagicMock, patch
+
+
+class TestBasicProcessorUltra:
+    def test_process_image_error(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "basic"
+        proc = BasicProcessor(mock_mgr)
+
+        # 1. image is None (line 110)
+        with patch("cv2.imread", return_value=None):
+            res = proc.process_image("invalid.jpg")
+            assert "無法讀取" in res["error"]
+
+        # 2. General exception (line 144)
+        with patch("cv2.imread", side_effect=Exception("CV2 error")):
+            res = proc.process_image("invalid.jpg")
+            assert "CV2 error" in res["error"]
+
+    def test_process_pdf_errors(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "basic"
+        proc = BasicProcessor(mock_mgr)
+
+        # 1. Page loop exception (line 243)
+        with patch("fitz.open") as mock_fitz:
+            mock_doc = MagicMock()
+            mock_doc.__len__.return_value = 1
+            mock_page = MagicMock()
+            mock_doc.__getitem__.return_value = mock_page
+            mock_fitz.return_value = mock_doc
+            mock_page.get_pixmap.side_effect = Exception("Page error")
+            res = proc.process_pdf("test.pdf")
+            assert res["pages_processed"] == 0
+
+        # 2. General exception (line 257)
+        with patch("fitz.open", side_effect=Exception("Fatal PDF error")):
+            res = proc.process_pdf("test.pdf")
+            assert "Fatal PDF error" in res["error"]

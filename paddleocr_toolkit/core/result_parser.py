@@ -97,6 +97,25 @@ class OCRResultParser:
         elif hasattr(res, "__getitem__") and isinstance(res, dict):
             results.extend(self._parse_from_dict(res))
 
+        # 方法 3: 嘗試標準列表訪問 [[[poly], [text, score]]]
+        elif isinstance(res, (list, tuple)):
+            results.extend(self._parse_from_list(res))
+
+        return results
+
+    def _parse_from_list(self, res: List) -> List[OCRResult]:
+        """從標準列表解析結果 [[[poly], [text, score]]]"""
+        results = []
+        for line in res:
+            if isinstance(line, (list, tuple)) and len(line) >= 2:
+                poly = line[0]
+                text_info = line[1]
+                if isinstance(text_info, (list, tuple)) and len(text_info) >= 1:
+                    text = text_info[0]
+                    score = text_info[1] if len(text_info) > 1 else 1.0
+                    result = self._create_ocr_result(text, score, poly)
+                    if result:
+                        results.append(result)
         return results
 
     def _parse_from_attributes(self, res: Any) -> List[OCRResult]:

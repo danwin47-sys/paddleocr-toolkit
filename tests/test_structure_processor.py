@@ -144,3 +144,22 @@ class TestStructureProcessor:
 
         tables = processor._extract_tables([mock_res])
         assert len(tables) == 0
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.structure_processor import StructureProcessor
+from unittest.mock import MagicMock, patch
+
+
+class TestStructureExceptions:
+    def test_structure_processor_branches(self):
+        processor = StructureProcessor(structure_engine=MagicMock())
+        mock_item = MagicMock()
+        mock_item.type = "something_else"
+        mock_res = MagicMock()
+        mock_res.parsing_res_list = [mock_item]
+        layout = processor.analyze_layout([mock_res])
+        assert layout["other"] == 1
+        with patch.object(mock_item, "type", side_effect=Exception("Crash")):
+            layout = processor.analyze_layout([mock_res])
+            assert layout["text_blocks"] == 0

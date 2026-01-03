@@ -17,7 +17,7 @@ except ImportError:
     HAS_FITZ = False
 
 try:
-    pass
+    import numpy as np
 
     HAS_NUMPY = True
 except ImportError:

@@ -140,6 +140,93 @@ class TestGPUBatchProcessor:
         processor.reset_stats()
         assert processor.stats["total_images"] == 0
 
+    def test_batch_predict_flow(self):
+        """測試完整批次預測流程"""
+        from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
+
+        # 準備
+        processor = GPUBatchProcessor(batch_size=2)
+        images = [1, 2, 3, 4, 5]  # 5張圖，應該分成3批 (2, 2, 1)
+
+        mock_engine = MagicMock()
+
+        # 模擬 ocr 返回結果，每次調用返回對應數量的結果
+        def side_effect(tensor, batch=True):
+            return ["res"] * len(tensor)
+
+        mock_engine.ocr.side_effect = side_effect
+
+        # 執行
+        results = processor.batch_predict(images, mock_engine)
+
+        # 驗證
+        assert len(results) == 5
+        assert processor.stats["total_images"] == 5
+        assert processor.stats["total_batches"] == 3
+        assert processor.stats["total_time"] > 0
+        assert mock_engine.ocr.call_count == 3
+
+    def test_gpu_predict_with_pool(self):
+        """測試帶記憶體池的預測"""
+        from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
+
+        processor = GPUBatchProcessor(enable_memory_pool=True)
+        mock_pool = MagicMock()
+        processor.memory_pool = mock_pool
+
+        mock_engine = MagicMock()
+        batch_tensor = MagicMock()
+
+        processor._gpu_predict_batch(batch_tensor, mock_engine)
+
+        # 驗證使用了 memory pool 上下文
+        mock_pool.__enter__.assert_called()
+        mock_pool.__exit__.assert_called()
+        mock_engine.ocr.assert_called_with(batch_tensor, batch=True)
+
+    def test_performance_stats_calculation(self):
+        """測試性能統計計算"""
+        from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
+
+        processor = GPUBatchProcessor()
+        # 手動注入統計數據
+        processor.stats = {
+            "total_images": 100,
+            "total_batches": 10,
+            "total_time": 10.0,
+            "gpu_time": 5.0,
+            "preprocessing_time": 2.0,
+        }
+
+        stats = processor.get_performance_stats()
+
+        assert stats["avg_time_per_image"] == 0.1  # 10.0 / 100
+        assert stats["avg_time_per_batch"] == 1.0  # 10.0 / 10
+        assert stats["preprocessing_ratio"] == 0.2  # 2.0 / 10.0
+        assert stats["gpu_ratio"] == 0.5  # 5.0 / 10.0
+
+    def test_print_report(self):
+        """測試報告打印"""
+        from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
+
+        processor = GPUBatchProcessor()
+        processor.stats["total_images"] = 10
+
+        with patch("paddleocr_toolkit.core.gpu_optimizer.logger") as mock_logger:
+            processor.print_performance_report()
+            assert mock_logger.info.called
+
+    def test_empty_stats_report(self):
+        """測試空統計數據的報告"""
+        from paddleocr_toolkit.core.gpu_optimizer import GPUBatchProcessor
+
+        processor = GPUBatchProcessor()
+        # 默認全0
+        stats = processor.get_performance_stats()
+        assert stats["total_images"] == 0
+        # 應該直接返回 stats 而不是計算後的字典
+        assert "avg_time_per_image" not in stats
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -102,9 +102,11 @@ class EnhancedTranslationProcessor:
         logger.info("[Translation] Starting translation process...")
         logging.info(f"開始翻譯處理: {erased_pdf_path}")
 
-        logger.info("   Source Lang: %s", translate_config.get('source_lang', 'auto'))
-        logger.info("   Target Lang: %s", translate_config.get('target_lang', 'en'))
-        logger.info("   Ollama Model: %s", translate_config.get('ollama_model', 'qwen2.5:7b'))
+        logger.info("   Source Lang: %s", translate_config.get("source_lang", "auto"))
+        logger.info("   Target Lang: %s", translate_config.get("target_lang", "en"))
+        logger.info(
+            "   Ollama Model: %s", translate_config.get("ollama_model", "qwen2.5:7b")
+        )
 
         try:
             # === 1. 初始化工具 ===

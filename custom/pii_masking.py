@@ -7,6 +7,7 @@ import re
 from typing import Any, List, Dict
 from paddleocr_toolkit.plugins.base import PostprocessorPlugin
 
+
 class PIIMaskingPlugin(PostprocessorPlugin):
     name = "PII Masking"
     version = "1.0.0"
@@ -30,29 +31,33 @@ class PIIMaskingPlugin(PostprocessorPlugin):
         注意：這裡假設 results 是 OCRResult 物件列表或字典列表
         """
         masked_count = 0
-        
+
         for res in results:
             # 兼容 OCRResult 物件與字典
             text = getattr(res, "text", None) or res.get("text", "")
             original_text = text
-            
+
             # 手機號遮蔽中間 6 碼
-            text = self.PHONE_PATTERN.sub(lambda m: m.group()[:4] + "***" + m.group()[-3:], text)
-            
+            text = self.PHONE_PATTERN.sub(
+                lambda m: m.group()[:4] + "***" + m.group()[-3:], text
+            )
+
             # Email 遮蔽使用者帳號
-            text = self.EMAIL_PATTERN.sub(lambda m: m.group()[0] + "***" + m.group()[m.group().find("@"):], text)
-            
+            text = self.EMAIL_PATTERN.sub(
+                lambda m: m.group()[0] + "***" + m.group()[m.group().find("@") :], text
+            )
+
             # 身分證遮蔽後 6 碼
             text = self.ID_PATTERN.sub(lambda m: m.group()[:4] + "******", text)
-            
+
             if text != original_text:
                 masked_count += 1
                 if hasattr(res, "text"):
                     res.text = text
                 else:
                     res["text"] = text
-                    
+
         if masked_count > 0:
             self.logger.info(f"已遮蔽 {masked_count} 處敏感資訊")
-            
+
         return results

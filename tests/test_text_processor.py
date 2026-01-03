@@ -103,3 +103,26 @@ class TestEdgeCases:
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Added from Ultra Coverage
+import paddleocr_toolkit.processors.text_processor as tp
+from unittest.mock import MagicMock, patch
+import sys
+
+
+class TestTextProcessorUltra:
+    def test_functions_missed(self):
+        mock_wordninja = MagicMock()
+        with patch.dict(sys.modules, {"wordninja": mock_wordninja}), patch(
+            "paddleocr_toolkit.processors.text_processor.HAS_WORDNINJA", True
+        ), patch(
+            "paddleocr_toolkit.processors.text_processor.wordninja",
+            mock_wordninja,
+            create=True,
+        ):
+            mock_wordninja.split.return_value = ["micro", "machining"]
+            result = tp.fix_english_spacing("SUPERCALIFRAGILISTIC", use_wordninja=True)
+            assert "Micro machining" in result
+            mock_wordninja.split.return_value = ["something"]
+            result = tp.fix_english_spacing("somethinglong", use_wordninja=True)
+            assert "somethinglong" in result

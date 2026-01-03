@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 import fitz  # PyMuPDF
 
 if TYPE_CHECKING:
-    from paddleocr_toolkit.core import OCREngineManager
+    from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 
 try:
     from tqdm import tqdm

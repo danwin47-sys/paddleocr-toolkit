@@ -4,6 +4,7 @@ Tests for CLI mode processor
 """
 
 import argparse
+import logging
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -156,7 +157,7 @@ class TestProcessMethod:
 class TestProcessFormula:
     """Test _process_formula method"""
 
-    def test_formula_success(self, tmp_path, capsys):
+    def test_formula_success(self, tmp_path, caplog):
         """Test successful formula processing"""
         tool = Mock()
         tool.process_formula.return_value = {
@@ -170,16 +171,17 @@ class TestProcessFormula:
         input_path = tmp_path / "math.png"
 
         processor = ModeProcessor(tool, args, input_path, tmp_path)
-        result = processor._process_formula()
+
+        with caplog.at_level(logging.INFO):
+            result = processor._process_formula()
 
         assert len(result["formulas"]) == 1
         assert result["latex_file"] == "/output/formula.tex"
 
-        captured = capsys.readouterr()
-        assert "OK" in captured.out
+        assert "Formula recognition complete" in caplog.text
 
-    def test_formula_with_error(self, tmp_path, capsys):
-        """Test formula processing with error"""
+    def test_process_formula_error(self, tmp_path, caplog):
+        """Test formula processing error"""
         tool = Mock()
         tool.process_formula.return_value = {"error": "Processing failed"}
 
@@ -187,19 +189,19 @@ class TestProcessFormula:
         input_path = tmp_path / "math.png"
 
         processor = ModeProcessor(tool, args, input_path, tmp_path)
-        result = processor._process_formula()
+
+        # Verify error log
+        with caplog.at_level(logging.ERROR):
+            result = processor._process_formula()
 
         assert "error" in result
-
-        captured = capsys.readouterr()
-        # Check for error message in output
-        assert captured.out  # Just verify output exists
+        assert "Processing error" in caplog.text
 
 
 class TestProcessStructured:
     """Test _process_structured method"""
 
-    def test_structured_success(self, tmp_path, capsys):
+    def test_structured_success(self, tmp_path, caplog):
         """Test successful structured processing"""
         tool = Mock()
         tool.process_structured.return_value = {
@@ -221,13 +223,14 @@ class TestProcessStructured:
         input_path = tmp_path / "doc.pdf"
 
         processor = ModeProcessor(tool, args, input_path, tmp_path)
-        result = processor._process_structured()
+
+        with caplog.at_level(logging.INFO):
+            result = processor._process_structured()
 
         assert result["pages_processed"] == 3
         assert len(result["markdown_files"]) == 1
 
-        captured = capsys.readouterr()
-        assert "OK" in captured.out or "完成" in captured.out
+        assert "Processing complete" in caplog.text
 
 
 class TestProcessHybrid:
@@ -260,7 +263,7 @@ class TestProcessHybrid:
         assert result["pages_processed"] == 2
 
     @patch("paddle_ocr_tool.HAS_TRANSLATOR", True)
-    def test_hybrid_with_translation(self, tmp_path, capsys):
+    def test_hybrid_with_translation(self, tmp_path, caplog):
         """Test hybrid mode with translation enabled"""
         tool = Mock()
         tool.process_translate.return_value = {
@@ -292,13 +295,14 @@ class TestProcessHybrid:
         input_path = tmp_path / "test.pdf"
 
         processor = ModeProcessor(tool, args, input_path, tmp_path)
-        result = processor._process_hybrid_with_translation()
+
+        with caplog.at_level(logging.INFO):
+            result = processor._process_hybrid_with_translation()
 
         tool.process_translate.assert_called_once()
         assert result["pages_processed"] == 2
 
-        captured = capsys.readouterr()
-        assert "翻譯" in captured.out or "translate" in captured.out.lower()
+        assert "Translation" in caplog.text or "翻譯" in caplog.text
 
 
 class TestProcessBasic:

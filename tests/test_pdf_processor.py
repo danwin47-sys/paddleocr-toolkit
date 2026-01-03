@@ -371,3 +371,39 @@ class TestProcessPDF:
         assert len(results[0]) == 1  # Page 1 成功
         assert len(results[1]) == 0  # Page 2 失敗
         assert len(results[2]) == 1  # Page 3 成功
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.pdf_processor import PDFProcessor
+from unittest.mock import MagicMock, patch
+import pytest
+import numpy as np
+
+
+class TestPDFProcessorUltra:
+    def test_pdf_processor_initialization_errors(self):
+        with patch("paddleocr_toolkit.processors.pdf_processor.HAS_FITZ", False):
+            with pytest.raises(ImportError, match="PyMuPDF 未安裝"):
+                PDFProcessor(ocr_func=lambda x: x)
+        with patch("paddleocr_toolkit.processors.pdf_processor.HAS_NUMPY", False):
+            with pytest.raises(ImportError, match="NumPy 未安裝"):
+                PDFProcessor(ocr_func=lambda x: x)
+
+    def test_pdf_processor_searchable_save(self):
+        mock_ocr = MagicMock(return_value=[])
+        processor = PDFProcessor(ocr_func=mock_ocr)
+        mock_doc = MagicMock()
+        mock_doc.__len__.return_value = 1
+        mock_page = MagicMock()
+        mock_doc.__getitem__.return_value = mock_page
+        with patch("fitz.open", return_value=mock_doc), patch(
+            "paddleocr_toolkit.processors.pdf_processor.pixmap_to_numpy",
+            return_value=np.zeros((10, 10, 3)),
+        ), patch(
+            "paddleocr_toolkit.processors.pdf_processor.PDFGenerator"
+        ) as mock_gen_cls:
+            mock_gen = MagicMock()
+            mock_gen_cls.return_value = mock_gen
+            processor.process_pdf("test.pdf", searchable=True)
+            mock_gen.add_page_from_pixmap.assert_called()
+            mock_gen.save.assert_called()

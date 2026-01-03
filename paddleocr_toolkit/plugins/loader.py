@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .base import OCRPlugin
+from paddleocr_toolkit.plugins.base import OCRPlugin
 
 
 class PluginLoader:
@@ -210,7 +210,7 @@ class PluginLoader:
 # 使用範例
 if __name__ == "__main__":
     from paddleocr_toolkit.utils.logger import logger
-    
+
     logger.info("Plugin Loader Example")
     logger.info("Usage:")
     logger.info(

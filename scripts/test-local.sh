@@ -68,7 +68,8 @@ fi
 if [ "$RUN_PYTEST" = true ]; then
     echo "  → 執行 pytest 單元測試..."
     if command -v pytest &> /dev/null; then
-        if pytest tests/ -v --tb=short 2>&1 | tee /tmp/pytest_output.txt | tail -20; then
+        pytest tests/ -v --tb=short 2>&1 | tee /tmp/pytest_output.txt | tail -20
+        if [ ${PIPESTATUS[0]} -eq 0 ]; then
             echo -e "  ${GREEN}✓${NC} pytest 測試通過"
             ((TESTS_PASSED++))
         else

@@ -93,18 +93,22 @@ class PaddleOCRFacade:
 
         # 初始化對應的 Processor
         self._init_processors()
-        
+
         # 初始化語義處理器（可選）
         self.semantic_processor = None
         if enable_semantic:
             try:
-                from paddleocr_toolkit.processors.semantic_processor import SemanticProcessor
+                from paddleocr_toolkit.processors.semantic_processor import (
+                    SemanticProcessor,
+                )
+
                 self.semantic_processor = SemanticProcessor(
-                    llm_provider=llm_provider,
-                    model=llm_model
+                    llm_provider=llm_provider, model=llm_model
                 )
                 if self.semantic_processor.is_enabled():
-                    logging.info(f"SemanticProcessor 已啟用：{llm_provider}/{llm_model or 'default'}")
+                    logging.info(
+                        f"SemanticProcessor 已啟用：{llm_provider}/{llm_model or 'default'}"
+                    )
                 else:
                     logging.warning("SemanticProcessor 初始化失敗，功能已禁用")
                     self.semantic_processor = None
@@ -112,7 +116,9 @@ class PaddleOCRFacade:
                 logging.error(f"SemanticProcessor 初始化錯誤: {e}")
                 self.semantic_processor = None
 
-        logging.info(f"PaddleOCRFacade 初始化完成：mode={mode}, device={device}, semantic={enable_semantic}")
+        logging.info(
+            f"PaddleOCRFacade 初始化完成：mode={mode}, device={device}, semantic={enable_semantic}"
+        )
 
     def _init_processors(self):
         """根據模式初始化對應的 Processor"""
@@ -141,7 +147,9 @@ class PaddleOCRFacade:
             logging.info("BasicProcessor 初始化完成")
 
         elif self.mode == "structure":
-            from paddleocr_toolkit.processors.structure_processor import StructureProcessor
+            from paddleocr_toolkit.processors.structure_processor import (
+                StructureProcessor,
+            )
 
             self.structure_processor = StructureProcessor(self.engine_manager)
             logging.info("StructureProcessor 初始化完成")
@@ -316,15 +324,15 @@ class PaddleOCRFacade:
             預測結果
         """
         return self.engine_manager.predict(image)
-    
+
     def correct_text(self, text: str, language: str = "zh") -> str:
         """
         使用語義處理器修正文字（僅在啟用時可用）
-        
+
         Args:
             text: 要修正的文字
             language: 語言（"zh" 或 "en"）
-        
+
         Returns:
             str: 修正後的文字
         """
@@ -333,15 +341,17 @@ class PaddleOCRFacade:
         else:
             logging.warning("語義處理未啟用，返回原始文字")
             return text
-    
-    def extract_structured_data(self, text: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+
+    def extract_structured_data(
+        self, text: str, schema: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         從文字中提取結構化資料
-        
+
         Args:
             text: 源文字
             schema: JSON Schema
-        
+
         Returns:
             Dict: 提取的結構化資料
         """

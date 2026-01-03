@@ -250,23 +250,43 @@ class OutputPathManager:
 
     def _print_basic_mode_summary(self, args: argparse.Namespace) -> None:
         """顯示 basic 模式的輸出摘要"""
-        logger.info("[Searchable PDF] %s", 'Enabled' if args.searchable else 'Disabled')
-        logger.info("[Text Output] %s", args.text_output if args.text_output else 'Disabled')
+        logger.info("[Searchable PDF] %s", "Enabled" if args.searchable else "Disabled")
+        logger.info(
+            "[Text Output] %s", args.text_output if args.text_output else "Disabled"
+        )
 
     def _print_formula_mode_summary(self, args: argparse.Namespace) -> None:
         """顯示 formula 模式的輸出摘要"""
-        logger.info("[LaTeX Output] %s", args.latex_output if args.latex_output else 'Disabled')
+        logger.info(
+            "[LaTeX Output] %s", args.latex_output if args.latex_output else "Disabled"
+        )
 
     def _print_hybrid_mode_summary(self, args: argparse.Namespace) -> None:
         """顯示 hybrid 模式的輸出摘要"""
         logger.info("[Searchable PDF] Enabled (Hybrid Mode)")
-        logger.info("[Markdown Output] %s", args.markdown_output if args.markdown_output else 'Disabled')
-        logger.info("[JSON Output] %s", args.json_output if args.json_output else 'Disabled')
-        logger.info("[HTML Output] %s", args.html_output if args.html_output else 'Disabled')
+        logger.info(
+            "[Markdown Output] %s",
+            args.markdown_output if args.markdown_output else "Disabled",
+        )
+        logger.info(
+            "[JSON Output] %s", args.json_output if args.json_output else "Disabled"
+        )
+        logger.info(
+            "[HTML Output] %s", args.html_output if args.html_output else "Disabled"
+        )
 
     def _print_structure_mode_summary(self, args: argparse.Namespace) -> None:
         """顯示 structure/vl 模式的輸出摘要"""
-        logger.info("[Markdown Output] %s", args.markdown_output if args.markdown_output else 'Disabled')
-        logger.info("[JSON Output] %s", args.json_output if args.json_output else 'Disabled')
-        logger.info("[Excel Output] %s", args.excel_output if args.excel_output else 'Disabled')
-        logger.info("[HTML Output] %s", args.html_output if args.html_output else 'Disabled')
+        logger.info(
+            "[Markdown Output] %s",
+            args.markdown_output if args.markdown_output else "Disabled",
+        )
+        logger.info(
+            "[JSON Output] %s", args.json_output if args.json_output else "Disabled"
+        )
+        logger.info(
+            "[Excel Output] %s", args.excel_output if args.excel_output else "Disabled"
+        )
+        logger.info(
+            "[HTML Output] %s", args.html_output if args.html_output else "Disabled"
+        )

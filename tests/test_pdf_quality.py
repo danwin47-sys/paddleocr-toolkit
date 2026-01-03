@@ -92,3 +92,30 @@ class TestDetectPdfQuality:
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.pdf_quality import detect_pdf_quality
+from unittest.mock import MagicMock, patch
+
+
+class TestPDFQualityUltra:
+    def test_detect_pdf_quality_branches(self):
+        mock_doc = MagicMock()
+        mock_doc.__len__.return_value = 1
+        mock_page = MagicMock()
+        mock_doc.__getitem__.return_value = mock_page
+        with patch("fitz.open", return_value=mock_doc):
+            mock_page.get_text.return_value = "short"
+            mock_page.get_images.return_value = [1]
+            res = detect_pdf_quality("test.pdf")
+            assert res["is_scanned"] is True
+            mock_page.get_text.return_value = "a" * 100
+            res = detect_pdf_quality("test.pdf")
+            assert res["is_blurry"] is True
+
+    def test_detect_pdf_quality_no_fitz(self):
+        import paddleocr_toolkit.processors.pdf_quality as pq
+
+        with patch("paddleocr_toolkit.processors.pdf_quality.HAS_FITZ", False):
+            res = pq.detect_pdf_quality("test.pdf")
+            assert res["reason"] == "PyMuPDF 未安裝"

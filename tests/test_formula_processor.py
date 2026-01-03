@@ -4,6 +4,7 @@
 """
 
 import tempfile
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -117,7 +118,8 @@ class TestFormulaProcessorProcessPDF:
                     == "\\alpha + \\beta"
                 )
         finally:
-            Path(pdf_path).unlink(missing_ok=True)
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
 
 
 class TestFormulaProcessorUtility:
@@ -152,4 +154,79 @@ class TestFormulaProcessorUtility:
             assert "x=1" in content
             assert "第 1 頁" in content
         finally:
-            Path(tex_path).unlink(missing_ok=True)
+            if os.path.exists(tex_path):
+                os.remove(tex_path)
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.formula_processor import FormulaProcessor
+from unittest.mock import MagicMock, patch
+import pytest
+
+
+class TestFormulaProcessorUltra:
+    def test_formula_processor_init_error(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "ocr"
+        with pytest.raises(ValueError, match="FormulaProcessor 需要 formula 模式"):
+            FormulaProcessor(mock_mgr)
+
+    def test_process_image_error(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "formula"
+        processor = FormulaProcessor(mock_mgr)
+
+        # 1. Image is None (line 87)
+        with patch("cv2.imread", return_value=None):
+            res = processor.process_image("invalid.jpg")
+            assert "無法讀取" in res["error"]
+
+        # 2. General exception (lines 102-104)
+        with patch("cv2.imread", side_effect=Exception("CV2 error")):
+            res = processor.process_image("invalid.jpg")
+            assert "CV2 error" in res["error"]
+
+    def test_process_pdf_page_loop_errors(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "formula"
+        processor = FormulaProcessor(mock_mgr)
+        with patch("fitz.open") as mock_fitz:
+            mock_doc = MagicMock()
+            mock_doc.__len__.return_value = 1
+            mock_page = MagicMock()
+            mock_doc.__getitem__.return_value = mock_page
+            mock_fitz.return_value = mock_doc
+            # Force page error
+            mock_page.get_pixmap.side_effect = Exception("Pixmap error")
+            res = processor.process_pdf("test.pdf")
+            assert res["pages_processed"] == 0
+
+    def test_parse_formula_output_exception(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "formula"
+        processor = FormulaProcessor(mock_mgr)
+        # Trigger exception in _parse_formula_output (line 213)
+        res = processor._parse_formula_output(
+            MagicMock()
+        )  # Passing something that causes iteration error
+        assert res == []
+
+    def test_save_latex_exception(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "formula"
+        processor = FormulaProcessor(mock_mgr)
+        with patch("builtins.open", side_effect=Exception("Write Error")):
+            processor._save_latex([{"page": 1, "formulas": []}], "out.tex")
+
+
+class TestFormulaUltraMore:
+    def test_formula_processor_exception(self):
+        mock_mgr = MagicMock()
+        mock_mgr.get_mode.return_value.value = "formula"
+        proc = FormulaProcessor(mock_mgr)
+
+        # Trigger line 214 exception in _parse_formula_output
+        mock_bad_item = MagicMock()
+        mock_bad_item.__len__.side_effect = TypeError("Bad len")
+        res = proc._parse_formula_output([mock_bad_item])
+        assert res == []

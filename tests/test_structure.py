@@ -14,7 +14,7 @@ def test_project_structure():
     assert Path("web-frontend").exists()
     assert Path("scripts").exists()
     assert Path("docs").exists()
-    
+
     # 檢查關鍵檔案
     assert Path("README.md").exists()
     assert Path("requirements.txt").exists()
@@ -28,7 +28,7 @@ def test_scripts_executable():
         Path("scripts/test-quick.sh"),
         Path("scripts/install-hooks.sh"),
     ]
-    
+
     for script in scripts:
         assert script.exists(), f"{script} 不存在"
         # 檢查執行權限
@@ -38,14 +38,14 @@ def test_scripts_executable():
 def test_required_dependencies():
     """測試必要依賴存在"""
     requirements = Path("requirements.txt").read_text()
-    
+
     essential_deps = [
         "fastapi",
         "uvicorn",
         "PyMuPDF",
         "reportlab",
     ]
-    
+
     for dep in essential_deps:
         assert dep.lower() in requirements.lower(), f"缺少依賴：{dep}"
 
@@ -53,11 +53,11 @@ def test_required_dependencies():
 def test_frontend_structure():
     """測試前端結構"""
     frontend_path = Path("web-frontend")
-    
+
     # 檢查配置檔案
     assert (frontend_path / "package.json").exists()
     assert (frontend_path / "tsconfig.json").exists()
-    
+
     # 檢查源碼目錄
     assert (frontend_path / "src").exists()
     assert (frontend_path / "src" / "app").exists()
@@ -67,7 +67,7 @@ def test_frontend_structure():
 def test_api_structure():
     """測試 API 結構"""
     api_path = Path("paddleocr_toolkit/api")
-    
+
     assert api_path.exists()
     assert (api_path / "main.py").exists()
 
@@ -79,7 +79,7 @@ def test_documentation():
         "docs/DEPLOYMENT_GUIDE.md",
         "docs/FAQ.md",
     ]
-    
+
     for doc in docs:
         assert Path(doc).exists(), f"文檔不存在：{doc}"
 

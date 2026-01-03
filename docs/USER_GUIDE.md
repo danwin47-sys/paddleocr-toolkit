@@ -1,285 +1,189 @@
-# PaddleOCR Toolkit 使用指南
+# PaddleOCR Toolkit 使用者手冊
 
-歡迎使用 PaddleOCR Toolkit！本指南將幫助您快速上手並掌握所有功能。
-
----
+本手冊提供 PaddleOCR Toolkit 的詳細使用說明，涵蓋安裝、CLI 命令、配置設定與進階功能。
 
 ## 📋 目錄
 
-- [快速開始](#快速開始)
-- [基本使用](#基本使用)
-- [進階功能](#進階功能)
-- [OCR 模式說明](#ocr-模式說明)
-- [最佳實踐](#最佳實踐)
-- [常見問題](#常見問題)
+1.  [⚡ 快速開始](#-快速開始)
+2.  [📦 安裝指南](#-安裝指南)
+3.  [💻 命令列工具 (CLI)](#-命令列工具-cli)
+4.  [⚙️ 配置設定](#-配置設定)
+5.  [🧠 LLM 整合 (AI 校正)](#-llm-整合-ai-校正)
+6.  [🌐 Web 儀表板](#-web-儀表板)
 
 ---
 
-## 快速開始
+## ⚡ 快速開始
 
-### 系統需求
-
-#### 硬體需求
-- **CPU**: 2 核心以上（建議 4 核心）
-- **RAM**: 最低 2GB（建議 4GB 以上）
-- **硬碟**: 至少 2GB 可用空間（用於模型儲存）
-
-#### 軟體需求
-- **Python**: 3.8 或以上
-- **Node.js**: 16.x 或以上（前端）
-- **作業系統**: Windows、macOS、Linux
-
-### 安裝步驟
-
-#### 1. 安裝後端依賴
-
+### 1. 安裝套件
 ```bash
-cd paddleocr-toolkit
 pip install -r requirements.txt
 ```
 
-首次執行時會自動下載 PaddleOCR 模型（約 100MB），請耐心等待。
-
-#### 2. 安裝前端依賴
-
+### 2. 生成可搜尋 PDF (基本模式)
 ```bash
-cd web-frontend
-npm install
+python paddle_ocr_tool.py input.pdf
 ```
 
-#### 3. 啟動服務
-
-**啟動後端**：
+### 3. 使用混合模式 (表格識別 + Markdown 輸出)
 ```bash
-# 在專案根目錄
-python -m uvicorn paddleocr_toolkit.api.main:app --host 0.0.0.0 --port 8000 --reload
+python paddle_ocr_tool.py input.pdf --mode hybrid
 ```
 
-**啟動前端**：
+---
+
+## 📦 安裝指南
+
+### 系統需求
+- Python 3.8+
+- RAM: 建議 4GB+ (若啟用 LLM 或處理大型 PDF)
+- (可選) NVIDIA GPU + CUDA 用於加速 OCR
+
+### 本地安裝 (MacOS/Linux/Windows)
+
 ```bash
-# 在 web-frontend 目錄
-npm run dev
+# 1. Clone 專案
+git clone https://github.com/danwin47-sys/paddleocr-toolkit.git
+cd paddleocr-toolkit
+
+# 2. 建立虛擬環境 (推薦)
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. 安裝依賴
+pip install -r requirements.txt
 ```
 
-#### 4. 訪問應用
-
-打開瀏覽器訪問：`http://localhost:3000`
-
----
-
-## 基本使用
-
-### 上傳 PDF 檔案
-
-1. **點擊上傳區域**
-   - 直接點擊「點選或拖曳上傳檔案」區域
-   - 或將 PDF 檔案拖放到該區域
-
-2. **選擇檔案**
-   - 支援的格式：PDF、JPG、PNG、BMP、WEBP
-   - 建議單一檔案大小 < 50MB
-
-3. **等待上傳**
-   - 系統會顯示上傳進度
-   - 上傳完成後自動開始 OCR 處理
-
-### 查看辨識結果
-
-1. **處理進度**
-   - 螢幕會顯示即時處理進度（0-100%）
-   - 處理時間取決於檔案大小和選擇的模式
-
-2. **結果顯示**
-   - 右側面板會顯示辨識出的文字
-   - 包含信心度評分
-
-3. **操作選項**
-   - **複製文字**：點擊「📋 複製文字」按鈕
-   - **下載可搜尋 PDF**：點擊「📄 可搜尋 PDF」按鈕
-   - **重新處理**：上傳新檔案自動開始新處理
-
-### 選擇 OCR 模式
-
-點擊右上角的 **⚙️ 設定** 按鈕，選擇適合的模式：
-
-- **極速模式 (Basic)**: 最快速，適合簡單文檔
-- **智能混合模式 (Hybrid)**: 支援版面分析和表格識別，適合複雜文檔
+### Docker 安裝 (尚未發布)
+*(即將推出)*
 
 ---
 
-## 進階功能
+## 💻 命令列工具 (CLI)
 
-### AI 智能校正
+主要的進入點是 `paddle_ocr_tool.py`。
 
-系統支援使用 Gemini 或 Claude AI 進行語義錯誤修正。
+### 基本語法
+```bash
+python paddle_ocr_tool.py [INPUT_PATH] [OPTIONS]
+```
 
-#### 設定步驟
+### 核心模式 (`--mode`)
+| 模式        | 描述                          | 適用場景                          |
+| :---------- | :---------------------------- | :-------------------------------- |
+| `basic`     | 基礎 OCR，僅提取文字          | 快速提取純文字，無需格式          |
+| `hybrid`    | **(推薦)** 結合版面分析與 OCR | 表格、多欄排版文件，生成 Markdown |
+| `structure` | 專注於結構化提取              | 複雜表格與文件結構還原            |
 
-1. 點擊 **⚙️ 設定**
-2. 選擇 **AI 校正模式**
-3. 選擇提供者：
-   - **Gemini**: Google 的 AI 模型
-   - **Claude**: Anthropic 的 AI 模型
-4. 輸入對應的 API Key
-5. 點擊「儲存」
+### 常用參數
 
-#### 使用說明
+#### 輸入與輸出
+- `--output <DIR>`: 指定輸出目錄 (預設: 當前目錄)
+- `--recursive`: 遞歸處理目錄下的所有檔案
+- `--overwrite`: 強制覆蓋已存在的輸出檔案
 
-- AI 校正會在 OCR 完成後自動執行
-- 可修正錯別字、標點符號等問題
-- 處理時間會增加 5-10 秒
+#### 影像處理
+- `--dpi <INT>`: 處理 PDF 時的解析度 (預設: 150，建議: 200-300 以提升準確度)
+- `--deskew`: 啟用影像歪斜校正
+- `--unwarp`: 啟用影像去彎曲 (適用於相片掃描件)
 
-### 可搜尋 PDF
+#### 進階功能
+- `--translate`: 啟用翻譯功能 (需配置 LLM)
+- `--source_lang <LANG>`: 翻譯來源語言 (預設: auto)
+- `--target_lang <LANG>`: 翻譯目標語言 (預設: en)
+- `--enable_semantic`: 啟用語義檢查修正 (需配置 LLM)
 
-將 OCR 辨識的文字嵌入原始 PDF，使其可搜尋。
+### 範例
 
-#### 功能說明
+**批次處理目錄並啟用高解析度：**
+```bash
+python paddle_ocr_tool.py ./documents --output ./results --recursive --dpi 300
+```
 
-- 保留原始 PDF 視覺效果
-- 添加透明文字層
-- 支援全文搜尋
+**驗證 OCR 準確度 (Validate 命令)：**
+```bash
+python -m paddleocr_toolkit.cli.commands.validate <OCR_JSON> <GROUND_TRUTH_TXT>
+```
 
-#### 使用方法
-
-1. 完成 OCR 處理
-2. 點擊「📄 可搜尋 PDF」按鈕
-3. 下載生成的 PDF
-4. 使用 PDF 閱讀器的搜尋功能測試
-
-### 多語言支援
-
-系統預設支援繁體中文，未來將支援更多語言。
-
----
-
-## OCR 模式說明
-
-### 極速模式 (Basic)
-
-**適用場景**：
-- 簡單的文字文檔
-- 只需要快速辨識文字
-- 不需要版面分析
-
-**特點**：
-- ✅ 處理速度快（2-5 秒/頁）
-- ✅ 記憶體使用少
-- ❌ 不支援表格識別
-- ❌ 不支援版面分析
-
-**建議使用**：
-- 掃描的書籍或雜誌
-- 純文字文檔
-- 需要快速處理的情況
-
-### 智能混合模式 (Hybrid)
-
-**適用場景**：
-- 複雜的文檔佈局
-- 包含表格的文檔
-- 需要保留版面結構
-
-**特點**：
-- ✅ 版面分析
-- ✅ 表格識別
-- ✅ 高準確度
-- ❌ 處理速度較慢（10-20 秒/頁）
-- ❌ 記憶體使用較多
-
-**建議使用**：
-- 財務報表
-- 學術論文
-- 包含圖表的文檔
+**運行效能基準測試 (Benchmark 命令)：**
+```bash
+python -m paddleocr_toolkit.cli.commands.benchmark input.pdf
+```
 
 ---
 
-## 最佳實踐
+## ⚙️ 配置設定
 
-### 提升辨識準確度
+系統會在以下路徑依序尋找 `config.yaml`：
+1. 當前工作目錄
+2. `~/.paddleocr_toolkit/`
 
-1. **使用高品質掃描**
-   - 解析度建議 > 300 DPI
-   - 避免模糊或傾斜的圖片
+### 範例 `config.yaml`
 
-2. **選擇適當的模式**
-   - 簡單文檔用 Basic 模式
-   - 複雜文檔用 Hybrid 模式
+```yaml
+ocr:
+  mode: "hybrid"
+  device: "cpu"       # "cpu" 或 "gpu"
+  dpi: 150
+  use_angle_cls: true # 啟用方向分類器
 
-3. **預處理圖片**
-   - 調整亮度和對比度
-   - 去除背景雜訊
-   - 矯正傾斜角度
+output:
+  searchable_pdf: true
+  markdown: true
+  json: true
 
-### 優化處理速度
-
-1. **壓縮大型文件**
-   - 大型 PDF 建議先壓縮
-   - 或分割成多個小檔案處理
-
-2. **使用 Basic 模式**
-   - 如不需要版面分析，使用 Basic 模式可大幅提升速度
-
-3. **關閉不需要的功能**
-   - 如不需要 AI 校正，可關閉以節省時間
-
-### 記憶體管理
-
-1. **避免同時處理多個大檔案**
-2. **定期清理瀏覽器快取**
-3. **關閉不使用的瀏覽器分頁**
+translation:
+  enabled: false
+  provider: "ollama"  # "ollama", "openai", "gemini", "claude"
+  ollama_url: "http://localhost:11434"
+  ollama_model: "qwen2.5:7b"
+  
+logging:
+  level: "INFO"
+  save_to_file: true
+```
 
 ---
 
-## 常見問題
+## 🧠 LLM 整合 (AI 校正)
 
-### Q: 第一次執行很慢怎麼辦？
+PaddleOCR Toolkit 支援整合大型語言模型 (LLM) 進行 OCR 結果的後處理，例如語義修正與翻譯。
 
-A: 第一次執行時系統需要下載 PaddleOCR 模型（約 100MB），這是正常的。下載完成後會自動快取，後續使用會很快。
+### 支援的提供商
+1. **Ollama (本地)**: 免費、隱私高，需安裝 [Ollama](https://ollama.com)。
+2. **OpenAI**: 使用 GPT-3.5/4。
+3. **Google Gemini**: 使用 Gemini Pro/Flash。
+4. **Anthropic Claude**: 使用 Claude 3/3.5。
 
-### Q: 支援哪些檔案格式？
+### 啟用方式 (以 Ollama 為例)
 
-A: 
-- **圖片**: JPG, PNG, BMP, WEBP
-- **文檔**: PDF
+1. 啟動 Ollama 服務：
+   ```bash
+   ollama serve
+   ollama pull qwen2.5:7b
+   ```
 
-### Q: 辨識結果不準確怎麼辦？
-
-A: 
-1. 檢查原始圖片品質
-2. 嘗試使用 Hybrid 模式
-3. 使用 AI 校正功能
-4. 參考[疑難排解](TROUBLESHOOTING.md)
-
-### Q: 可以批量處理多個檔案嗎？
-
-A: 目前版本暫不支援批量處理，此功能將在 v3.5.0 中推出。
-
-### Q: 處理進度卡住怎麼辦？
-
-A: 
-1. 重新整理頁面
-2. 檢查後端服務是否正常運行
-3. 查看瀏覽器控制台是否有錯誤訊息
-4. 參考[疑難排解](TROUBLESHOOTING.md)
+2. 執行 CLI 時帶上參數：
+   ```bash
+   python paddle_ocr_tool.py doc.pdf --enable_semantic \
+     --llm_provider ollama \
+     --ollama_model qwen2.5:7b
+   ```
 
 ---
 
-## 更多資源
+## 🌐 Web 儀表板
 
-- [常見問題集 (FAQ)](FAQ.md)
-- [疑難排解指南](TROUBLESHOOTING.md)
-- [API 參考文檔](API_REFERENCE.md)
-- [GitHub Issues](https://github.com/danwin47-sys/paddleocr-toolkit/issues)
+內建的 Web 介面提供可視化的任務管理與系統監控。
 
----
+### 啟動服務
+```bash
+python -m paddleocr_toolkit.api.main
+```
+服務預設運行於 `http://localhost:8000`。
 
-## 需要幫助？
-
-如果您遇到問題或有建議，歡迎：
-
-1. 查閱 [FAQ](FAQ.md)
-2. 閱讀 [疑難排解](TROUBLESHOOTING.md)
-3. 在 GitHub 提交 Issue
-4. 聯繫技術支援
-
-**祝您使用愉快！** 🎉
+### 主要功能
+- **任務上傳**: 拖放檔案進行 OCR。
+- **即時日誌**: 透過 WebSocket 查看處理進度。
+- **系統健康**: `/health` 端點監控 CPU/RAM 使用量。
+- **API 文件**: 瀏覽器訪問 `/docs` 查看 Swagger UI。

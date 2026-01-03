@@ -19,7 +19,8 @@ from paddleocr_toolkit.api.websocket_manager import manager
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture
@@ -45,14 +46,17 @@ def test_websocket_connection(client):
         data = websocket.receive_json()
         assert data == {"type": "pong"}
 
-    # 驗證斷開連線
+    # 驗證斷開連線 (small sleep for async race)
+    import time
+
+    time.sleep(0.2)
     assert manager.get_connection_count(task_id) == 0
 
 
 def test_create_task_and_status(client, mock_ocr_engine_manager):
     """測試建立任務和狀態查詢"""
-    # 建立虛擬檔案
-    files = {"file": ("test.pdf", b"dummy content", "application/pdf")}
+    # 建立虛擬檔案 (PNG to avoid ParallelPDFProcessor in this test)
+    files = {"file": ("test.png", b"dummy content", "image/png")}
 
     # 傳送請求
     response = client.post("/api/ocr", files=files)

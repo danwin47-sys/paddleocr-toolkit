@@ -7,9 +7,11 @@ interface TranslationModalProps {
     isOpen: boolean;
     onClose: () => void;
     originalText: string;
+    geminiKey?: string;
+    claudeKey?: string;
 }
 
-export default function TranslationModal({ isOpen, onClose, originalText }: TranslationModalProps) {
+export default function TranslationModal({ isOpen, onClose, originalText, geminiKey, claudeKey }: TranslationModalProps) {
     const [targetLang, setTargetLang] = useState('en');
     const [provider, setProvider] = useState('ollama');
     const [translatedText, setTranslatedText] = useState('');

@@ -129,3 +129,167 @@ class TestFileManagerAPI:
         assert data["uploads"]["count"] >= 1
         assert data["outputs"]["count"] >= 1
         assert data["total_size_mb"] >= 0
+
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.api.file_manager import (
+    list_files,
+    download_file,
+    delete_file,
+    cleanup_old_files,
+    get_file_stats,
+)
+from fastapi import HTTPException
+from unittest.mock import MagicMock, patch
+import pytest
+
+
+class TestFileManagerUltra:
+    @pytest.mark.asyncio
+    async def test_file_manager_remaining_gaps(self):
+        # 1. list_files "output" and "uploads" (lines 56, 58, 63, 65-82)
+        with patch("paddleocr_toolkit.api.file_manager.OUTPUT_DIR") as mock_out, patch(
+            "paddleocr_toolkit.api.file_manager.UPLOAD_DIR"
+        ) as mock_up:
+            mock_out.exists.return_value = False
+            mock_up.exists.return_value = True
+
+            mock_file = MagicMock()
+            mock_file.is_file.return_value = True
+            mock_file.name = "test.txt"
+            mock_file.suffix = ".txt"
+            mock_file.stat.return_value.st_size = 100
+            mock_file.stat.return_value.st_mtime = 123456789
+            mock_up.iterdir.return_value = [mock_file]
+
+            res_up = await list_files(directory="uploads")
+            assert res_up.total == 1
+            assert res_up.files[0].name == "test.txt"
+
+            res_out = await list_files(directory="output")
+            assert res_out.total == 0
+
+        # 3. download_file success (lines 113-115)
+        with patch("paddleocr_toolkit.api.file_manager.OUTPUT_DIR") as mock_out:
+            mock_file = mock_out / "test.txt"
+            mock_file.exists.return_value = True
+            mock_file.is_file.return_value = True
+            res = await download_file("test.txt", directory="output")
+            assert res is not None
+
+        # 4. delete_file success (line 151)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up:
+            mock_up.__truediv__.return_value.exists.return_value = True
+            res = await delete_file("test.txt")
+            assert "已刪除" in res["message"]
+
+        # 6. cleanup_old_files success (line 181)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up, patch(
+            "paddleocr_toolkit.api.file_manager.OUTPUT_DIR"
+        ) as mock_out:
+            mock_up.exists.return_value = True
+            mock_out.exists.return_value = False
+            mock_file = MagicMock()
+            mock_file.is_file.return_value = True
+            mock_file.stat.return_value.st_mtime = 0  # Very old
+            mock_up.iterdir.return_value = [mock_file]
+
+            res = await cleanup_old_files(days=1)
+            assert res["deleted_count"] == 1
+
+            # 2. list_files invalid type (line 60)
+            with pytest.raises(HTTPException) as exc:
+                await list_files(directory="invalid")
+            assert exc.value.status_code == 400
+
+        # 3. download_file "uploads" and invalid (lines 98, 102, 110)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up:
+            mock_up.__truediv__.return_value.exists.return_value = True
+            mock_up.__truediv__.return_value.is_file.return_value = False  # Not a file
+            with pytest.raises(HTTPException) as exc:
+                await download_file("test.txt", directory="uploads")
+            assert exc.value.status_code == 400
+
+            with pytest.raises(HTTPException) as exc:
+                await download_file("test.txt", directory="invalid")
+            assert exc.value.status_code == 400
+
+        # 4. delete_file "output" and invalid (lines 139-142)
+        with patch("paddleocr_toolkit.api.file_manager.OUTPUT_DIR") as mock_out:
+            mock_out.__truediv__.return_value.exists.return_value = False
+            with pytest.raises(HTTPException) as exc:
+                await delete_file("test.txt", directory="output")
+            assert exc.value.status_code == 404
+
+            with pytest.raises(HTTPException) as exc:
+                await delete_file("test.txt", directory="invalid")
+            assert exc.value.status_code == 400
+
+        # 5. delete_file exception (lines 152-153)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up:
+            mock_up.__truediv__.return_value.exists.return_value = True
+            mock_up.__truediv__.return_value.unlink.side_effect = Exception(
+                "Unlink failed"
+            )
+            with pytest.raises(HTTPException) as exc:
+                await delete_file("test.txt")
+            assert exc.value.status_code == 500
+
+        # 6. cleanup_old_files gaps (lines 174, 182-183)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up, patch(
+            "paddleocr_toolkit.api.file_manager.OUTPUT_DIR"
+        ) as mock_out:
+            mock_up.exists.return_value = False
+            mock_out.exists.return_value = True
+            mock_file = MagicMock()
+            mock_file.is_file.return_value = True
+            mock_file.stat.return_value.st_mtime = 0  # Very old
+            mock_file.unlink.side_effect = Exception("Failed")
+            mock_out.iterdir.return_value = [mock_file]
+
+            res = await cleanup_old_files(days=1)
+            assert res["deleted_count"] == 0  # Failed unlink
+
+        # 7. get_file_stats paths (lines 191-197)
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up, patch(
+            "paddleocr_toolkit.api.file_manager.OUTPUT_DIR"
+        ) as mock_out:
+            mock_up.exists.return_value = False
+            mock_out.exists.return_value = False
+            res = await get_file_stats()
+            assert res["uploads"]["count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_cleanup_errors(self):
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up, patch(
+            "paddleocr_toolkit.api.file_manager.OUTPUT_DIR"
+        ) as mock_out, patch("time.time", return_value=1000):
+            mock_up.exists.return_value = True
+            mock_out.exists.return_value = True
+            mock_file = MagicMock()
+            mock_file.is_file.return_value = True
+            mock_file.stat.return_value.st_mtime = 0
+            mock_file.unlink.side_effect = Exception("Delete error")
+            mock_up.iterdir.return_value = [mock_file]
+            mock_out.iterdir.return_value = []
+            res = await cleanup_old_files(days=1)
+            assert res["deleted_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_file_exception(self):
+        with patch("paddleocr_toolkit.api.file_manager.UPLOAD_DIR") as mock_up:
+            mock_file = MagicMock()
+            mock_file.exists.return_value = True
+            mock_file.unlink.side_effect = Exception("Boom")
+            mock_up.__truediv__.return_value = mock_file
+            with pytest.raises(HTTPException):
+                await delete_file("test.txt", directory="uploads")
+
+    @pytest.mark.asyncio
+    async def test_download_file_errors(self):
+        with pytest.raises(HTTPException):
+            await download_file("test.txt", directory="invalid")
+        with patch("paddleocr_toolkit.api.file_manager.OUTPUT_DIR") as mock_out:
+            mock_out.__truediv__.return_value.exists.return_value = False
+            with pytest.raises(HTTPException):
+                await download_file("test.txt", directory="output")

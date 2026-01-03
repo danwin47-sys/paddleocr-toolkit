@@ -300,7 +300,9 @@ class PDFGenerator:
             self.doc.save(self.output_path)
             self.doc.save(self.output_path)
             self.doc.close()
-            logger.info("[OK] PDF saved: %s (%d pages)", self.output_path, self.page_count)
+            logger.info(
+                "[OK] PDF saved: %s (%d pages)", self.output_path, self.page_count
+            )
             return True
 
         except Exception as e:

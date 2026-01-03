@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: "基於 AI 的先進文件辨識與校正系統 (Gemini/Claude)",
 };
 
+import Sidebar from "@/components/Sidebar";
+
+// ... existing code ...
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -17,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <head>
+        {/* ... scripts ... */}
         {GA_TRACKING_ID && (
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
@@ -44,7 +49,14 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <div className="app-layout">
+          <Sidebar />
+          <main className="app-main">
+            {children}
+          </main>
+        </div>
+      </body>
     </html>
   );
 }

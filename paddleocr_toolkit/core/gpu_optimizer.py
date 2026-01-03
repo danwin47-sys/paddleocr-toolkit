@@ -220,26 +220,32 @@ class GPUBatchProcessor:
         logger.info("=" * 60)
         logger.info("GPU Batch Processing Report")
         logger.info("=" * 60)
-        logger.info("Total Images: %d", stats['total_images'])
-        logger.info("Total Batches: %d", stats['total_batches'])
+        logger.info("Total Images: %d", stats["total_images"])
+        logger.info("Total Batches: %d", stats["total_batches"])
         logger.info("Batch Size: %d", self.batch_size)
-        logger.info("Total Time: %.2fs", stats['total_time'])
-        logger.info("Avg per Image: %.3fs", stats.get('avg_time_per_image', 0))
-        logger.info("Avg per Batch: %.3fs", stats.get('avg_time_per_batch', 0))
+        logger.info("Total Time: %.2fs", stats["total_time"])
+        logger.info("Avg per Image: %.3fs", stats.get("avg_time_per_image", 0))
+        logger.info("Avg per Batch: %.3fs", stats.get("avg_time_per_batch", 0))
         logger.info(
-            "Throughput: %.1f img/s", 
-            stats['total_images'] / stats['total_time'] if stats['total_time'] > 0 else 0
+            "Throughput: %.1f img/s",
+            stats["total_images"] / stats["total_time"]
+            if stats["total_time"] > 0
+            else 0,
         )
         logger.info(
-            "Preprocessing Time: %.2fs (%.1f%%)", 
-            stats['preprocessing_time'], 
-            stats.get('preprocessing_ratio', 0) * 100
+            "Preprocessing Time: %.2fs (%.1f%%)",
+            stats["preprocessing_time"],
+            stats.get("preprocessing_ratio", 0) * 100,
         )
-        logger.info("GPU Time: %.2fs (%.1f%%)", stats['gpu_time'], stats.get('gpu_ratio', 0) * 100)
-        
+        logger.info(
+            "GPU Time: %.2fs (%.1f%%)",
+            stats["gpu_time"],
+            stats.get("gpu_ratio", 0) * 100,
+        )
+
         if self.memory_pool:
             logger.info("Peak Memory: %.1fMB", self.memory_pool.get_peak_usage_mb())
-            
+
         logger.info("=" * 60)
 
 

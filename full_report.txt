@@ -1,0 +1,206 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.7.4, pytest-7.4.4, pluggy-0.13.0
+rootdir: /Users/derek_shih/Desktop/Python_Training_Derek/paddleocr-toolkit
+configfile: pytest.ini
+plugins: arraydiff-0.3, flask-1.3.0, env-1.0.1, remotedata-0.3.2, doctestplus-0.4.0, cov-4.1.0, openfiles-0.4.0, mock-3.11.1, anyio-3.7.1, asyncio-0.21.2
+asyncio: mode=strict
+collected 826 items
+
+tests/test_api_dependencies.py ......                                    [  0%]
+tests/test_api_file_manager.py ........                                  [  1%]
+tests/test_api_main.py ..                                                [  1%]
+tests/test_api_routers_files.py .......                                  [  2%]
+tests/test_api_routers_ocr.py ..........                                 [  3%]
+tests/test_api_routers_system.py ......                                  [  4%]
+tests/test_api_routers_tasks.py .....                                    [  5%]
+tests/test_api_websocket.py ...                                          [  5%]
+tests/test_api_websocket_manager.py .........                            [  6%]
+tests/test_basic_processor.py ..........                                 [  7%]
+tests/test_batch_processor.py ...............                            [  9%]
+tests/test_batch_processor_expanded.py ..........                        [ 11%]
+tests/test_batch_processor_extended.py ................                  [ 12%]
+tests/test_brute_force_omega.py .....                                    [ 13%]
+tests/test_claude_client.py ........                                     [ 14%]
+tests/test_cli_argument_parser.py ...................                    [ 16%]
+tests/test_cli_commands.py ...                                           [ 17%]
+tests/test_cli_commands_expanded.py ...                                  [ 17%]
+tests/test_cli_config_handler.py ...............                         [ 19%]
+tests/test_cli_init_expanded.py .....                                    [ 19%]
+tests/test_cli_main.py .........                                         [ 21%]
+tests/test_cli_main_expanded.py .........                                [ 22%]
+tests/test_cli_mode_processor.py .................                       [ 24%]
+tests/test_cli_output_manager.py ....................                    [ 26%]
+tests/test_cli_rich_ui_expanded.py .........                             [ 27%]
+tests/test_cli_validate_expanded.py .......                              [ 28%]
+tests/test_cli_validate_extra.py ......                                  [ 29%]
+tests/test_config_loader.py ................                             [ 31%]
+tests/test_core_logging_utils_expanded.py ....                           [ 31%]
+tests/test_core_models.py .........                                      [ 32%]
+tests/test_e2e_workflow.py ...                                           [ 33%]
+tests/test_example_plugin_extra.py ........                              [ 34%]
+tests/test_exceptions_expanded.py ..                                     [ 34%]
+tests/test_final_push.py ..........                                      [ 35%]
+tests/test_final_sweep.py ...............                                [ 37%]
+tests/test_format_converter.py ..........                                [ 38%]
+tests/test_formula_processor.py .......                                  [ 39%]
+tests/test_gemini_client.py ........                                     [ 40%]
+tests/test_glossary_manager.py .............                             [ 42%]
+tests/test_gpu_optimizer.py ...............                              [ 43%]
+tests/test_gpu_optimizer_expanded.py .........                           [ 44%]
+tests/test_hybrid_processor.py ..........                                [ 46%]
+tests/test_hybrid_processor_expanded.py ........                         [ 47%]
+tests/test_hybrid_processor_extended.py ........                         [ 48%]
+tests/test_hybrid_processor_extra.py ....                                [ 48%]
+tests/test_image_preprocessor.py .........................               [ 51%]
+tests/test_image_preprocessor_expanded.py ...........                    [ 52%]
+tests/test_image_preprocessor_extra.py ...                               [ 53%]
+tests/test_llm_client_extended.py ...........                            [ 54%]
+tests/test_model_cache.py ............                                   [ 56%]
+tests/test_model_cache_expanded.py .............                         [ 57%]
+tests/test_ocr_cache.py .....                                            [ 58%]
+tests/test_ocr_engine.py ............................                    [ 61%]
+tests/test_ocr_workaround.py ..............                              [ 63%]
+tests/test_output_manager.py .............                               [ 64%]
+tests/test_package_init.py .......                                       [ 65%]
+tests/test_paddle_ocr_facade.py ..........                               [ 66%]
+tests/test_parallel_pdf_processor.py ........                            [ 67%]
+tests/test_pdf_generator.py ...........................                  [ 71%]
+tests/test_pdf_processor.py ....................                         [ 73%]
+tests/test_pdf_quality.py ....                                           [ 74%]
+tests/test_pdf_utils.py ................                                 [ 76%]
+tests/test_performance_benchmark.py ss.                                  [ 76%]
+tests/test_performance_modules.py .....                                  [ 76%]
+tests/test_performance_optimization.py ........                          [ 77%]
+tests/test_plugin_base.py ............                                   [ 79%]
+tests/test_plugin_loader_extra.py ...........                            [ 80%]
+tests/test_plugin_system.py ...                                          [ 81%]
+tests/test_plugins.py ...                                                [ 81%]
+tests/test_processors_extended.py ...                                    [ 81%]
+tests/test_result_parser.py ...................                          [ 84%]
+tests/test_result_parser_extended.py ..................                  [ 86%]
+tests/test_rich_ui.py sss.s                                              [ 86%]
+tests/test_rich_ui_encoding.py .....                                     [ 87%]
+tests/test_semantic_processor.py ........                                [ 88%]
+tests/test_semantic_processor_extended.py ........                       [ 89%]
+tests/test_stats_collector.py .............                              [ 91%]
+tests/test_streaming_utils.py ........                                   [ 92%]
+tests/test_streaming_utils_expanded.py ........                          [ 92%]
+tests/test_streaming_utils_extra.py .....                                [ 93%]
+tests/test_structure.py ......                                           [ 94%]
+tests/test_structure_processor.py .........                              [ 95%]
+tests/test_task_queue.py .....                                           [ 96%]
+tests/test_text_processor.py ...........                                 [ 97%]
+tests/test_translation_processor.py ..........                           [ 98%]
+tests/test_translation_processor_expanded.py ......                      [ 99%]
+tests/test_translation_processor_extended.py ......                      [100%]
+
+=============================== warnings summary ===============================
+../../../opt/anaconda3/lib/python3.7/site-packages/pydantic/_internal/_config.py:271
+  /Users/derek_shih/opt/anaconda3/lib/python3.7/site-packages/pydantic/_internal/_config.py:271: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/test_api_routers_ocr.py::TestOCRRouter::test_export_exception_final
+  /Users/derek_shih/opt/anaconda3/lib/python3.7/site-packages/openpyxl/compat/numbers.py:41: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    numpy.float,
+
+tests/test_api_routers_ocr.py::TestOCRRouter::test_export_exception_final
+  /Users/derek_shih/opt/anaconda3/lib/python3.7/site-packages/pandas/util/testing.py:27: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    import pandas._libs.testing as _testing
+
+tests/test_api_routers_ocr.py::TestOCRRouter::test_export_exception_final
+  /Users/derek_shih/opt/anaconda3/lib/python3.7/site-packages/openpyxl/xml/functions.py:30: DeprecationWarning: defusedxml.lxml is no longer supported and will be removed in a future release.
+    from defusedxml.lxml import fromstring as _fromstring, tostring
+
+tests/test_api_websocket_manager.py::TestConnectionManager::test_disconnect
+  tests/test_api_websocket_manager.py:40: PytestWarning: The test <Function test_disconnect> is marked with '@pytest.mark.asyncio' but it is not an async function. Please remove asyncio marker. If the test is not marked explicitly, check for global markers applied via 'pytestmark'.
+    def test_disconnect(self):
+
+tests/test_api_websocket_manager.py::TestConnectionManager::test_disconnect_logs
+  tests/test_api_websocket_manager.py:47: PytestWarning: The test <Function test_disconnect_logs> is marked with '@pytest.mark.asyncio' but it is not an async function. Please remove asyncio marker. If the test is not marked explicitly, check for global markers applied via 'pytestmark'.
+    def test_disconnect_logs(self):
+
+tests/test_api_websocket_manager.py::TestConnectionManager::test_get_connection_count
+  tests/test_api_websocket_manager.py:97: PytestWarning: The test <Function test_get_connection_count> is marked with '@pytest.mark.asyncio' but it is not an async function. Please remove asyncio marker. If the test is not marked explicitly, check for global markers applied via 'pytestmark'.
+    def test_get_connection_count(self):
+
+tests/test_cli_commands_expanded.py::test_run_benchmark_logic
+  /Users/derek_shih/opt/anaconda3/lib/python3.7/unittest/mock.py:1110: DeprecationWarning: paddle_ocr_tool 已棄用，請改用 paddle_ocr_facade。此模組將在未來版本移除。
+    thing = __import__(import_path)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform darwin, python 3.7.4-final-0 -----------
+Name                                                     Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------------------------
+paddleocr_toolkit/__init__.py                               19      9    53%   63-74
+paddleocr_toolkit/__main__.py                                9      9     0%   2-22
+paddleocr_toolkit/api/__init__.py                            0      0   100%
+paddleocr_toolkit/api/dependencies.py                       40      0   100%
+paddleocr_toolkit/api/file_manager.py                       90     14    84%   58, 63, 98, 102, 110, 139-142, 147, 152-153, 174, 182-183
+paddleocr_toolkit/api/main.py                               97     13    87%   60-64, 81-83, 103-104, 161, 164-165
+paddleocr_toolkit/api/routers/__init__.py                    0      0   100%
+paddleocr_toolkit/api/routers/files.py                      79      6    92%   43, 46, 92, 97-98, 114
+paddleocr_toolkit/api/routers/ocr.py                       269     73    73%   109-112, 138-139, 143-144, 148-154, 156, 158, 162-164, 184-185, 205-211, 244-246, 252, 258, 273-278, 282-294, 305-320, 346-350, 360, 367, 384-390
+paddleocr_toolkit/api/routers/system.py                     55      8    85%   34, 53-56, 67-69
+paddleocr_toolkit/api/routers/tasks.py                      31      0   100%
+paddleocr_toolkit/api/websocket_manager.py                  74      9    88%   183, 189-190, 193, 217-221
+paddleocr_toolkit/cli/__init__.py                            6      0   100%
+paddleocr_toolkit/cli/argument_parser.py                    43      0   100%
+paddleocr_toolkit/cli/commands/__init__.py                   0      0   100%
+paddleocr_toolkit/cli/commands/benchmark.py                 75     10    87%   35-36, 145, 155-163
+paddleocr_toolkit/cli/commands/config.py                    79      7    91%   40, 138-139, 150-155
+paddleocr_toolkit/cli/commands/init.py                      58      3    95%   167-170
+paddleocr_toolkit/cli/commands/validate.py                 125      9    93%   35, 118-119, 181, 221-227
+paddleocr_toolkit/cli/config_handler.py                     32      0   100%
+paddleocr_toolkit/cli/main.py                               55      1    98%   118
+paddleocr_toolkit/cli/mode_processor.py                    132     16    88%   14, 99, 121, 135-137, 168, 174, 176, 178, 203, 209, 258-265
+paddleocr_toolkit/cli/output_manager.py                    115      8    93%   73, 88, 103, 118, 133, 200, 222, 224
+paddleocr_toolkit/cli/rich_ui.py                           103     22    79%   16-25, 45-46, 53, 91, 234, 277-307
+paddleocr_toolkit/core/__init__.py                          12      2    83%   30-31
+paddleocr_toolkit/core/buffered_writer.py                   69      4    94%   148, 190-192
+paddleocr_toolkit/core/config.py                            31      2    94%   58-59
+paddleocr_toolkit/core/config_loader.py                     88     11    88%   16-17, 123-127, 219-220, 234-236
+paddleocr_toolkit/core/gpu_optimizer.py                     91      2    98%   249-250
+paddleocr_toolkit/core/logging_utils.py                     28      0   100%
+paddleocr_toolkit/core/model_cache.py                      120     16    87%   58, 148-162, 187-188, 277-280
+paddleocr_toolkit/core/models.py                            30      0   100%
+paddleocr_toolkit/core/ocr_cache.py                         35      0   100%
+paddleocr_toolkit/core/ocr_engine.py                       132     15    89%   22, 29-31, 37-38, 44-45, 182-186, 193-198, 203-205
+paddleocr_toolkit/core/pdf_generator.py                    146     15    90%   15-16, 23-24, 110, 169-171, 233-238, 285-286
+paddleocr_toolkit/core/pdf_utils.py                         70     10    86%   20-21, 27-28, 96, 153, 169-172, 183
+paddleocr_toolkit/core/result_parser.py                    158     13    92%   16-18, 77-78, 219-220, 230-231, 264-266, 323-324
+paddleocr_toolkit/core/streaming_utils.py                   70      7    90%   18-19, 42, 80, 200-201, 210
+paddleocr_toolkit/core/task_queue.py                        59      0   100%
+paddleocr_toolkit/exceptions.py                             13      0   100%
+paddleocr_toolkit/llm/__init__.py                            3      0   100%
+paddleocr_toolkit/llm/llm_client.py                        150     23    85%   19-20, 29, 34, 55, 102-104, 122, 140-142, 193, 210-212, 241-243, 264, 290-292
+paddleocr_toolkit/outputs/output_manager.py                 86     11    87%   21-22, 111-113, 216-224
+paddleocr_toolkit/plugins/__init__.py                        0      0   100%
+paddleocr_toolkit/plugins/base.py                           71     15    79%   86, 130, 142-144, 161-163, 176, 180-182, 203-205
+paddleocr_toolkit/plugins/example_plugin.py                 25      3    88%   44, 54-55
+paddleocr_toolkit/plugins/loader.py                         92     22    76%   75-76, 99-100, 105-107, 157-158, 173-174, 189-191, 196-197, 201-202, 212-216
+paddleocr_toolkit/processors/__init__.py                     9      0   100%
+paddleocr_toolkit/processors/basic_processor.py             90     16    82%   18, 24-25, 125, 142-144, 163, 242-244, 255-259
+paddleocr_toolkit/processors/batch_processor.py            119     17    86%   17-18, 24-25, 32-33, 57, 59, 80, 248-251, 281-284
+paddleocr_toolkit/processors/formula_processor.py           90     21    77%   18, 24-25, 102-104, 146, 167-169, 177-178, 182-186, 213-214, 237-238
+paddleocr_toolkit/processors/glossary_manager.py            99     17    83%   91, 106-107, 113-116, 160, 187-199
+paddleocr_toolkit/processors/hybrid_processor.py           196     27    86%   24, 30-31, 45-47, 245-252, 265-266, 269-270, 289-292, 404-405, 459-461, 512-513, 562-563
+paddleocr_toolkit/processors/image_preprocessor.py         118     20    83%   14-15, 21-22, 153-156, 161-175, 326-328
+paddleocr_toolkit/processors/ocr_workaround.py              84     13    85%   16-17, 23-24, 65, 109, 111, 130-132, 172, 178-179
+paddleocr_toolkit/processors/parallel_pdf_processor.py     105     14    87%   19-20, 26-27, 95, 113, 149-151, 197-202
+paddleocr_toolkit/processors/pdf_processor.py               98     15    85%   21-22, 28-29, 35-39, 75, 77, 134, 146, 211-213
+paddleocr_toolkit/processors/pdf_quality.py                 45     13    71%   14-15, 35, 55-57, 83-85, 91-94
+paddleocr_toolkit/processors/semantic_processor.py          73     10    86%   132, 153, 173-174, 196-197, 217, 230-232
+paddleocr_toolkit/processors/stats_collector.py            109      9    92%   68, 143-147, 222-224
+paddleocr_toolkit/processors/structure_processor.py         57      5    91%   17-18, 139-141
+paddleocr_toolkit/processors/text_processor.py              55     11    80%   15, 300-310
+paddleocr_toolkit/processors/translation_processor.py      153     26    83%   22-23, 29-30, 33, 43-44, 116-117, 140-141, 167-170, 184-190, 303-305, 399-400
+paddleocr_toolkit/utils/__init__.py                          2      0   100%
+paddleocr_toolkit/utils/format_converter.py                 78      0   100%
+paddleocr_toolkit/utils/logger.py                           22      5    77%   38, 54-57
+--------------------------------------------------------------------------------------
+TOTAL                                                     4767    627    87%
+
+================= 820 passed, 6 skipped, 8 warnings in 17.66s ==================

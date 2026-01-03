@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from paddle_ocr_tool import PaddleOCRTool
-    
+
 from paddleocr_toolkit.utils.logger import logger
 
 # 需要从 paddle_ocr_tool.py 导入的常量
@@ -73,11 +73,14 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            logger.error("Processing error: %s", result['error'])
+            logger.error("Processing error: %s", result["error"])
         else:
-            logger.info("Formula recognition complete! %d formulas recognized", len(result['formulas']))
+            logger.info(
+                "Formula recognition complete! %d formulas recognized",
+                len(result["formulas"]),
+            )
             if result.get("latex_file"):
-                logger.info("LaTeX file: %s", result['latex_file'])
+                logger.info("LaTeX file: %s", result["latex_file"])
 
         return result
 
@@ -96,17 +99,19 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            logger.error("Processing error: %s", result['error'])
+            logger.error("Processing error: %s", result["error"])
         else:
-            logger.info("Processing complete! %s pages processed", result['pages_processed'])
+            logger.info(
+                "Processing complete! %s pages processed", result["pages_processed"]
+            )
             if result.get("markdown_files"):
-                logger.info("Markdown files: %s", ', '.join(result['markdown_files']))
+                logger.info("Markdown files: %s", ", ".join(result["markdown_files"]))
             if result.get("json_files"):
-                logger.info("JSON files: %s", ', '.join(result['json_files']))
+                logger.info("JSON files: %s", ", ".join(result["json_files"]))
             if result.get("excel_files"):
-                logger.info("Excel files: %s", ', '.join(result['excel_files']))
+                logger.info("Excel files: %s", ", ".join(result["excel_files"]))
             if result.get("html_files"):
-                logger.info("HTML files: %s", ', '.join(result['html_files']))
+                logger.info("HTML files: %s", ", ".join(result["html_files"]))
 
         return result
 
@@ -133,16 +138,19 @@ class ModeProcessor:
 
         if not HAS_TRANSLATOR:
             logger.error("Translator module not available")
-            logger.error("Please ensure pdf_translator.py exists and dependencies are installed")
+            logger.error(
+                "Please ensure pdf_translator.py exists and dependencies are installed"
+            )
             sys.exit(1)
 
         logger.info("[Translation] Enabled")
         logger.info("   Source Lang: %s", self.args.source_lang)
         logger.info("   Target Lang: %s", self.args.target_lang)
         logger.info("   Ollama Model: %s", self.args.ollama_model)
-        logger.info("   Mono PDF: %s", 'Disabled' if self.args.no_mono else 'Enabled')
+        logger.info("   Mono PDF: %s", "Disabled" if self.args.no_mono else "Enabled")
         logger.info(
-            "   Dual PDF: %s", 'Disabled' if self.args.no_dual else f'Enabled ({self.args.dual_mode})'
+            "   Dual PDF: %s",
+            "Disabled" if self.args.no_dual else f"Enabled ({self.args.dual_mode})",
         )
 
         result = self.tool.process_translate(
@@ -165,21 +173,23 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            logger.error("Processing error: %s", result['error'])
+            logger.error("Processing error: %s", result["error"])
         else:
-            logger.info("Translation complete! %s pages processed", result['pages_processed'])
+            logger.info(
+                "Translation complete! %s pages processed", result["pages_processed"]
+            )
             if result.get("searchable_pdf"):
-                logger.info("  [Searchable PDF] %s", result['searchable_pdf'])
+                logger.info("  [Searchable PDF] %s", result["searchable_pdf"])
             if result.get("markdown_file"):
-                logger.info("  [Markdown] %s", result['markdown_file'])
+                logger.info("  [Markdown] %s", result["markdown_file"])
             if result.get("json_file"):
-                logger.info("  [JSON] %s", result['json_file'])
+                logger.info("  [JSON] %s", result["json_file"])
             if result.get("html_file"):
-                logger.info("  [HTML] %s", result['html_file'])
+                logger.info("  [HTML] %s", result["html_file"])
             if result.get("translated_pdf"):
-                logger.info("  [Translated PDF] %s", result['translated_pdf'])
+                logger.info("  [Translated PDF] %s", result["translated_pdf"])
             if result.get("bilingual_pdf"):
-                logger.info("  [Bilingual PDF] %s", result['bilingual_pdf'])
+                logger.info("  [Bilingual PDF] %s", result["bilingual_pdf"])
 
         return result
 
@@ -200,13 +210,16 @@ class ModeProcessor:
         )
 
         if result.get("error"):
-            logger.error("Processing error: %s", result['error'])
+            logger.error("Processing error: %s", result["error"])
         else:
-            logger.info("Hybrid processing complete! %s pages processed", result['pages_processed'])
+            logger.info(
+                "Hybrid processing complete! %s pages processed",
+                result["pages_processed"],
+            )
             if result.get("searchable_pdf"):
-                logger.info("  Searchable PDF: %s", result['searchable_pdf'])
+                logger.info("  Searchable PDF: %s", result["searchable_pdf"])
             if result.get("markdown_file"):
-                logger.info("  Markdown file: %s", result['markdown_file'])
+                logger.info("  Markdown file: %s", result["markdown_file"])
 
         return result
 

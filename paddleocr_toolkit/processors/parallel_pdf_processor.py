@@ -91,7 +91,7 @@ class ParallelPDFProcessor:
 
             if isinstance(result, list) and len(result) > 0:
                 return (page_num, result[0])
-            
+
             return (page_num, result)
         except Exception as e:
             return (page_num, f"Error on page {page_num}: {str(e)}")
@@ -154,7 +154,11 @@ class ParallelPDFProcessor:
         results.sort(key=lambda x: x[0])
 
         elapsed = time.time() - start_time
-        logger.info("PDF processing complete! Total time: %.2fs (%.2fs/page)", elapsed, elapsed/total_pages)
+        logger.info(
+            "PDF processing complete! Total time: %.2fs (%.2fs/page)",
+            elapsed,
+            elapsed / total_pages,
+        )
 
         return [r[1] for r in results]
 
@@ -188,7 +192,7 @@ class ParallelPDFProcessor:
         speedup = serial_time / parallel_time if parallel_time > 0 else 0
         logger.info("-" * 30)
         logger.info("Speedup: %.2fx", speedup)
-        logger.info("Core utilization: %.1f%%", (speedup/self.workers)*100)
+        logger.info("Core utilization: %.1f%%", (speedup / self.workers) * 100)
         logger.info("-" * 30)
 
 

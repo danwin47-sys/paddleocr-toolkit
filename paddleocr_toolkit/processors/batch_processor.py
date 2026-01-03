@@ -17,6 +17,10 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
+    class np:
+        ndarray = Any
+
+
 try:
     import fitz
 

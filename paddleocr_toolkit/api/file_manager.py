@@ -113,12 +113,12 @@ async def download_file(filename: str, directory: str = "output"):
     encoded_filename = quote(filename)
 
     return FileResponse(
-        path=file_path, 
-        filename=filename, 
+        path=file_path,
+        filename=filename,
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"
-        }
+        },
     )
 
 

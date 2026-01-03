@@ -167,7 +167,10 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
         # have explicitly removed those lines.
         diff_lines = list(
             difflib.unified_diff(
-                gt_text[:300].splitlines(), ocr_text[:300].splitlines(), lineterm="", n=0
+                gt_text[:300].splitlines(),
+                ocr_text[:300].splitlines(),
+                lineterm="",
+                n=0,
             )
         )
 
@@ -179,7 +182,6 @@ def validate_ocr_results(ocr_results_file: str, ground_truth_file: str):
                     logger.info(f"[OCR]  {line}")
         else:
             logger.info("? 完全匹配！")
-
 
     # 6. ?分
     logger.info("\n" + "=" * 70)

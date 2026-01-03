@@ -45,12 +45,14 @@ class ModelCache:
         cache_key = self._make_cache_key(mode, kwargs)
 
         if cache_key not in self._cache:
-           if mode not in self._cache:
             start = time.time()
             logger.info("Loading model: %s", mode)
             # 這裡模擬載入過程
             # 實際應用中會調用 paddleocr 的載入函數
-            self._cache[mode] = {"model": f"PaddleOCR_{mode}", "loaded_at": time.time()}
+            self._cache[cache_key] = {
+                "model": f"PaddleOCR_{mode}",
+                "loaded_at": time.time(),
+            }
             logger.info("Model loaded (%.2fs)", time.time() - start)
         else:
             logger.info("Using cached model: %s", mode)
@@ -146,18 +148,12 @@ class ResultCache:
             try:
                 with open(cache_file, "rb") as f:
                     result = pickle.load(f)
-
-                # 加载到内存缓存
+                # 加載到記憶體快取
                 self.memory_cache[cache_key] = result
-                self._cache = {
-                k: v for k, v in self._cache.items()
-                if time.time() - v["loaded_at"] < max_age
-            }
                 self.cache_hits += 1
-
                 return result
             except Exception as e:
-                logger.warning(f"加载缓存失败: {e}")
+                logger.warning(f"加載快取失敗: {e}")
 
         self.cache_misses += 1
         return None
@@ -229,11 +225,11 @@ class ResultCache:
         logger.info("=" * 60)
         logger.info("Cache Statistics")
         logger.info("=" * 60)
-        logger.info("Hits: %d", stats['hits'])
-        logger.info("Misses: %d", stats['misses'])
-        logger.info("Hit Rate: %.1f%%", stats['hit_rate'] * 100)
-        logger.info("Memory Cached: %d", stats['memory_cached'])
-        logger.info("Disk Cached: %d", stats['disk_cached'])
+        logger.info("Hits: %d", stats["hits"])
+        logger.info("Misses: %d", stats["misses"])
+        logger.info("Hit Rate: %.1f%%", stats["hit_rate"] * 100)
+        logger.info("Memory Cached: %d", stats["memory_cached"])
+        logger.info("Disk Cached: %d", stats["disk_cached"])
         logger.info("=" * 60)
 
 

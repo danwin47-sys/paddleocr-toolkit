@@ -19,6 +19,8 @@ class ConnectionManager:
     def __init__(self):
         # 儲存所有活動連線 {task_id: set of websockets}
         self.active_connections: Dict[str, Set[WebSocket]] = {}
+        # 儲存日誌訂閱連線
+        self.log_connections: Set[WebSocket] = set()
 
     async def connect(self, websocket: WebSocket, task_id: str):
         """
@@ -34,7 +36,21 @@ class ConnectionManager:
             self.active_connections[task_id] = set()
 
         self.active_connections[task_id].add(websocket)
+        self.active_connections[task_id].add(websocket)
         logger.info("WebSocket connected: Task %s", task_id)
+
+    async def connect_logs(self, websocket: WebSocket):
+        """
+        接受日誌串流連線
+
+        Args:
+            websocket: WebSocket連線
+        """
+        await websocket.accept()
+        self.log_connections.add(websocket)
+        logger.info(
+            "Log WebSocket connected. Total subscribers: %d", len(self.log_connections)
+        )
 
     def disconnect(self, websocket: WebSocket, task_id: str):
         """
@@ -52,6 +68,19 @@ class ConnectionManager:
                 del self.active_connections[task_id]
 
         print(f"WebSocket連線關閉: 任務 {task_id}")
+
+    def disconnect_logs(self, websocket: WebSocket):
+        """
+        移除日誌串流連線
+
+        Args:
+            websocket: WebSocket連線
+        """
+        self.log_connections.discard(websocket)
+        logger.info(
+            "Log WebSocket disconnected. Remaining subscribers: %d",
+            len(self.log_connections),
+        )
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         """
@@ -147,6 +176,26 @@ class ConnectionManager:
         }
 
         await self.broadcast_to_task(task_id, error_msg)
+
+    async def broadcast_log(self, log_line: str):
+        """
+        廣播日誌訊息給所有訂閱者
+
+        Args:
+            log_line: 日誌行內容
+        """
+        if not self.log_connections:
+            return
+
+        disconnected = set()
+        for connection in self.log_connections:
+            try:
+                await connection.send_text(log_line)
+            except Exception:
+                disconnected.add(connection)
+
+        for connection in disconnected:
+            self.log_connections.discard(connection)
 
     def get_connection_count(self, task_id: Optional[str] = None) -> int:
         """

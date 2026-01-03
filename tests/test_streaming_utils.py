@@ -229,6 +229,131 @@ class TestBatchPagesGenerator:
                 os.remove(temp_path)
 
 
-# 執行測試
+class TestStreamingPDFProcessor:
+    """測試 StreamingPDFProcessor"""
+
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    def test_process_pages(self):
+        """測試逐頁處理"""
+        from paddleocr_toolkit.core.streaming_utils import StreamingPDFProcessor
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            doc = fitz.open()
+            for i in range(5):
+                doc.new_page(width=100, height=100)
+            doc.save(temp_path)
+            doc.close()
+
+            processor = StreamingPDFProcessor(temp_path)
+
+            # 定義處理函數
+            def process_func(image):
+                return image.shape
+
+            results = list(processor.process_pages(process_func))
+
+            assert len(results) == 5
+            for i, (page_num, res) in enumerate(results):
+                assert page_num == i
+                assert len(res) == 3  # shape
+
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    @pytest.mark.skipif(not HAS_FITZ, reason="PyMuPDF not installed")
+    @patch("paddleocr_toolkit.core.streaming_utils.gc.collect")
+    def test_gc_collection(self, mock_gc_collect):
+        """測試垃圾回收觸發"""
+        from paddleocr_toolkit.core.streaming_utils import StreamingPDFProcessor
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+            temp_path = f.name
+
+        try:
+            doc = fitz.open()
+            for i in range(12):  # 超過10頁
+                doc.new_page(width=100, height=100)
+            doc.save(temp_path)
+            doc.close()
+
+            processor = StreamingPDFProcessor(temp_path)
+            list(processor.process_pages(lambda x: x))
+
+            # 應該至少調用一次 gc.collect (在第10頁) + 上下文結束
+            assert mock_gc_collect.call_count >= 1
+
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    def test_progress_bar(self):
+        """測試進度條顯示"""
+        # 建立 mock tqdm 模組
+        mock_tqdm_module = MagicMock()
+        mock_progress = MagicMock()
+
+        # 讓 tqdm(iterator) 返回 iterator 本身 (或包裝過的可迭代對象)
+        def side_effect(iterable, **kwargs):
+            return iterable
+
+        mock_progress.side_effect = side_effect
+        mock_tqdm_module.tqdm = mock_progress
+
+        # 使用 patch.dict 注入 mock 模組
+        with patch.dict("sys.modules", {"tqdm": mock_tqdm_module}):
+            # 這裡不管 fitz 是否安裝，直接 mock 生成器來繞過
+            with patch(
+                "paddleocr_toolkit.core.streaming_utils.pdf_pages_generator"
+            ) as mock_gen:
+                from paddleocr_toolkit.core.streaming_utils import StreamingPDFProcessor
+
+                # 生成器返回一些數據
+                mock_gen.return_value = iter([(0, "img"), (1, "img")])
+
+                # Mock open_pdf_context 因為 process_pages 會用到它來計算總頁數
+                with patch(
+                    "paddleocr_toolkit.core.streaming_utils.open_pdf_context"
+                ) as mock_ctx:
+                    mock_ctx.return_value.__enter__.return_value = ["p1", "p2"]
+
+                    processor = StreamingPDFProcessor("dummy.pdf")
+                    # 執行處理，確保 show_progress=True
+                    results = list(
+                        processor.process_pages(lambda x: x, show_progress=True)
+                    )
+
+                    assert len(results) == 2
+                    # 驗證 tqdm 被調用
+                    mock_progress.assert_called()
+
+
+class TestMissingDependencies:
+    """測試缺失依賴"""
+
+    def test_missing_fitz(self):
+        """測試缺少 fitz"""
+        from paddleocr_toolkit.core import streaming_utils
+
+        # 保存原始狀態
+        orig_has_fitz = streaming_utils.HAS_FITZ
+        streaming_utils.HAS_FITZ = False
+
+        try:
+            with pytest.raises(ImportError, match="PyMuPDF 未安裝"):
+                with streaming_utils.open_pdf_context("test.pdf"):
+                    pass
+
+            with pytest.raises(ImportError, match="PyMuPDF 未安裝"):
+                next(streaming_utils.pdf_pages_generator("test.pdf"))
+
+        finally:
+            # 恢復狀態
+            streaming_utils.HAS_FITZ = orig_has_fitz
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

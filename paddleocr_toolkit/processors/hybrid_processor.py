@@ -21,7 +21,7 @@ import numpy as np
 from paddleocr_toolkit.utils.logger import logger
 
 if TYPE_CHECKING:
-    from paddleocr_toolkit.core import OCREngineManager
+    from paddleocr_toolkit.core.ocr_engine import OCREngineManager
 
 try:
     from tqdm import tqdm
@@ -35,6 +35,7 @@ from paddleocr_toolkit.core.pdf_utils import pixmap_to_numpy
 from paddleocr_toolkit.core.result_parser import OCRResultParser
 from paddleocr_toolkit.processors.pdf_quality import detect_pdf_quality
 from paddleocr_toolkit.processors.stats_collector import StatsCollector
+from paddleocr_toolkit.processors.image_preprocessor import auto_preprocess
 
 # 條件匯入翻譯相關模組
 try:
@@ -163,7 +164,7 @@ class HybridPDFProcessor:
 
             # 自動偵測 PDF 品質並調整 DPI
             quality = detect_pdf_quality(pdf_path)
-            logger.info("[Detection] %s", quality['reason'])
+            logger.info("[Detection] %s", quality["reason"])
             if quality["is_scanned"] or quality["is_blurry"]:
                 if quality["recommended_dpi"] > dpi:
                     dpi = quality["recommended_dpi"]
@@ -291,7 +292,10 @@ class HybridPDFProcessor:
                 logging.info("翻譯功能已配置，但需手動整合 TranslationProcessor")
 
         # === 6. 完成統計 ===
-        logger.info("[OK] Hybrid mode processing complete: %d pages", result_summary['pages_processed'])
+        logger.info(
+            "[OK] Hybrid mode processing complete: %d pages",
+            result_summary["pages_processed"],
+        )
 
         final_stats = stats_collector.finish()
         final_stats.print_summary()
@@ -358,8 +362,9 @@ class HybridPDFProcessor:
         pixmap = page.get_pixmap(dpi=dpi)
         img_array = pixmap_to_numpy(pixmap)
 
-        # 2. 執行 OCR（混合模式使用 structure 引擎）
-        structure_output = self.engine_manager.predict(img_array)
+        # 2. 影像前處理 + 執行 OCR
+        processed_img_array = auto_preprocess(img_array, is_scanned=True)
+        structure_output = self.engine_manager.predict(processed_img_array)
 
         # 3. 提取並合併結果
         ocr_results, page_markdown = self._extract_and_merge_results(
@@ -482,6 +487,7 @@ class HybridPDFProcessor:
         # 儲存 JSON
         if json_output:
             import json
+
             try:
                 # 將 OCR 結果轉換為可序列化格式
                 json_data = {
@@ -494,15 +500,15 @@ class HybridPDFProcessor:
                                 {
                                     "text": result.text,
                                     "bbox": result.bbox,
-                                    "confidence": getattr(result, 'confidence', 1.0)
+                                    "confidence": getattr(result, "confidence", 1.0),
                                 }
                                 for result in page_results
-                            ]
+                            ],
                         }
                         for i, page_results in enumerate(all_ocr_results)
-                    ]
+                    ],
                 }
-                
+
                 with open(json_output, "w", encoding="utf-8") as f:
                     json.dump(json_data, f, ensure_ascii=False, indent=2)
                 result_summary["json_file"] = json_output
@@ -532,27 +538,24 @@ class HybridPDFProcessor:
                     "<body>",
                     f"    <h1>OCR 識別結果: {Path(pdf_path).name}</h1>",
                 ]
-                
+
                 # 加入每頁內容
                 for i, markdown in enumerate(all_markdown):
                     html_content.append(f'    <div class="page">')
                     html_content.append(f"        <h2>第 {i + 1} 頁</h2>")
-                    
-                    # 將 Markdown 轉換為 HTML (簡單處理)
-                    lines = markdown.split(
 
-"\n")
+                    # 將 Markdown 轉換為 HTML (簡單處理)
+                    lines = markdown.split("\n")
                     for line in lines:
                         if line.strip():
-                            html_content.append(f'        <div class="text-block">{line}</div>')
-                    
+                            html_content.append(
+                                f'        <div class="text-block">{line}</div>'
+                            )
+
                     html_content.append("    </div>")
-                
-                html_content.extend([
-                    "</body>",
-                    "</html>"
-                ])
-                
+
+                html_content.extend(["</body>", "</html>"])
+
                 with open(html_output, "w", encoding="utf-8") as f:
                     f.write("\n".join(html_content))
                 result_summary["html_file"] = html_output

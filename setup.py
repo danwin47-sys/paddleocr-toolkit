@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="paddleocr-toolkit",
-    version="3.2.0",
+    version="3.3.0",
     author="Danwin47",
     author_email="danwin47@gmail.com",
     description="專業級OCR檔案辨識與處理工具 (企業級擴展版)",

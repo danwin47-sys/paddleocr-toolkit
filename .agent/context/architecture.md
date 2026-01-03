@@ -17,7 +17,8 @@
 
 ```
 paddleocr-toolkit/
-├── paddle_ocr_tool.py        # 主程式（CLI，2600 行）⚠️
+├── paddle_ocr_tool.py        # 相容性墊片 (Shim, 76 行)
+├── paddle_ocr_facade.py      # 主程式 Facade (API 入口)
 ├── pdf_translator.py          # PDF 翻譯模組
 ├── config.yaml                # 設定檔範本
 ├── paddleocr_toolkit/         # Python 套件
@@ -293,15 +294,11 @@ graph TD
 
 ### 目前限制
 
-1. **主程式過大**：`paddle_ocr_tool.py` 2600 行
-   - 包含過多邏輯
-   - 難以維護和測試
-
-2. **模組未充分整合**：
+1. **模組未充分整合**：
    - `image_preprocessor` 未充分使用
    - `batch_processor` 可更好整合
 
-3. **低覆蓋模組**：
+2. **低覆蓋模組**：
    - `pdf_generator.py`: 69%
    - `image_preprocessor.py`: 66%
    - `pdf_utils.py`: 70%
@@ -315,7 +312,7 @@ graph TD
 
 #### 中期（1-2 個月）
 
-- [ ] 重構 `paddle_ocr_tool.py`
+- [x] 重構 `paddle_ocr_tool.py` (已完成，改為 Facade 模式)
 - [ ] 整合 `image_preprocessor` 到主流程
 - [ ] 新增更多輸出格式
 

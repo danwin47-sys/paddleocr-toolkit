@@ -336,3 +336,46 @@ class TestMissingDependencies:
 # 執行測試
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+# Added from Ultra Coverage
+from paddleocr_toolkit.processors.image_preprocessor import (
+    resize_image_if_needed,
+    deskew,
+)
+from unittest.mock import MagicMock, patch
+import numpy as np
+
+
+class TestImagePreprocessorUltra:
+    def test_resize_image_exception(self):
+        with patch(
+            "paddleocr_toolkit.processors.image_preprocessor.Image.open",
+            side_effect=Exception("Open Error"),
+        ):
+            res, resized = resize_image_if_needed("invalid.jpg")
+            assert res == "invalid.jpg"
+            assert not resized
+
+    def test_deskew_logic(self):
+        img = np.zeros((100, 100), dtype=np.uint8)
+        # Mock HoughLines to return a line (lines 153-156)
+        # theta ~ pi/2 (1.57) -> angle ~ 0
+        mock_lines = np.array([[[10, 1.62]]])  # 1.62 rad ~ 92.8 deg -> angle ~ 2.8
+        with patch("cv2.HoughLines", return_value=mock_lines), patch(
+            "cv2.warpAffine", return_value=img
+        ), patch("paddleocr_toolkit.processors.image_preprocessor.logging") as mock_log:
+            res = deskew(img)
+            assert res.shape == img.shape
+
+        # Also hit 'not angles' branch (158-159)
+        with patch(
+            "cv2.HoughLines", return_value=np.array([[[10, 0.1]]])
+        ):  # angle ~ -84 (too large)
+            res = deskew(img, max_angle=1.0)
+            assert res is img
+
+        # Hit 163-164: abs(avg_angle) < 0.5
+        mock_lines_small = np.array([[[10, np.pi / 2 + 0.005]]])  # angle ~ 0.28
+        with patch("cv2.HoughLines", return_value=mock_lines_small):
+            res = deskew(img)
+            assert res is img

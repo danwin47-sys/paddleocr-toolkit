@@ -7,7 +7,7 @@
 
 [![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-581%20passed-success)](https://github.com/danwin47-sys/paddleocr-toolkit/actions)
-[![Coverage](https://img.shields.io/badge/coverage-84%25-green)](https://codecov.io/gh/danwin47-sys/paddleocr-toolkit)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-green)](https://codecov.io/gh/danwin47-sys/paddleocr-toolkit)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -18,7 +18,7 @@
 基於 [PaddleOCR 3.x](https://github.com/PaddlePaddle/PaddleOCR) 開發的命令列工具與 Python 套件，能將 PDF/圖片轉為可搜尋 PDF、Markdown 或 JSON。
 本專案已完成企業級重構，提供高覆蓋率測試與模組化架構。
 
-**📚 [快速開始](docs/QUICK_START.md) | [API文檔](docs/API_GUIDE.md) | [插件範例](custom/) | [貢獻指南](CONTRIBUTING.md)**
+**📚 [快速開始](docs/USER_GUIDE.md#快速開始) | [使用手冊](docs/USER_GUIDE.md) | [API文檔](docs/API.md) | [貢獻指南](docs/CONTRIBUTING.md)**
 
 ---
 
@@ -44,6 +44,89 @@
 - ✅ **84% 測試覆蓋率**
 - ✅ **100% 類型提示** (Type Hints)
 - ✅ **模組化設計** (Core/Processors/CLI 分層架構)
+
+---
+
+## 🆕 v3.3.0 新功能
+
+### 系統監控與管理
+- **Health Check API**: `/health` 和 `/api/health` - 完整的系統健康狀態檢查
+  - 版本資訊與運行時間追蹤
+  - 組件狀態檢查（OCR引擎、WebSocket、檔案系統、任務佇列）
+  - 即時統計（任務數、連接數）
+  
+- **System Metrics API**: `/api/metrics` - 詳細的系統資源監控
+  - CPU 使用率與核心數
+  - 記憶體使用情況（總量、可用量、進程使用）
+  - 磁碟空間追蹤
+  - 任務統計（總數、完成、處理中、錯誤）
+
+- **Task Queue API**: `/api/queue/status` - 任務佇列狀態監控
+  - 佇列大小與活動任務數
+  - 工作者數量與處理統計
+
+### WebSocket 自動重連
+- **智能重連**: 指數退避算法（1s → 2s → 4s → ... → 30s）
+- **狀態管理**: 4種連接狀態可視化
+  - 🟡 Connecting - 連接中
+  - 🟢 Connected - 已連接
+  - 🟠 Reconnecting - 重連中
+  - 🔴 Disconnected - 已斷開
+- **手動控制**: 提供重連按鈕支援手動重連
+
+### 並發控制
+- **任務佇列**: 限制同時處理的 OCR 任務數（預設 2個工作者）
+- **優先級支援**: 支援任務優先級設定（LOW/NORMAL/HIGH）
+- **統計追蹤**: 追蹤處理總數與失敗數
+
+---
+
+## 📚 API 使用範例
+
+### 檢查系統健康
+```bash
+curl http://localhost:8000/health | jq
+```
+
+**回應範例**:
+```json
+{
+  "status": "healthy",
+  "version": "3.3.0",
+  "uptime_seconds": 1234.56,
+  "components": {
+    "ocr_engine": "ready",
+    "websocket": "active",
+    "file_system": "ok",
+    "task_queue": "active"
+  },
+  "stats": {
+    "total_tasks": 10,
+    "active_ws_connections": 2
+  }
+}
+```
+
+### 查看系統資源
+```bash
+curl http://localhost:8000/api/metrics | jq
+```
+
+### 監控任務佇列
+```bash
+curl http://localhost:8000/api/queue/status | jq
+```
+
+**回應範例**:
+```json
+{
+  "queue_size": 3,
+  "active_tasks": 2,
+  "max_workers": 2,
+  "total_processed": 150,
+  "total_failed": 2
+}
+```
 
 ---
 
