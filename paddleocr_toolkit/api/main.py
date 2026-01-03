@@ -122,7 +122,7 @@ async def cleanup_old_tasks_loop():
 @app.on_event("startup")
 async def startup_event():
     """Initialize components on startup"""
-    global ocr_engine_cache, task_queue
+    global task_queue
 
     # Init Plugin Loader
     plugin_loader.load_all_plugins()

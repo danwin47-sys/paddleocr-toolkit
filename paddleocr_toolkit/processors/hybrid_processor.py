@@ -530,9 +530,12 @@ class HybridPDFProcessor:
                     "    <style>",
                     "        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.8; }",
                     "        h1 { color: #333; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; }",
-                    "        h2 { color: #4f46e5; margin-top: 40px; border-left: 4px solid #4f46e5; padding-left: 15px; }",
-                    "        .page { margin-bottom: 40px; padding: 20px; background: #f9fafb; border-radius: 8px; }",
-                    "        .text-block { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }",
+                    "        h2 { color: #4f46e5; margin-top: 40px; border-left: 4px solid #4f46e5; "
+                    "padding-left: 15px; }",
+                    "        .page { margin-bottom: 40px; padding: 20px; background: #f9fafb; "
+                    "border-radius: 8px; }",
+                    "        .text-block { margin: 10px 0; padding: 10px; background: white; "
+                    "border-radius: 4px; }",
                     "    </style>",
                     "</head>",
                     "<body>",
