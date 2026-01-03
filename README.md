@@ -6,7 +6,7 @@
 ---
 
 [![CI](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/danwin47-sys/paddleocr-toolkit/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-581%20passed-success)](https://github.com/danwin47-sys/paddleocr-toolkit/actions)
+[![Tests](https://img.shields.io/badge/tests-789%20passed-success)](https://github.com/danwin47-sys/paddleocr-toolkit/actions)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-green)](https://codecov.io/gh/danwin47-sys/paddleocr-toolkit)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -40,8 +40,8 @@
 - **Analytics**: Google Analytics 整合，追蹤使用者行為與關鍵事件。
 
 ### 📊 代碼質量
-- ✅ **581 個單元測試**（100% 通過率）
-- ✅ **84% 測試覆蓋率**
+- ✅ **789 個單元測試**（100% 通過率）
+- ✅ **90% 測試覆蓋率**
 - ✅ **100% 類型提示** (Type Hints)
 - ✅ **模組化設計** (Core/Processors/CLI 分層架構)
 
