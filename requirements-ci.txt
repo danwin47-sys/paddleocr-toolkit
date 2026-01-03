@@ -8,7 +8,7 @@ pillow>=9.0.0
 
 # ============ Image Processing ============
 opencv-python-headless<4.8.0
-numpy>=1.21.0,<1.22.0  # Python 3.8 相容, MKL fix
+numpy>=1.21.0  # Python 3.8+ compatibility
 
 # ============ Translation ============
 requests>=2.31.0
