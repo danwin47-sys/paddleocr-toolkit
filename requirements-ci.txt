@@ -7,12 +7,14 @@ pdf2image>=1.16.0
 pillow>=9.0.0
 
 # ============ Image Processing ============
+# ============ Image Processing ============
 opencv-python-headless<4.8.0
-numpy>=1.21.0  # Python 3.8+ compatibility
+numpy>=1.21.0,<2.0.0  # Constraint to avoid ABI issues with 2.0+
 
 # ============ Translation ============
 requests>=2.31.0
 tqdm>=4.65.0
+openpyxl>=3.1.0  # Excel output support
 ollama>=0.1.0; python_version >= "3.9"  # Python 3.9+
 
 # ============ Web Framework (optional but for coverage) ============
