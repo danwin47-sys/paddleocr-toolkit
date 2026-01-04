@@ -132,6 +132,12 @@ curl http://localhost:8000/api/queue/status | jq
 
 ## 🚀 安裝
 
+### 系統需求
+
+- **Python**: 3.8 或更高版本（推薦 3.10, 3.11, 或 3.12）
+- **作業系統**: Windows, macOS, Linux
+- **記憶體**: 建議 2GB+ RAM
+
 ### 1. 安裝依賴
 
 ```bash

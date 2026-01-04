@@ -17,8 +17,6 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     
-    # Python 3.12 允許失敗，不影響整體 CI 狀態
-    continue-on-error: ${{ matrix.python-version == '3.12' }}
     
     steps:
     - uses: actions/checkout@v3

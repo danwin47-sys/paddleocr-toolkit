@@ -28,14 +28,17 @@ try:
     PPStructureV3 = PPStructure
     HAS_STRUCTURE = True
 except ImportError:
-    HAS_STRUCTURE = False
+    PaddleOCR = None  # type: ignore
+    PPStructure = None  # type: ignore
     PPStructureV3 = None  # type: ignore
+    HAS_STRUCTURE = False
 
 try:
     from paddleocr import PaddleOCRVL
 
     HAS_VL = True
 except ImportError:
+    PaddleOCRVL = None  # type: ignore
     HAS_VL = False
 
 try:
@@ -43,6 +46,7 @@ try:
 
     HAS_FORMULA = True
 except ImportError:
+    FormulaRecPipeline = None  # type: ignore
     HAS_FORMULA = False
 
 
@@ -154,6 +158,9 @@ class OCREngineManager:
 
     def _init_basic_engine(self) -> None:
         """初始化基本 OCR 引擎"""
+        if PaddleOCR is None:
+            raise ImportError("PaddleOCR 模組不可用，請執行 'pip install paddleocr'")
+
         self.engine = PaddleOCR(
             use_doc_orientation_classify=self.config.get(
                 "use_doc_orientation_classify", True
@@ -165,8 +172,8 @@ class OCREngineManager:
 
     def _init_structure_engine(self) -> None:
         """初始化結構化引擎"""
-        if not HAS_STRUCTURE:
-            raise ImportError("PPStructureV3 not available")
+        if not HAS_STRUCTURE or PPStructureV3 is None:
+            raise ImportError("PPStructureV3 模組不可用，請執行 'pip install paddleocr'")
 
         logger.info("  Loading PPStructure engine...")
         self.engine = PPStructureV3(show_log=True, layout=True, table=True, ocr=True)
@@ -174,8 +181,8 @@ class OCREngineManager:
 
     def _init_vl_engine(self) -> None:
         """初始化視覺語言模型引擎"""
-        if not HAS_VL:
-            raise ImportError("PaddleOCRVL not available")
+        if not HAS_VL or PaddleOCRVL is None:
+            raise ImportError("PaddleOCRVL 模組不可用，請執行 'pip install paddleocr'")
 
         self.engine = PaddleOCRVL(
             use_doc_orientation_classify=self.config.get(
@@ -187,8 +194,8 @@ class OCREngineManager:
 
     def _init_formula_engine(self) -> None:
         """初始化公式識別引擎"""
-        if not HAS_FORMULA:
-            raise ImportError("FormulaRecPipeline not available")
+        if not HAS_FORMULA or FormulaRecPipeline is None:
+            raise ImportError("FormulaRecPipeline 模組不可用，請執行 'pip install paddleocr'")
 
         self.engine = FormulaRecPipeline(
             use_doc_orientation_classify=self.config.get(
@@ -212,6 +219,9 @@ class OCREngineManager:
         logger.info("  - OCR Recognition: Enabled")
 
         try:
+            if PPStructure is None:
+                raise ImportError("PPStructure 模組不可用")
+
             self.structure_engine = PPStructure(
                 show_log=True, layout=True, table=True, ocr=True
             )
