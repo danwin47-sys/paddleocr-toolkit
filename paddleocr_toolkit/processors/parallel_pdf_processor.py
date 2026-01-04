@@ -93,7 +93,16 @@ class ParallelPDFProcessor:
                 return (page_num, result[0])
 
             return (page_num, result)
+        except ImportError as ie:
+            # Import failures need special handling - log full details
+            import traceback
+            error_detail = f"Import error on page {page_num}: {str(ie)}\n{traceback.format_exc()}"
+            logger.error("[ParallelPDF] %s", error_detail)
+            return (page_num, f"Error on page {page_num}: {str(ie)}")
         except Exception as e:
+            import traceback
+            error_detail = f"Error on page {page_num}: {type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            logger.error("[ParallelPDF] %s", error_detail)
             return (page_num, f"Error on page {page_num}: {str(e)}")
 
     def process_pdf_parallel(

@@ -142,13 +142,25 @@ async def process_ocr_task(
                 await manager.send_progress_update(task_id, 30, "processing", "正在辨識...")
 
             def run_ocr():
-                eng = OCREngineManager(
-                    mode=mode, device="cpu", plugin_loader=plugin_loader
-                )
-                eng.init_engine()
-                res = eng.predict(actual_path)
-                eng.close()
-                return res
+                try:
+                    logger.info("[OCR] Initializing OCR engine in async executor (mode=%s)", mode)
+                    eng = OCREngineManager(
+                        mode=mode, device="cpu", plugin_loader=plugin_loader
+                    )
+                    eng.init_engine()
+                    logger.info("[OCR] Engine initialized successfully, running prediction...")
+                    res = eng.predict(actual_path)
+                    eng.close()
+                    logger.info("[OCR] Prediction completed successfully")
+                    return res
+                except ImportError as e:
+                    logger.error("[OCR] Import error in executor: %s", e)
+                    logger.error("[OCR] This usually means PaddleOCR is not installed. Run: pip install paddleocr")
+                    raise ImportError(f"PaddleOCR module unavailable: {e}") from e
+                except Exception as e:
+                    logger.error("[OCR] Unexpected error in executor: %s", e)
+                    logger.error(traceback.format_exc())
+                    raise
 
             ocr_result = await asyncio.get_event_loop().run_in_executor(None, run_ocr)
 
@@ -224,11 +236,29 @@ async def process_ocr_task(
                 except Exception as e:
                     logger.error("%s 校正失敗: %s", provider, e)
 
+        # Helper function to convert numpy arrays to Python native types
+        def convert_to_serializable(obj):
+            """Convert numpy arrays and other non-serializable types to JSON-compatible formats"""
+            import numpy as np
+            
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_to_serializable(value) for key, value in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [convert_to_serializable(item) for item in obj]
+            else:
+                return obj
+
         final_result = {
             "raw_result": current_text,
             "pages": len(ocr_result) if isinstance(ocr_result, list) else 1,
             "confidence": 0.95,
-            "structured_data": ocr_result if isinstance(ocr_result, list) else None,
+            "structured_data": convert_to_serializable(ocr_result) if isinstance(ocr_result, list) else None,
         }
 
         # 4. Cache and complete

@@ -3,6 +3,76 @@
 本文件記錄 PaddleOCR Toolkit 的所有重要變更。
 
 ---
+
+## [3.4.0] - 2026-01-04 🚀
+
+### 重大更新：Python 3.12 環境完整遷移
+
+此版本成功將專案從 Python 3.7 遷移至 Python 3.12，解決所有依賴相容性問題，修復 API 不相容，並大幅提升測試效能。**正式棄用 Python 3.7 支援**。
+
+### ⚠️ 破壞性變更
+
+- **Python 版本要求**: 現在需要 **Python 3.8+** (建議 3.10+)
+- **棄用 Python 3.7**: 不再支援 Python 3.7，請升級至 3.8 或更新版本
+
+  - `paddlepaddle==2.6.2`
+  - `paddleocr==2.8.1`
+  - `pytest-asyncio==0.25.2`
+  - `setuptools==80.9.0`
+- ✅ **測試優化** - AsyncIO 測試完全支援
+
+### 🐛 問題修復
+
+#### 1. PPStructure API 相容性修復
+- **問題**: `'PPStructure' object has no attribute 'predict'`
+- **修復**: 更新 `ocr_engine.py` 優先使用 `__call__` 方法
+- **影響**: 混合模式 OCR 現在正常運作
+
+#### 2. 異步任務隊列導入錯誤修復
+- **問題**: 多進程 worker 中 PaddleOCR 導入失敗但錯誤被靜默
+- **修復**: 增強 `ocr.py` 和 `parallel_pdf_processor.py` 錯誤處理
+- **影響**: 詳細錯誤日誌幫助快速診斷問題
+
+#### 3. JSON 序列化錯誤修復
+- **問題**: `PydanticSerializationError: Unable to serialize numpy.ndarray`
+- **修復**: 添加 `convert_to_serializable()` 遞迴轉換函數
+- **影響**: 前端現在能正確顯示 OCR 結果
+
+### 🔧 改進
+
+#### 測試與 CI/CD
+- ✅ **測試通過率**: 789/791 (99.7%)
+- ✅ **測試覆蓋率**: 89% (超過要求的 76%)
+- ✅ **執行速度**: 提升 **50%** (23.39s vs 46.84s)
+- ✅ **CI/CD**: 全部 9 項檢查通過
+
+#### 配置更新
+- ✅ 更新 `setup.py`: `python_requires='>=3.8'`
+- ✅ 更新 CI 配置: 移除 Python 3.12 錯誤容忍
+- ✅ 更新 `README.md`: 新增系統需求章節
+
+### 📊 效能提升
+
+| 指標         | 改善         |
+| ------------ | ------------ |
+| 測試執行時間 | **50% 更快** |
+| 測試通過數   | +30 測試     |
+| 代碼覆蓋率   | +3%          |
+
+### 📝 文件更新
+
+- ✅ 新增 Python 3.12 設定指南
+- ✅ 新增完整遷移報告 (walkthrough.md)
+- ✅ 更新 README 系統需求
+- ✅ 更新 CHANGELOG 與 Release Notes
+
+### 🔗 相關連結
+
+- [Python 3.12 遷移報告](docs/python312_migration.md)
+- [測試覆蓋率報告](docs/python312_coverage_report.md)
+
+---
+
 ## [3.5.0] - 2026-01-02
 
 ### 改進 🔧

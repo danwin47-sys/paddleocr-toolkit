@@ -264,9 +264,15 @@ class OCREngineManager:
             # Use standard ocr() method which returns list structure
             # PaddleOCR v3/PaddleX ocr() might not accept kwargs if it forwards to predict()
             results = self.engine.ocr(input_data)
-        else:
-            # Fallback for Structure/Layout analysis which rely on predict()
+        elif self.mode in [OCRMode.STRUCTURE, OCRMode.HYBRID] and hasattr(self.engine, "__call__"):
+            # PPStructure 在新版本使用 __call__ 而非 predict
+            results = self.engine(input_data, **kwargs)
+        elif hasattr(self.engine, "predict"):
+            # Fallback for older API that has predict()
             results = self.engine.predict(input_data, **kwargs)
+        else:
+            # 最後嘗試直接調用
+            results = self.engine(input_data, **kwargs)
 
         # 3. 外掛後處理
         if self.plugin_loader:
